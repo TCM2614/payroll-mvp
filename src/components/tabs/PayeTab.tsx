@@ -178,13 +178,33 @@ export function PayeTab() {
 
 
 
-        {/* Gross + tax code side-by-side */}
-
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+
+          {/* Gross / month + chips */}
 
           <div className="space-y-1">
 
             <label className="text-xs font-medium">Gross / month (£)</label>
+
+
+
+            <div className="flex flex-wrap gap-2 text-[11px] text-zinc-500">
+
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
+
+                {formatGBP(primaryGross * 12)}/year
+
+              </span>
+
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
+
+                £{((primaryGross * 12) / 2080).toFixed(2)}/hour (est.)
+
+              </span>
+
+            </div>
+
+
 
             <input
 
@@ -194,11 +214,15 @@ export function PayeTab() {
 
               onChange={(e) => setPrimaryGross(Number(e.target.value) || 0)}
 
-              className="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
 
             />
 
           </div>
+
+
+
+          {/* Tax code */}
 
           <div className="space-y-1">
 
@@ -218,23 +242,21 @@ export function PayeTab() {
 
           </div>
 
-        </div>
+
+
+          {/* Student loans – aligned as third column */}
+
+          <div className="flex flex-col justify-between space-y-2">
+
+            <label className="text-xs font-medium text-center md:text-left">
+
+              Student loans
+
+            </label>
 
 
 
-        {/* Loans row – centred, dropdown + postgrad toggle */}
-
-        <div className="flex justify-center">
-
-          <div className="w-full max-w-sm space-y-2">
-
-            <label className="block text-xs font-medium text-center">Student loans</label>
-
-
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-
-              {/* Main loan plan dropdown */}
+            <div className="flex flex-col gap-2">
 
               <select
 
@@ -262,15 +284,13 @@ export function PayeTab() {
 
 
 
-              {/* Postgrad toggle */}
-
               <button
 
                 type="button"
 
                 onClick={() => setHasPostgrad((v) => !v)}
 
-                className={`w-full rounded-lg border px-3 py-1.5 text-sm sm:w-auto ${
+                className={`w-full rounded-lg border px-3 py-1.5 text-sm ${
 
                   hasPostgrad
 
@@ -290,9 +310,9 @@ export function PayeTab() {
 
 
 
-            <p className="text-[11px] text-center text-zinc-500">
+            <p className="text-[11px] text-zinc-500">
 
-              Choose your main loan plan from the dropdown and optionally add a Postgrad loan.
+              Choose your main loan plan and optionally add a Postgrad loan.
 
             </p>
 
