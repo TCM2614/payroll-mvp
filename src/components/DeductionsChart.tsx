@@ -59,7 +59,24 @@ export function DeductionsChart({
 
           {/* Take-home as its own bar */}
           <Bar dataKey="takehome" name="Take-home" fill={COLORS.takehome}>
-            <LabelList dataKey="takehome" position="top" formatter={(v: number) => formatGBPShort(v)} />
+            <LabelList
+              dataKey="takehome"
+              position="top"
+              content={(props) => {
+                const { x, y, value, index } = props as any;
+                if (x == null || y == null) return null;
+                return (
+                  <text
+                    x={x}
+                    y={y - 6}
+                    textAnchor="middle"
+                    fontSize={12}
+                  >
+                    {formatGBPShort(Number(value))}
+                  </text>
+                );
+              }}
+            />
           </Bar>
 
         </BarChart>
