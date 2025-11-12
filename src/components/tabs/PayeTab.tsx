@@ -166,6 +166,12 @@ export function PayeTab() {
 
 
 
+  const annualGross = primaryGross * 12;
+
+  const hourlyRate = annualGross / 2080; // Assuming 40 hours/week × 52 weeks
+
+
+
   return (
 
     <div className="space-y-6">
@@ -192,13 +198,13 @@ export function PayeTab() {
 
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
 
-                {formatGBP(primaryGross * 12)}/year
+                {formatGBP(annualGross)}/year
 
               </span>
 
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
 
-                £{((primaryGross * 12) / 2080).toFixed(2)}/hour (est.)
+                £{hourlyRate.toFixed(2)}/hour (est.)
 
               </span>
 
