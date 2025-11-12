@@ -1,4 +1,4 @@
-import { UK_TAX_2025 } from "../tax/uk2025";
+import { UK_TAX_2025, LoanKey } from "../tax/uk2025";
 
 export type Frequency = "hourly"|"daily"|"monthly"|"annual";
 export type TaxCodeFlavor = "L"|"BR"|"D0"|"D1"|"0T"|"NT";
@@ -174,4 +174,38 @@ export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
     totalGrossAnnual: totalAnnualGross,
     totalTakeHomeAnnual,
   };
+}
+
+// Helper function for simple monthly PAYE calculation
+export function calcPayeMonthly(input: {
+  grossMonthly: number;
+  taxCode: string;
+  loans?: LoanKey[];
+  pensionPct?: number;
+  sippPct?: number;
+}): number {
+  const { grossMonthly, taxCode, loans = [], pensionPct = 0, sippPct = 0 } = input;
+  
+  const annualGross = grossMonthly * 12;
+  const pensionAmount = (annualGross * pensionPct) / 100;
+  const sippPersonal = (annualGross * sippPct) / 100;
+  
+  const result = calcPAYECombined({
+    streams: [{
+      id: "primary",
+      label: "Primary job",
+      frequency: "monthly",
+      amount: grossMonthly,
+      taxCode,
+      salarySacrificePct: pensionPct > 0 ? pensionPct : undefined,
+    }],
+    sippPersonal,
+  });
+  
+  // Calculate student loan repayments (simplified)
+  let studentLoanTotal = 0;
+  // This is a placeholder - you'd need to implement proper student loan calculation
+  // based on the loan plans in the loans array
+  
+  return (result.totalTakeHomeAnnual - studentLoanTotal) / 12;
 }
