@@ -162,9 +162,13 @@ export function PayeTab() {
 
       {/* Primary job */}
 
-      <section className="space-y-3">
+      <section className="space-y-4">
 
         <h3 className="text-sm font-semibold">Primary job</h3>
+
+
+
+        {/* Gross + tax code side-by-side */}
 
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
 
@@ -204,13 +208,25 @@ export function PayeTab() {
 
           </div>
 
-          <div className="space-y-1">
+        </div>
 
-            <label className="text-xs font-medium">Loans</label>
 
-            {/* Multi-select loans (Plan 1/2, Postgrad, etc.) */}
+
+        {/* Loans row – centred, full width */}
+
+        <div className="flex justify-center">
+
+          <div className="w-full max-w-sm space-y-1">
+
+            <label className="block text-xs font-medium text-center">Student loans</label>
 
             <LoansMultiSelect value={loans} onChange={setLoans} />
+
+            <p className="text-[11px] text-center text-zinc-500">
+
+              You can select more than one (e.g. Plan 2 + Postgrad).
+
+            </p>
 
           </div>
 
