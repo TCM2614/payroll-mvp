@@ -4,8 +4,6 @@
 
 import { useState } from "react";
 
-import LoansMultiSelect from "@/components/LoansMultiSelect";
-
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 
 import { calcPayeMonthly } from "@/lib/calculators/paye";
@@ -44,7 +42,19 @@ export function PayeTab() {
 
 
 
-  const [loans, setLoans] = useState<LoanKey[]>([]); // multi-select: ["plan1","plan2","postgrad"]
+  const [loanPlan, setLoanPlan] = useState<string | null>(null); // "plan1" | "plan2" | "plan4" | null
+
+  const [hasPostgrad, setHasPostgrad] = useState(false);
+
+
+
+  const loans: LoanKey[] = [
+
+    ...(loanPlan ? [loanPlan as LoanKey] : []),
+
+    ...(hasPostgrad ? ["postgrad" as LoanKey] : []),
+
+  ];
 
   const [sippPct, setSippPct] = useState(0);
 
@@ -212,19 +222,77 @@ export function PayeTab() {
 
 
 
-        {/* Loans row – centred, full width */}
+        {/* Loans row – centred, dropdown + postgrad toggle */}
 
         <div className="flex justify-center">
 
-          <div className="w-full max-w-sm space-y-1">
+          <div className="w-full max-w-sm space-y-2">
 
             <label className="block text-xs font-medium text-center">Student loans</label>
 
-            <LoansMultiSelect value={loans} onChange={setLoans} />
+
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+
+              {/* Main loan plan dropdown */}
+
+              <select
+
+                value={loanPlan ?? ""}
+
+                onChange={(e) =>
+
+                  setLoanPlan(e.target.value === "" ? null : e.target.value)
+
+                }
+
+                className="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+
+              >
+
+                <option value="">No plan</option>
+
+                <option value="plan1">Plan 1</option>
+
+                <option value="plan2">Plan 2</option>
+
+                <option value="plan4">Plan 4</option>
+
+              </select>
+
+
+
+              {/* Postgrad toggle */}
+
+              <button
+
+                type="button"
+
+                onClick={() => setHasPostgrad((v) => !v)}
+
+                className={`w-full rounded-lg border px-3 py-1.5 text-sm sm:w-auto ${
+
+                  hasPostgrad
+
+                    ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+
+                    : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+
+                }`}
+
+              >
+
+                {hasPostgrad ? "Postgrad loan: ON" : "Add Postgrad loan"}
+
+              </button>
+
+            </div>
+
+
 
             <p className="text-[11px] text-center text-zinc-500">
 
-              You can select more than one (e.g. Plan 2 + Postgrad).
+              Choose your main loan plan from the dropdown and optionally add a Postgrad loan.
 
             </p>
 
