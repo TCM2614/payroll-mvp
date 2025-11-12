@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 
 
@@ -9,6 +10,24 @@ export default function Home() {
     <main className="flex min-h-screen items-center justify-center px-6">
 
       <div className="text-center max-w-2xl">
+
+        <div className="mb-6 flex justify-center">
+
+          <Image
+
+            src="/logo.svg"
+
+            alt="Payroll Calculator Logo"
+
+            width={80}
+
+            height={80}
+
+            className="dark:invert"
+
+          />
+
+        </div>
 
         <h1 className="mb-4 text-4xl font-bold">UK Payroll Take-Home Calculator</h1>
 
