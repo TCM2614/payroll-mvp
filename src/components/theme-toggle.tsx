@@ -1,27 +1,40 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
-export default function ThemeToggle() {
+
+
+export function ThemeToggle() {
+
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
+  const next = theme === "dark" ? "light" : "dark";
 
   return (
+
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700"
+
+      onClick={() => setTheme(next)}
+
+      className="rounded-xl border px-3 py-1 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
+
+      aria-label="Toggle theme"
+
+      title="Toggle theme"
+
     >
-      {theme === "dark" ? "☀️" : "🌙"}
+
+      {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
+
     </button>
+
   );
+
 }
+
+
+
+// (optional) also export default to be future-proof
+
+export default ThemeToggle;
 

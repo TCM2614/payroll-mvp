@@ -23,7 +23,7 @@ import type {
   ValueType,
   Payload as TooltipPayload,
 } from 'recharts/types/component/DefaultTooltipContent';
-import ThemeToggle from './theme-toggle';
+import { ThemeToggle } from "./theme-toggle";
 
 const DEFAULT_SALARY = 45_000;
 const MAX_SALARY = 250_000;
