@@ -8,27 +8,37 @@ export default function Home() {
 
   return (
 
-    <main className="mx-auto max-w-2xl px-6 py-16 text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12 bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-900 dark:to-zinc-950">
 
-      <h1 className="mb-4 text-4xl font-bold">UK Payroll Take-Home Calculator</h1>
+      <div className="max-w-2xl text-center">
 
-      <p className="mb-8 text-zinc-600 dark:text-zinc-400">
+        <h1 className="mb-4 text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
 
-        Compare PAYE, Umbrella & Limited company take-home pay — live, fast and accurate.
+          UK Payroll Take-Home Calculator
 
-      </p>
+        </h1>
 
-      <Link
+        <p className="mb-8 text-zinc-600 dark:text-zinc-400">
 
-        href="/calc"
+          Compare PAYE, Umbrella and Limited company income side-by-side. Fast,
 
-        className="rounded-xl bg-zinc-900 px-6 py-3 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900"
+          accurate, and made for contractors.
 
-      >
+        </p>
 
-        Launch Calculator
+        <Link
 
-      </Link>
+          href="/calc"
+
+          className="rounded-xl bg-zinc-900 px-6 py-3 text-white font-medium hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 transition"
+
+        >
+
+          Launch Calculator
+
+        </Link>
+
+      </div>
 
     </main>
 
