@@ -1,20 +1,12 @@
 "use client";
 
-import ContractorComparisonTabs from "@/components/ContractorComparisonTabs";
+import { UmbrellaCalculator } from "@/components/UmbrellaCalculator";
 
 
 
 export function UmbrellaTab() {
 
-  return (
-
-    <div className="space-y-4">
-
-      <ContractorComparisonTabs />
-
-    </div>
-
-  );
+  return <UmbrellaCalculator />;
 
 }
 

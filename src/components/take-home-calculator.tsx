@@ -35,7 +35,7 @@ export function TakeHomeCalculator() {
 
 
 
-        <TabsContent value="paye">
+        <TabsContent value="paye" className="pt-4">
 
           <PayeTab />
 
@@ -43,7 +43,7 @@ export function TakeHomeCalculator() {
 
 
 
-        <TabsContent value="umbrella">
+        <TabsContent value="umbrella" className="pt-4">
 
           <UmbrellaTab />
 
@@ -51,7 +51,7 @@ export function TakeHomeCalculator() {
 
 
 
-        <TabsContent value="limited">
+        <TabsContent value="limited" className="pt-4">
 
           <LimitedTab />
 
@@ -59,7 +59,7 @@ export function TakeHomeCalculator() {
 
 
 
-        <TabsContent value="combined">
+        <TabsContent value="combined" className="pt-4">
 
           <CombinedIncomeTab />
 
