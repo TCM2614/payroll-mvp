@@ -1,6 +1,6 @@
 "use client";
 
-import TakeHomeCalculator from "@/components/take-home-calculator";
+import { TakeHomeCalculator } from "@/components/take-home-calculator";
 
 
 
