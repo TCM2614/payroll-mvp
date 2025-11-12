@@ -1,3 +1,5 @@
+// src/app/calc/page.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -18,13 +20,13 @@ export default function CalcPage() {
 
   return (
 
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
 
-      <h1 className="mb-6 text-2xl font-semibold">Take-Home Calculator</h1>
+      <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
 
-      <div className="mb-4">
+        <h1 className="mb-6 text-center text-2xl font-semibold">Take-Home Calculator</h1>
 
-        <label className="block text-sm font-medium">Gross per month (£)</label>
+        <label className="mb-2 block text-sm font-medium">Gross per month (£)</label>
 
         <input
 
@@ -34,15 +36,17 @@ export default function CalcPage() {
 
           onChange={(e) => setGross(Number(e.target.value) || 0)}
 
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mb-4 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950"
 
         />
 
-      </div>
+        <div className="text-center">
 
-      <div className="text-xl font-semibold">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Estimated Take-Home</p>
 
-        Estimated Take-Home: £{takeHome.toLocaleString()}
+          <p className="mt-1 text-3xl font-bold">£{takeHome.toLocaleString()}</p>
+
+        </div>
 
       </div>
 
