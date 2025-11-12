@@ -1,39 +1,61 @@
-// Umbrella company calculator
+import { UK_TAX_2025 } from "../tax/uk2025";
+import { calcPAYECombined, PayeIncomeStream } from "./paye";
 
-export interface UmbrellaInput {
-  grossAnnual: number;
-  umbrellaFee?: number;
-  taxYear?: string;
-}
+export type UmbrellaInput = {
+  dayRate?: number; hourlyRate?: number;
+  monthlyRate?: number; annualRate?: number;
+  daysPerWeek?: number; hoursPerDay?: number; weeksPerYear?: number;
+  umbrellaMarginPerWeek?: number;
+  holidayPayPct?: number;
+  taxCode?: string;
+  salarySacrificePct?: number; salarySacrificeFixed?: number;
+  sippPersonal?: number;
+};
 
-export interface UmbrellaOutput {
-  grossAnnual: number;
-  umbrellaFee: number;
-  taxableIncome: number;
-  incomeTax: number;
-  nationalInsurance: number;
-  netAnnual: number;
-  netMonthly: number;
-}
+export function calcUmbrella(i: UmbrellaInput) {
+  const weeks = i.weeksPerYear ?? 46;
+  const days = i.daysPerWeek ?? 5;
+  const hours = i.hoursPerDay ?? (i.hourlyRate ? 7.5 : undefined);
 
-export function calculateUmbrella(input: UmbrellaInput): UmbrellaOutput {
-  const { grossAnnual, umbrellaFee = 0 } = input;
-  
-  // Placeholder calculation - implement actual umbrella logic
-  const taxableIncome = grossAnnual - umbrellaFee;
-  const incomeTax = taxableIncome * 0.20; // Simplified
-  const nationalInsurance = taxableIncome * 0.08; // Simplified
-  const netAnnual = grossAnnual - umbrellaFee - incomeTax - nationalInsurance;
-  const netMonthly = netAnnual / 12;
+  const assignmentAnnual = i.annualRate
+    ? i.annualRate
+    : i.monthlyRate
+    ? i.monthlyRate * 12
+    : i.dayRate
+    ? i.dayRate * days * weeks
+    : i.hourlyRate && hours
+    ? i.hourlyRate * hours * days * weeks
+    : 0;
+
+  const margin = (i.umbrellaMarginPerWeek ?? 20) * weeks;
+  const employerNI =
+    Math.max(0, assignmentAnnual - UK_TAX_2025.employerNi.secondaryThreshold) *
+    UK_TAX_2025.employerNi.rate;
+  const levy = assignmentAnnual * UK_TAX_2025.employerNi.apprenticeshipLevy;
+
+  const employmentCostAnnual = margin + employerNI + levy;
+  const grossToEmployeeAnnual = Math.max(0, assignmentAnnual - employmentCostAnnual);
+
+  const stream: PayeIncomeStream = {
+    id: "primary",
+    label: "Umbrella PAYE",
+    frequency: "annual",
+    amount: grossToEmployeeAnnual,
+    taxCode: i.taxCode ?? "1257L",
+    salarySacrificePct: i.salarySacrificePct,
+    salarySacrificeFixed: i.salarySacrificeFixed,
+  };
+
+  const paye = calcPAYECombined({ streams: [stream], sippPersonal: i.sippPersonal ?? 0 });
+
+  const rolledHoliday = i.holidayPayPct ? grossToEmployeeAnnual * (i.holidayPayPct / 100) : 0;
 
   return {
-    grossAnnual,
-    umbrellaFee,
-    taxableIncome,
-    incomeTax,
-    nationalInsurance,
-    netAnnual,
-    netMonthly,
+    assignmentAnnual,
+    employmentCostAnnual,
+    grossToEmployeeAnnual,
+    rolledHoliday,
+    paye,
+    netTakeHomeAnnual: paye.totalTakeHomeAnnual,
   };
 }
-

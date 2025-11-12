@@ -1,56 +1,53 @@
-// Limited company calculator
+import { UK_TAX_2025 } from "../tax/uk2025";
 
-export interface LimitedInput {
-  grossAnnual: number;
-  salary?: number;
-  expenses?: number;
-  corporationTaxRate?: number;
-  dividendTaxRate?: number;
-  taxYear?: string;
-}
+export type LimitedInput = {
+  dayRate?: number; hourlyRate?: number;
+  monthlyRate?: number; annualRate?: number;
+  daysPerWeek?: number; hoursPerDay?: number; weeksPerYear?: number;
+  salaryAnnual?: number; allowableExpensesAnnual?: number; employerPension?: number;
+};
 
-export interface LimitedOutput {
-  grossAnnual: number;
-  expenses: number;
-  netRevenue: number;
-  salary: number;
-  corporationTax: number;
-  profitAfterTax: number;
-  dividends: number;
-  dividendTax: number;
-  netAnnual: number;
-  netMonthly: number;
-}
+export function calcLimited(i: LimitedInput) {
+  const weeks = i.weeksPerYear ?? 46;
+  const days = i.daysPerWeek ?? 5;
+  const hours = i.hoursPerDay ?? (i.hourlyRate ? 7.5 : undefined);
 
-export function calculateLimited(input: LimitedInput): LimitedOutput {
-  const {
-    grossAnnual,
-    salary = 12570, // Optimal salary for 2024-25
-    expenses = 0,
-    corporationTaxRate = 0.19,
-    dividendTaxRate = 0.075, // Basic rate dividend tax
-  } = input;
+  const revenueAnnual = i.annualRate
+    ? i.annualRate
+    : i.monthlyRate
+    ? i.monthlyRate * 12
+    : i.dayRate
+    ? i.dayRate * days * weeks
+    : i.hourlyRate && hours
+    ? i.hourlyRate * hours * days * weeks
+    : 0;
 
-  // Placeholder calculation - implement actual limited company logic
-  const netRevenue = grossAnnual - expenses;
-  const corporationTax = (netRevenue - salary) * corporationTaxRate;
-  const profitAfterTax = netRevenue - salary - corporationTax;
-  const dividends = profitAfterTax;
-  const dividendTax = dividends * dividendTaxRate;
-  const netAnnual = salary + dividends - dividendTax;
-  const netMonthly = netAnnual / 12;
+  const salary = i.salaryAnnual ?? 12570;
+  const expenses = i.allowableExpensesAnnual ?? 0;
+  const erPension = i.employerPension ?? 0;
+
+  const profitBeforeTax = Math.max(0, revenueAnnual - salary - expenses - erPension);
+  const corpTax = profitBeforeTax * UK_TAX_2025.corpTaxRate;
+  const distributable = Math.max(0, profitBeforeTax - corpTax);
+
+  const free = UK_TAX_2025.dividend.allowance;
+  let remaining = Math.max(0, distributable - free);
+
+  const basicWidth = UK_TAX_2025.basicBandTop;
+  const divBasic = Math.min(remaining, basicWidth); remaining -= divBasic;
+  const divHigher = Math.min(remaining, UK_TAX_2025.higherBandTop - UK_TAX_2025.basicBandTop); remaining -= divHigher;
+  const divAdditional = Math.max(0, remaining);
+
+  const divTax = divBasic*UK_TAX_2025.dividend.basic
+               + divHigher*UK_TAX_2025.dividend.higher
+               + divAdditional*UK_TAX_2025.dividend.additional;
+
+  const netDividends = Math.max(0, distributable - divTax);
+  const directorNetSalary = salary;
+  const netToDirector = directorNetSalary + netDividends;
 
   return {
-    grossAnnual,
-    expenses,
-    netRevenue,
-    salary,
-    corporationTax,
-    profitAfterTax,
-    dividends,
-    dividendTax,
-    netAnnual,
-    netMonthly,
+    revenueAnnual, salary, expenses, employerPension: erPension,
+    profitBeforeTax, corpTax, distributable, netDividends, netToDirector
   };
 }
-
