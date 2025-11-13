@@ -2,7 +2,7 @@
 
 
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 
@@ -11,6 +11,12 @@ import { calcPayeMonthly } from "@/lib/calculators/paye";
 import { formatGBP } from "@/lib/format";
 
 import { LoanKey } from "@/lib/tax/uk2025";
+
+import {
+  trackCalculatorSubmit,
+  trackResultsView,
+  getSalaryBand,
+} from "@/lib/analytics";
 
 
 
@@ -169,6 +175,25 @@ export function PayeTab() {
     );
 
   }, 0);
+
+  // Track calculator submission
+  useEffect(() => {
+    if (annualGross > 0) {
+      trackCalculatorSubmit({
+        tab: "standard",
+        hasPension: pensionPct > 0 || salarySacrificeFixed > 0 || sippPersonal > 0,
+        hasStudentLoan: loans.length > 0,
+        salaryBand: getSalaryBand(annualGross),
+      });
+    }
+  }, [annualGross, pensionPct, salarySacrificeFixed, sippPersonal, loans.length]);
+
+  // Track results view
+  useEffect(() => {
+    if (totalTakeHome > 0) {
+      trackResultsView();
+    }
+  }, [totalTakeHome]);
 
 
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { formatGBP } from "@/lib/format";
 import {
   calculateContractorAnnual,
@@ -8,6 +8,11 @@ import {
   type Ir35Status,
 } from "@/domain/tax/contracting";
 import { createUK2025Config, calculateAnnualTax } from "@/domain/tax/periodTax";
+import {
+  trackCalculatorSubmit,
+  trackResultsView,
+  getSalaryBand,
+} from "@/lib/analytics";
 
 export function LimitedCompanyCalculator() {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
@@ -52,6 +57,25 @@ export function LimitedCompanyCalculator() {
   const netWeekly = result.supported && result.annual
     ? result.annual.net / 52
     : 0;
+
+  // Track calculator submission
+  useEffect(() => {
+    if (result.grossAnnualIncome > 0) {
+      trackCalculatorSubmit({
+        tab: "limited",
+        hasPension: pensionPct > 0,
+        hasStudentLoan: studentLoanPlan !== "none",
+        salaryBand: getSalaryBand(result.grossAnnualIncome),
+      });
+    }
+  }, [result.grossAnnualIncome, pensionPct, studentLoanPlan]);
+
+  // Track results view
+  useEffect(() => {
+    if (result.supported && result.annual && result.annual.net > 0) {
+      trackResultsView();
+    }
+  }, [result.supported, result.annual]);
 
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-3 sm:space-y-4">
