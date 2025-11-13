@@ -44,7 +44,7 @@ export default function LandingPage() {
 
           <h1 className="mt-5 text-balance text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
 
-            UK Take-Home Pay Calculator 2024/25 – Check Your Salary After Tax
+            UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK
 
           </h1>
 

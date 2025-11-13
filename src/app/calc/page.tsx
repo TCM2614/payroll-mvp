@@ -18,7 +18,7 @@ export default function CalcPage() {
 
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
 
-          UK Salary Calculator 2024/25 – Enter Your Details
+          UK Salary Calculator 2024/25 – Instant Take-Home Pay
 
         </h1>
 
@@ -133,6 +133,15 @@ export default function CalcPage() {
 
           <div>
             <h3 className="text-base font-semibold text-white mb-2">
+              Does it support outside IR35 limited company scenarios?
+            </h3>
+            <p className="text-sm text-white/70">
+              No. Outside IR35 limited company scenarios are not yet modelled. The Limited company tab shows a clear message when you select &quot;Outside IR35&quot;. Inside IR35 is supported and treated as PAYE-style employment.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-white mb-2">
               Is it an official HMRC service?
             </h3>
             <p className="text-sm text-white/70">
@@ -192,6 +201,14 @@ export default function CalcPage() {
               },
               {
                 "@type": "Question",
+                name: "Does it support outside IR35 limited company scenarios?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "No. Outside IR35 limited company scenarios are not yet modelled. The Limited company tab shows a clear message when you select Outside IR35. Inside IR35 is supported and treated as PAYE-style employment.",
+                },
+              },
+              {
+                "@type": "Question",
                 name: "Is it an official HMRC service?",
                 acceptedAnswer: {
                   "@type": "Answer",
@@ -210,7 +227,7 @@ export default function CalcPage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            name: "UK Take Home Calculator",
+            name: "UK Take-Home Calculator",
             applicationCategory: "FinanceApplication",
             operatingSystem: "Web",
             url: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/calc` : "https://yourdomain.com/calc",

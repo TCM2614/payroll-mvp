@@ -197,17 +197,30 @@ export function PeriodicTaxTab() {
     }
   }, [results.length]);
 
-  // Track warnings
+  // Track warnings and variance badges
   useEffect(() => {
     results.forEach((result, index) => {
-      if (result && result.warnings.length > 0) {
-        result.warnings.forEach((warning) => {
+      if (result) {
+        // Track domain warnings
+        if (result.warnings.length > 0) {
+          result.warnings.forEach((warning) => {
+            trackWarningShown({
+              code: warning.code,
+              severity: warning.severity as "info" | "warning" | "critical",
+              tab: "periodic",
+            });
+          });
+        }
+        
+        // Track variance badges when not within tolerance
+        if (result.variance.direction !== "withinTolerance") {
+          const severity = result.variance.direction === "over" ? "warning" : "critical";
           trackWarningShown({
-            code: warning.code,
-            severity: warning.severity as "info" | "warning" | "critical",
+            code: result.variance.direction === "over" ? "potential_overtax_mid_year" : "potential_undertax_mid_year",
+            severity,
             tab: "periodic",
           });
-        });
+        }
       }
     });
   }, [results]);

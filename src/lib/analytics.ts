@@ -53,15 +53,13 @@ export function trackEvent(
 ): void {
   if (typeof window === "undefined") return;
   
-  if (!isProduction()) {
-    // No-op in development
+  if (process.env.NODE_ENV !== "production") {
+    // Optional: console.log(name, props);
     return;
   }
 
   // Fire-and-forget call to Plausible
-  if (window.plausible) {
-    window.plausible(name, { props });
-  }
+  (window as any).plausible?.(name, { props });
 }
 
 /**
