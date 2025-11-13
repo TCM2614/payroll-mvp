@@ -30,7 +30,53 @@ type JobInput = {
 
 export function PayeTab() {
 
-  const [primaryGross, setPrimaryGross] = useState(6000);
+  const [primaryIncome, setPrimaryIncome] = useState(6000);
+
+  const [primaryFrequency, setPrimaryFrequency] = useState<
+
+    "monthly" | "annual" | "weekly" | "daily" | "hourly"
+
+  >("monthly");
+
+
+
+  const assumedHoursPerWeek = 37.5; // adjust if you prefer
+
+
+
+  function toMonthly(value: number, freq: typeof primaryFrequency): number {
+
+    switch (freq) {
+
+      case "annual":
+
+        return value / 12;
+
+      case "weekly":
+
+        return (value * 52) / 12;
+
+      case "daily":
+
+        // assume 5 working days per week
+
+        return (value * 5 * 52) / 12;
+
+      case "hourly":
+
+        return (value * assumedHoursPerWeek * 52) / 12;
+
+      case "monthly":
+
+      default:
+
+        return value;
+
+    }
+
+  }
+
+
 
   const [primaryTaxCode, setPrimaryTaxCode] = useState("1257L");
 
@@ -82,7 +128,7 @@ export function PayeTab() {
 
   const allJobs: JobInput[] = [
 
-    { id: 0, name: "Primary job", grossMonthly: primaryGross, taxCode: primaryTaxCode },
+    { id: 0, name: "Primary job", grossMonthly: primaryGrossMonthly, taxCode: primaryTaxCode },
 
     ...jobs,
 
@@ -166,9 +212,13 @@ export function PayeTab() {
 
 
 
-  const annualGross = primaryGross * 12;
+  const primaryGrossMonthly = toMonthly(primaryIncome, primaryFrequency);
 
-  const hourlyRate = annualGross / 2080; // Assuming 40 hours/week × 52 weeks
+  const annualGross = primaryGrossMonthly * 12;
+
+  const weeklyGross = annualGross / 52;
+
+  const hourlyRate = weeklyGross / assumedHoursPerWeek;
 
 
 
@@ -186,15 +236,17 @@ export function PayeTab() {
 
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
 
-          {/* Gross / month + chips */}
+          {/* Income input with chips and frequency selector */}
 
           <div className="space-y-1">
 
-            <label className="text-xs font-medium">Gross / month (£)</label>
+            <label className="text-xs font-medium">Income (£)</label>
 
 
 
-            <div className="flex flex-wrap gap-2 text-[11px] text-zinc-500">
+            {/* Chips + frequency selector */}
+
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
 
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
 
@@ -208,6 +260,34 @@ export function PayeTab() {
 
               </span>
 
+
+
+              <select
+
+                value={primaryFrequency}
+
+                onChange={(e) =>
+
+                  setPrimaryFrequency(e.target.value as typeof primaryFrequency)
+
+                }
+
+                className="rounded-lg border border-zinc-300 bg-transparent px-2 py-1 text-[11px] dark:border-zinc-700"
+
+              >
+
+                <option value="monthly">per month</option>
+
+                <option value="annual">per year</option>
+
+                <option value="weekly">per week</option>
+
+                <option value="daily">per day</option>
+
+                <option value="hourly">per hour</option>
+
+              </select>
+
             </div>
 
 
@@ -216,9 +296,9 @@ export function PayeTab() {
 
               type="number"
 
-              value={primaryGross}
+              value={primaryIncome}
 
-              onChange={(e) => setPrimaryGross(Number(e.target.value) || 0)}
+              onChange={(e) => setPrimaryIncome(Number(e.target.value) || 0)}
 
               className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
 
