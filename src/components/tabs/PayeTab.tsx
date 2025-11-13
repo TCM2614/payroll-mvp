@@ -228,9 +228,23 @@ export function PayeTab() {
 
       {/* Primary job */}
 
-      <section className="space-y-4">
+      <section className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-4">
 
-        <h3 className="text-sm font-semibold">Primary job</h3>
+        <div>
+
+          <h2 className="text-sm font-semibold tracking-tight text-white">
+
+            Primary job
+
+          </h2>
+
+          <p className="mt-1 text-xs text-white/50">
+
+            Enter your main employment income details
+
+          </p>
+
+        </div>
 
 
 
@@ -240,21 +254,21 @@ export function PayeTab() {
 
           <div className="space-y-1">
 
-            <label className="text-xs font-medium">Income (£)</label>
+            <label className="text-xs font-medium text-white/90">Income (£)</label>
 
 
 
             {/* Chips + frequency selector */}
 
-            <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-white/60">
 
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
+              <span className="rounded-full bg-white/10 px-2 py-0.5 border border-white/10">
 
                 {formatGBP(annualGross)}/year
 
               </span>
 
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
+              <span className="rounded-full bg-white/10 px-2 py-0.5 border border-white/10">
 
                 £{hourlyRate.toFixed(2)}/hour (est.)
 
@@ -272,7 +286,7 @@ export function PayeTab() {
 
                 }
 
-                className="rounded-lg border border-zinc-300 bg-transparent px-2 py-1 text-[11px] dark:border-zinc-700"
+                className="rounded-lg border border-white/15 bg-black/40 px-2 py-1 text-[11px] text-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
 
               >
 
@@ -300,7 +314,7 @@ export function PayeTab() {
 
               onChange={(e) => setPrimaryIncome(Number(e.target.value) || 0)}
 
-              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
 
             />
 
@@ -312,7 +326,7 @@ export function PayeTab() {
 
           <div className="space-y-1">
 
-            <label className="text-xs font-medium">Tax code</label>
+            <label className="text-xs font-medium text-white/90">Tax code</label>
 
             <input
 
@@ -322,7 +336,7 @@ export function PayeTab() {
 
               onChange={(e) => setPrimaryTaxCode(e.target.value.toUpperCase())}
 
-              className="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm uppercase dark:border-zinc-700 dark:bg-zinc-900"
+              className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm uppercase text-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
 
             />
 
@@ -334,7 +348,7 @@ export function PayeTab() {
 
           <div className="flex flex-col justify-between space-y-2">
 
-            <label className="text-xs font-medium text-center md:text-left">
+            <label className="text-xs font-medium text-center md:text-left text-white/90">
 
               Student loans
 
@@ -354,7 +368,7 @@ export function PayeTab() {
 
                 }
 
-                className="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
 
               >
 
@@ -376,13 +390,13 @@ export function PayeTab() {
 
                 onClick={() => setHasPostgrad((v) => !v)}
 
-                className={`w-full rounded-lg border px-3 py-1.5 text-sm ${
+                className={`w-full rounded-xl border px-3 py-2 text-sm transition-colors ${
 
                   hasPostgrad
 
-                    ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                    ? "border-emerald-500 bg-emerald-500 text-black shadow-md shadow-emerald-500/30"
 
-                    : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    : "border-white/15 bg-black/40 text-white/90 hover:bg-white/10 hover:text-white"
 
                 }`}
 
@@ -396,7 +410,7 @@ export function PayeTab() {
 
 
 
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] text-white/50">
 
               Choose your main loan plan and optionally add a Postgrad loan.
 

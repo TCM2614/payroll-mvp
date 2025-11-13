@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { useState } from "react";
 
-import MainHeader from "@/components/layout/MainHeader";
+import AppShell from "@/components/layout/AppShell";
 
 import EmailSignupSection from "@/components/landing/EmailSignupSection";
 
@@ -24,17 +24,9 @@ export default function LandingPage() {
 
   return (
 
-    <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-zinc-900 text-white">
+    <AppShell>
 
-      <div className="absolute inset-x-0 top-0 -z-10 h-64 bg-[radial-gradient(circle_at_top,_rgba(74,222,128,0.12),_transparent_55%)]" />
-
-
-
-      <MainHeader />
-
-
-
-      <main className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-24 pt-12">
+      <div className="flex flex-col items-center">
 
         {/* Hero */}
 
@@ -178,43 +170,7 @@ export default function LandingPage() {
 
         </section>
 
-      </main>
-
-
-
-      {/* Footer */}
-
-      <footer className="border-t border-white/10 bg-black/60">
-
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between">
-
-          <p>© {new Date().getFullYear()} UK Payroll Take-Home Calculator.</p>
-
-          <div className="flex flex-wrap gap-4">
-
-            <a href="/privacy" className="hover:text-white">
-
-              Privacy Policy
-
-            </a>
-
-            <a href="/cookies" className="hover:text-white">
-
-              Cookie Policy
-
-            </a>
-
-            <a href="/terms" className="hover:text-white">
-
-              Terms
-
-            </a>
-
-          </div>
-
-        </div>
-
-      </footer>
+      </div>
 
 
 
@@ -228,7 +184,7 @@ export default function LandingPage() {
 
       <CookieBanner />
 
-    </div>
+    </AppShell>
 
   );
 
