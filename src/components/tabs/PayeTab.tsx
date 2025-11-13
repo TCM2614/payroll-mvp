@@ -126,6 +126,16 @@ export function PayeTab() {
 
 
 
+  const primaryGrossMonthly = toMonthly(primaryIncome, primaryFrequency);
+
+  const annualGross = primaryGrossMonthly * 12;
+
+  const weeklyGross = annualGross / 52;
+
+  const hourlyRate = weeklyGross / assumedHoursPerWeek;
+
+
+
   const allJobs: JobInput[] = [
 
     { id: 0, name: "Primary job", grossMonthly: primaryGrossMonthly, taxCode: primaryTaxCode },
@@ -209,16 +219,6 @@ export function PayeTab() {
     setJobs((prev) => prev.filter((job) => job.id !== id));
 
   }
-
-
-
-  const primaryGrossMonthly = toMonthly(primaryIncome, primaryFrequency);
-
-  const annualGross = primaryGrossMonthly * 12;
-
-  const weeklyGross = annualGross / 52;
-
-  const hourlyRate = weeklyGross / assumedHoursPerWeek;
 
 
 
