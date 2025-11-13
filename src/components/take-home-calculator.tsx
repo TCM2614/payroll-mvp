@@ -23,21 +23,123 @@ export function TakeHomeCalculator() {
 
   return (
 
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-4 sm:space-y-6">
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
 
-        {/* Tab bar container with pill-style glassy background */}
+        {/* Tab bar container - mobile: horizontal scroll, desktop: grid */}
 
-        <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-1 flex gap-1">
+        <div className="mb-4 sm:mb-6 rounded-2xl border border-white/10 bg-white/5 p-1">
 
-          <TabsList className="w-full grid grid-cols-6 gap-1 bg-transparent p-0 h-auto">
+          {/* Mobile: horizontal scrollable tabs */}
+          <div className="md:hidden overflow-x-auto -mx-1 px-1 scrollbar-hide">
+            <TabsList className="inline-flex flex-nowrap gap-2 bg-transparent p-0 h-auto min-w-max">
 
             <TabsTrigger 
 
               value="paye" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-emerald-400 hover:border-emerald-500 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:hover:bg-emerald-700 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+
+            >
+
+              <span className="text-sm sm:text-base">£</span>
+
+              <span className="text-xs sm:text-sm font-medium">Standard</span>
+
+            </TabsTrigger>
+
+
+
+            <TabsTrigger 
+
+              value="umbrella" 
+
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+
+            >
+
+              <span className="text-sm sm:text-base">☂</span>
+
+              <span className="text-xs sm:text-sm font-medium">Umbrella</span>
+
+            </TabsTrigger>
+
+
+
+            <TabsTrigger 
+
+              value="limited" 
+
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+
+            >
+
+              <span className="text-sm sm:text-base">🏢</span>
+
+              <span className="text-xs sm:text-sm font-medium">Limited</span>
+
+            </TabsTrigger>
+
+
+
+            <TabsTrigger 
+
+              value="additional-jobs" 
+
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+
+            >
+
+              <span className="text-sm sm:text-base">+</span>
+
+              <span className="text-xs sm:text-sm font-medium">Jobs</span>
+
+            </TabsTrigger>
+
+
+
+            <TabsTrigger 
+
+              value="combined" 
+
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+
+            >
+
+              <span className="text-sm sm:text-base">📊</span>
+
+              <span className="text-xs sm:text-sm font-medium">Compare</span>
+
+            </TabsTrigger>
+
+
+
+            <TabsTrigger 
+
+              value="periodic" 
+
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+
+            >
+
+              <span className="text-sm sm:text-base">📅</span>
+
+              <span className="text-xs sm:text-sm font-medium">Periodic</span>
+
+            </TabsTrigger>
+
+          </TabsList>
+          </div>
+
+          {/* Desktop: grid layout */}
+          <TabsList className="hidden md:grid md:grid-cols-6 gap-1 bg-transparent p-0 h-auto">
+
+            <TabsTrigger 
+
+              value="paye" 
+
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-emerald-400 hover:border-emerald-500 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:hover:bg-emerald-700 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
 
             >
 
@@ -45,9 +147,9 @@ export function TakeHomeCalculator() {
 
               <span className="flex flex-col leading-tight">
 
-                <span className="text-xs sm:text-sm font-semibold">Standard</span>
+                <span className="text-sm font-semibold">Standard</span>
 
-                <span className="hidden text-[10px] text-white/60 sm:block">
+                <span className="text-[10px] text-white/60">
 
                   Standard employment
 
@@ -63,7 +165,7 @@ export function TakeHomeCalculator() {
 
               value="umbrella" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-blue-400 hover:border-blue-500 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:hover:bg-blue-700 data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-blue-400 hover:border-blue-500 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:hover:bg-blue-700 data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/30"
 
             >
 
@@ -71,9 +173,9 @@ export function TakeHomeCalculator() {
 
               <span className="flex flex-col leading-tight">
 
-                <span className="text-xs sm:text-sm font-semibold">Umbrella</span>
+                <span className="text-sm font-semibold">Umbrella</span>
 
-                <span className="hidden text-[10px] text-white/60 sm:block">
+                <span className="text-[10px] text-white/60">
 
                   Contracting via umbrella
 
@@ -89,7 +191,7 @@ export function TakeHomeCalculator() {
 
               value="limited" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-purple-400 hover:border-purple-500 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:hover:bg-purple-700 data-[state=active]:shadow-md data-[state=active]:shadow-purple-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-purple-400 hover:border-purple-500 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:hover:bg-purple-700 data-[state=active]:shadow-md data-[state=active]:shadow-purple-500/30"
 
             >
 
@@ -97,9 +199,9 @@ export function TakeHomeCalculator() {
 
               <span className="flex flex-col leading-tight">
 
-                <span className="text-xs sm:text-sm font-semibold">Limited</span>
+                <span className="text-sm font-semibold">Limited</span>
 
-                <span className="hidden text-[10px] text-white/60 sm:block">
+                <span className="text-[10px] text-white/60">
 
                   Director/Shareholder route
 
@@ -115,7 +217,7 @@ export function TakeHomeCalculator() {
 
               value="additional-jobs" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-amber-400 hover:border-amber-500 data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:hover:bg-amber-700 data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-amber-400 hover:border-amber-500 data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:hover:bg-amber-700 data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/30"
 
             >
 
@@ -123,9 +225,9 @@ export function TakeHomeCalculator() {
 
               <span className="flex flex-col leading-tight">
 
-                <span className="text-xs sm:text-sm font-semibold">Jobs</span>
+                <span className="text-sm font-semibold">Jobs</span>
 
-                <span className="hidden text-[10px] text-white/60 sm:block">
+                <span className="text-[10px] text-white/60">
 
                   Additional jobs
 
@@ -141,7 +243,7 @@ export function TakeHomeCalculator() {
 
               value="combined" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-zinc-400 hover:border-zinc-500 data-[state=active]:bg-zinc-700 data-[state=active]:text-white data-[state=active]:hover:bg-zinc-600 data-[state=active]:shadow-md data-[state=active]:shadow-zinc-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-zinc-400 hover:border-zinc-500 data-[state=active]:bg-zinc-700 data-[state=active]:text-white data-[state=active]:hover:bg-zinc-600 data-[state=active]:shadow-md data-[state=active]:shadow-zinc-500/30"
 
             >
 
@@ -149,9 +251,9 @@ export function TakeHomeCalculator() {
 
               <span className="flex flex-col leading-tight">
 
-                <span className="text-xs sm:text-sm font-semibold">Compare</span>
+                <span className="text-sm font-semibold">Compare</span>
 
-                <span className="hidden text-[10px] text-white/60 sm:block">
+                <span className="text-[10px] text-white/60">
 
                   Side by side
 
@@ -167,7 +269,7 @@ export function TakeHomeCalculator() {
 
               value="periodic" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-indigo-400 hover:border-indigo-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:hover:bg-indigo-700 data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-indigo-400 hover:border-indigo-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:hover:bg-indigo-700 data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/30"
 
             >
 
@@ -175,9 +277,9 @@ export function TakeHomeCalculator() {
 
               <span className="flex flex-col leading-tight">
 
-                <span className="text-xs sm:text-sm font-semibold">Periodic</span>
+                <span className="text-sm font-semibold">Periodic</span>
 
-                <span className="hidden text-[10px] text-white/60 sm:block">
+                <span className="text-[10px] text-white/60">
 
                   Periodic tax check
 
@@ -193,7 +295,7 @@ export function TakeHomeCalculator() {
 
 
 
-        <TabsContent value="paye" className="pt-4">
+        <TabsContent value="paye" className="pt-4 space-y-4">
 
           <PayeTab />
 
