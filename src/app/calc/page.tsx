@@ -30,7 +30,7 @@ export default function CalcPage() {
 
         <p className="mt-3 text-xs text-white/60">
 
-          Use the Standard tab if you&apos;re a PAYE employee, the Umbrella or Limited company tabs for contracting, and the Periodic tax check tab to analyse real payslips.
+          Use the Standard tab if you&apos;re a PAYE employee, the Umbrella or Limited company tabs for contracting, and the Periodic tax check tab to analyse real payslips. For advanced tools like comparing structures or multiple jobs, visit the <a href="/contracting" className="text-emerald-400 hover:text-emerald-300 underline">Advanced Contracting Tools</a> page.
 
         </p>
 
