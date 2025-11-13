@@ -53,7 +53,7 @@ export default function DashboardFeedbackForm({
       <div className="space-y-1">
         <label
           htmlFor="email"
-          className={`text-xs font-medium ${isLight ? "text-slate-700" : "text-slate-200"}`}
+          className={`block text-sm font-medium ${isLight ? "text-slate-700" : "text-white/90"}`}
         >
           Email address (optional but helpful)
         </label>
@@ -62,13 +62,13 @@ export default function DashboardFeedbackForm({
           id="email"
           name="email"
           placeholder="you@example.com"
-          className={`w-full h-10 rounded-lg border px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+          className={`w-full rounded-xl border px-4 py-3 text-sm placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-transparent ${
             isLight
-              ? "border-slate-300 bg-white text-slate-900"
-              : "border-slate-600 bg-slate-900/80 text-slate-50"
+              ? "border-slate-300 bg-white text-slate-900 focus:border-emerald-400"
+              : "border-white/15 bg-black/40 text-white focus:border-emerald-400"
           }`}
         />
-        <p className={`text-[11px] ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+        <p className={`text-xs ${isLight ? "text-slate-500" : "text-white/70"}`}>
           We&apos;ll only use this to send you updates about the dashboard and calculator.
         </p>
       </div>
@@ -76,7 +76,7 @@ export default function DashboardFeedbackForm({
       <div className="space-y-1">
         <label
           htmlFor="feedback"
-          className={`text-xs font-medium ${isLight ? "text-slate-700" : "text-slate-200"}`}
+          className={`block text-sm font-medium ${isLight ? "text-slate-700" : "text-white/90"}`}
         >
           What would you like this dashboard to do?
         </label>
@@ -85,14 +85,14 @@ export default function DashboardFeedbackForm({
           name="feedback"
           rows={4}
           placeholder="For example: compare two salaries, track my PAYE over the year, export a PDF for my accountant..."
-          className={`w-full rounded-lg border px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none ${
+          className={`w-full rounded-xl border px-4 py-3 text-sm placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-transparent resize-none ${
             isLight
-              ? "border-slate-300 bg-white text-slate-900"
-              : "border-slate-600 bg-slate-900/80 text-slate-50"
+              ? "border-slate-300 bg-white text-slate-900 focus:border-emerald-400"
+              : "border-white/15 bg-black/40 text-white focus:border-emerald-400"
           }`}
           required
         />
-        <p className={`text-[11px] ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+        <p className={`text-xs ${isLight ? "text-slate-500" : "text-white/70"}`}>
           The more specific you can be, the better we can design it.
         </p>
       </div>
@@ -101,16 +101,20 @@ export default function DashboardFeedbackForm({
         <button
           type="submit"
           disabled={status === "submitting"}
-          className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold shadow-lg transition focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+            isLight
+              ? "bg-emerald-500 text-black shadow-emerald-500/30 hover:bg-emerald-400 focus:ring-emerald-400"
+              : "bg-emerald-500 text-black shadow-emerald-500/30 hover:bg-emerald-400 focus:ring-emerald-400"
+          }`}
         >
           {status === "submitting" ? "Submitting..." : "Submit feedback"}
         </button>
         {showLinkToCalculator && (
-          <p className={`text-[11px] ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+          <p className={`text-xs ${isLight ? "text-slate-500" : "text-white/60"}`}>
             Or go back to the{" "}
             <Link
               href="/calc"
-              className={`underline ${isLight ? "text-indigo-600 hover:text-indigo-700" : "decoration-indigo-400 text-indigo-400 hover:text-indigo-300"}`}
+              className={`underline transition-colors ${isLight ? "text-indigo-600 hover:text-indigo-700" : "text-white/60 hover:text-white/90"}`}
             >
               main calculator
             </Link>

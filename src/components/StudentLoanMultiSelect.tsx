@@ -41,7 +41,7 @@ export function StudentLoanMultiSelect({
 
   return (
     <div className="space-y-1">
-      <label className="text-xs font-medium text-slate-600">
+      <label className="block text-sm font-medium text-white/90">
         Student loan plan(s)
       </label>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -53,10 +53,10 @@ export function StudentLoanMultiSelect({
               type="button"
               onClick={() => handleToggle(plan.id)}
               className={
-                "inline-flex items-center justify-center rounded-full border px-2.5 py-1 text-xs sm:text-sm transition-colors " +
+                "inline-flex items-center justify-center rounded-xl border px-2.5 py-1 text-xs sm:text-sm transition-colors " +
                 (checked
-                  ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")
+                  ? "border-emerald-400 bg-emerald-500/20 text-emerald-300"
+                  : "border-white/15 bg-black/40 text-white/70 hover:bg-white/10 hover:text-white")
               }
             >
               {plan.label}
@@ -64,7 +64,7 @@ export function StudentLoanMultiSelect({
           );
         })}
       </div>
-      <p className="text-[11px] text-slate-500">
+      <p className="text-xs text-white/70">
         You can compare multiple student loan plans side by side. We run a separate
         scenario for each selected plan.
       </p>

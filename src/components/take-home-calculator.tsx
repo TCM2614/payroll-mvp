@@ -20,14 +20,10 @@ export function TakeHomeCalculator() {
 
 
   return (
-
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-4 sm:space-y-6">
-
+    <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
-
         {/* Tab bar container - mobile: horizontal scroll, desktop: grid */}
-
-        <div className="mb-4 sm:mb-6 rounded-2xl border border-white/10 bg-white/5 p-1">
+        <div className="mb-4 sm:mb-6 rounded-2xl border border-white/10 bg-black/20 p-1">
 
           {/* Mobile: horizontal scrollable tabs */}
           <div className="md:hidden overflow-x-auto -mx-1 px-1 scrollbar-hide">
@@ -37,7 +33,7 @@ export function TakeHomeCalculator() {
 
               value="paye" 
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-black/20 text-white/70 hover:bg-white/10 hover:text-white data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-md"
 
             >
 
@@ -53,7 +49,7 @@ export function TakeHomeCalculator() {
 
               value="umbrella" 
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-black/20 text-white/70 hover:bg-white/10 hover:text-white data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-md"
 
             >
 
@@ -69,7 +65,7 @@ export function TakeHomeCalculator() {
 
               value="limited" 
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-black/20 text-white/70 hover:bg-white/10 hover:text-white data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-md"
 
             >
 
@@ -85,7 +81,7 @@ export function TakeHomeCalculator() {
 
               value="periodic" 
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-black/20 text-white/70 hover:bg-white/10 hover:text-white data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-md"
 
             >
 
@@ -105,7 +101,7 @@ export function TakeHomeCalculator() {
 
               value="paye" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-emerald-400 hover:border-emerald-500 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:hover:bg-emerald-700 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:hover:bg-emerald-400 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
 
             >
 
@@ -131,7 +127,7 @@ export function TakeHomeCalculator() {
 
               value="umbrella" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-blue-400 hover:border-blue-500 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:hover:bg-blue-700 data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:hover:bg-emerald-400 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
 
             >
 
@@ -157,7 +153,7 @@ export function TakeHomeCalculator() {
 
               value="limited" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-purple-400 hover:border-purple-500 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:hover:bg-purple-700 data-[state=active]:shadow-md data-[state=active]:shadow-purple-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:hover:bg-emerald-400 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
 
             >
 
@@ -183,7 +179,7 @@ export function TakeHomeCalculator() {
 
               value="periodic" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-indigo-400 hover:border-indigo-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:hover:bg-indigo-700 data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:hover:bg-emerald-400 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
 
             >
 
