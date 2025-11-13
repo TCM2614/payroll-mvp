@@ -44,7 +44,7 @@ export default function LandingPage() {
 
           <h1 className="mt-5 text-balance text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
 
-            UK Payroll Take-Home Calculator
+            UK Take-Home Pay Calculator 2024/25 – Check Your Salary After Tax
 
           </h1>
 
@@ -52,11 +52,7 @@ export default function LandingPage() {
 
           <p className="mt-4 text-balance text-sm text-white/70 sm:text-base">
 
-            Instantly compare PAYE, Umbrella and Limited company take-home pay
-
-            in one place. Built for UK employees, contractors and side-hustlers
-
-            who want clarity on every payslip.
+            Calculate your UK take-home pay for the 2024/25 tax year. Our free calculator shows your salary after tax, National Insurance, pension contributions and student loan deductions. Use it to compare PAYE employment, umbrella company and limited company scenarios. All calculations use official 2024/25 PAYE and National Insurance rates. This tool provides guidance only and is not an official HMRC service.
 
           </p>
 

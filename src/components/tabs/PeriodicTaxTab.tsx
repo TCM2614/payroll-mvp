@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { nanoid } from "nanoid";
 import {
   calculatePeriodTax,
@@ -15,6 +15,13 @@ import {
   type PeriodActualInput,
 } from "@/domain/tax/periodActuals";
 import { formatGBP } from "@/lib/format";
+import {
+  trackCalculatorSubmit,
+  trackResultsView,
+  trackWarningShown,
+  trackPeriodicAnalysisUsed,
+  getSalaryBand,
+} from "@/lib/analytics";
 
 type PayFrequency = "monthly" | "weekly" | "four-weekly";
 
@@ -156,6 +163,61 @@ export function PeriodicTaxTab() {
       periodsWithActualTax
     );
   }, [periods, payFrequency, totalPeriodsInYear, taxCode, config]);
+
+  // Calculate annual gross for analytics
+  const annualGross = useMemo(() => {
+    if (periods.length === 0) return 0;
+    const totalGross = periods.reduce((sum, p) => sum + p.gross, 0);
+    if (payFrequency === "monthly") {
+      return (totalGross / periods.length) * 12;
+    } else if (payFrequency === "weekly") {
+      return (totalGross / periods.length) * 52;
+    } else {
+      return (totalGross / periods.length) * 13;
+    }
+  }, [periods, payFrequency]);
+
+  // Track calculator submission
+  useEffect(() => {
+    if (periods.length > 0 && annualGross > 0) {
+      const hasPension = periods.some((p) => p.pension > 0);
+      trackCalculatorSubmit({
+        tab: "periodic",
+        hasPension,
+        hasStudentLoan: studentLoanPlan !== "none",
+        salaryBand: getSalaryBand(annualGross),
+      });
+    }
+  }, [periods.length, annualGross, studentLoanPlan]);
+
+  // Track results view
+  useEffect(() => {
+    if (results.length > 0 && results[results.length - 1]) {
+      trackResultsView();
+    }
+  }, [results.length]);
+
+  // Track warnings
+  useEffect(() => {
+    results.forEach((result, index) => {
+      if (result && result.warnings.length > 0) {
+        result.warnings.forEach((warning) => {
+          trackWarningShown({
+            code: warning.code,
+            severity: warning.severity as "info" | "warning" | "critical",
+            tab: "periodic",
+          });
+        });
+      }
+    });
+  }, [results]);
+
+  // Track periodic analysis usage
+  useEffect(() => {
+    if (actualTaxAnalysis && actualTaxAnalysis.items.length > 0) {
+      trackPeriodicAnalysisUsed();
+    }
+  }, [actualTaxAnalysis]);
 
   // Range aggregation state
   const [rangeFrom, setRangeFrom] = useState(0);

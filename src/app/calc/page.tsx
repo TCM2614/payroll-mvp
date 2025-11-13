@@ -18,19 +18,19 @@ export default function CalcPage() {
 
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
 
-          Take-Home Calculator
+          UK Salary Calculator 2024/25 – Enter Your Details
 
         </h1>
 
         <p className="mt-2 text-sm text-white/70">
 
-          Compare PAYE, Umbrella and Limited company take-home pay side by side, including student loans and pensions.
+          Calculate your UK take-home pay after tax, National Insurance, pension and student loan deductions for the 2024/25 tax year.
 
         </p>
 
         <p className="mt-3 text-xs text-white/60">
 
-          For a deeper check using your real payslips, use the &apos;Periodic tax check&apos; tab to enter period-by-period income and see if you might be over- or underpaying PAYE during the year.
+          Use the Standard tab if you&apos;re a PAYE employee, the Umbrella or Limited company tabs for contracting, and the Periodic tax check tab to analyse real payslips.
 
         </p>
 
@@ -80,6 +80,149 @@ export default function CalcPage() {
         </div>
 
       </section>
+
+      {/* FAQ Section */}
+      <section className="mt-12 space-y-6">
+        <h2 className="text-xl font-semibold text-white">Frequently Asked Questions</h2>
+        
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-base font-semibold text-white mb-2">
+              How does this calculator work?
+            </h3>
+            <p className="text-sm text-white/70">
+              Enter your gross income, tax code, pension contributions and student loan plan. The calculator uses official 2024/25 UK PAYE and National Insurance rates to compute your take-home pay. It shows a breakdown of tax, NI, pension and student loan deductions.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-white mb-2">
+              Which tax year does it use?
+            </h3>
+            <p className="text-sm text-white/70">
+              All calculations use the 2024/25 UK tax year rates, including personal allowance, income tax bands, National Insurance thresholds and student loan repayment rates.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-white mb-2">
+              Do you store my data?
+            </h3>
+            <p className="text-sm text-white/70">
+              No. All calculations happen in your browser. We don&apos;t store your salary, tax codes or any personal financial information. We only collect anonymous usage analytics to improve the tool.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-white mb-2">
+              Can it show over/under-tax mid-year?
+            </h3>
+            <p className="text-sm text-white/70">
+              Yes. Use the Periodic tax check tab to enter your actual payslip data period-by-period. The calculator compares what you&apos;ve paid against what you&apos;d expect, highlighting potential over-taxation or underpayments.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-white mb-2">
+              Does it cover student loans?
+            </h3>
+            <p className="text-sm text-white/70">
+              Yes. The calculator supports Plan 1, Plan 2, Plan 4, Plan 5 and Postgraduate loan repayments, using the correct thresholds and rates for the 2024/25 tax year.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-white mb-2">
+              Is it an official HMRC service?
+            </h3>
+            <p className="text-sm text-white/70">
+              No. This is an independent calculator for guidance only. It uses official HMRC rates but is not affiliated with HMRC. For official tax calculations, consult HMRC directly or a qualified tax advisor.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQPage JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "How does this calculator work?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Enter your gross income, tax code, pension contributions and student loan plan. The calculator uses official 2024/25 UK PAYE and National Insurance rates to compute your take-home pay. It shows a breakdown of tax, NI, pension and student loan deductions.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Which tax year does it use?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "All calculations use the 2024/25 UK tax year rates, including personal allowance, income tax bands, National Insurance thresholds and student loan repayment rates.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Do you store my data?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "No. All calculations happen in your browser. We don't store your salary, tax codes or any personal financial information. We only collect anonymous usage analytics to improve the tool.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Can it show over/under-tax mid-year?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Yes. Use the Periodic tax check tab to enter your actual payslip data period-by-period. The calculator compares what you've paid against what you'd expect, highlighting potential over-taxation or underpayments.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Does it cover student loans?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Yes. The calculator supports Plan 1, Plan 2, Plan 4, Plan 5 and Postgraduate loan repayments, using the correct thresholds and rates for the 2024/25 tax year.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Is it an official HMRC service?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "No. This is an independent calculator for guidance only. It uses official HMRC rates but is not affiliated with HMRC. For official tax calculations, consult HMRC directly or a qualified tax advisor.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
+
+      {/* SoftwareApplication JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "UK Take Home Calculator",
+            applicationCategory: "FinanceApplication",
+            operatingSystem: "Web",
+            url: typeof window !== "undefined" ? window.location.origin : "https://yourdomain.com",
+            description: "Calculate your UK salary after tax, National Insurance, pension and student loan deductions for the 2024/25 tax year.",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "GBP",
+            },
+          }),
+        }}
+      />
 
     </AppShell>
 

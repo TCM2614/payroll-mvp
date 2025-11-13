@@ -20,10 +20,10 @@ export default function DashboardPreviewPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-white">
-            Personal Dashboard Preview
+            UK Take-Home Dashboard – Compare Your Salary Scenarios
           </h1>
           <p className="mt-2 text-sm text-white/70">
-            See what&apos;s coming soon. Sign up to unlock full analytics and trend tracking.
+            Compare UK take-home pay scenarios for the 2024/25 tax year. Explore different salaries, pension rates and student loan plans to see how they affect your take-home pay. The Periodic tax check feature uses real payslips to highlight potential over-taxation or underpayments during the tax year.
           </p>
         </div>
 

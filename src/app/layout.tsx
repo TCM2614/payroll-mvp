@@ -10,25 +10,25 @@ import { SchemaMarkup } from "@/components/SEO/SchemaMarkup";
 
 export const metadata: Metadata = {
 
-  title: "UK Payroll Take-Home Calculator | Compare PAYE, Umbrella & Limited",
+  title: "UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK",
 
-  description: "Instantly compare PAYE, Umbrella and Limited company take-home pay in one place. Built for UK employees, contractors and side-hustlers who want clarity on every payslip.",
+  description: "Free UK take-home pay calculator for the 2024/25 tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.",
 
-  keywords: ["UK payroll calculator", "take-home pay", "PAYE calculator", "umbrella company calculator", "limited company calculator", "UK tax calculator", "student loan calculator"],
+  keywords: ["UK payroll calculator", "take-home pay", "PAYE calculator", "umbrella company calculator", "limited company calculator", "UK tax calculator", "student loan calculator", "UK salary calculator", "salary after tax", "take home pay calculator UK"],
 
   authors: [{ name: "Payroll MVP" }],
 
   openGraph: {
 
-    title: "UK Payroll Take-Home Calculator",
+    title: "UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK",
 
-    description: "Instantly compare PAYE, Umbrella and Limited company take-home pay. Calculate your UK take-home with student loans, pensions, and multi-job support.",
+    description: "Free UK take-home pay calculator for the 2024/25 tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.",
 
     type: "website",
 
     locale: "en_GB",
 
-    siteName: "UK Payroll Calculator",
+    siteName: "UK Take-Home Calculator",
 
   },
 
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
 
     card: "summary_large_image",
 
-    title: "UK Payroll Take-Home Calculator",
+    title: "UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK",
 
-    description: "Instantly compare PAYE, Umbrella and Limited company take-home pay.",
+    description: "Free UK take-home pay calculator for the 2024/25 tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.",
 
   },
 

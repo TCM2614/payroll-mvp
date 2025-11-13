@@ -172,7 +172,7 @@ const DEFAULT_TOLERANCE_PERCENT = 0.1; // 10%
  * Calculate annual tax breakdown (reference calculation)
  * This integrates with existing annual calculation logic
  */
-function calculateAnnualTax(inputs: AnnualTaxInputs): AnnualTaxBreakdown {
+export function calculateAnnualTax(inputs: AnnualTaxInputs): AnnualTaxBreakdown {
   const {
     grossAnnualIncome,
     pensionEmployeeAnnual = 0,

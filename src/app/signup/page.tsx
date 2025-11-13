@@ -46,21 +46,22 @@ export default function SignupPage() {
         <div className="w-full max-w-md space-y-6 rounded-2xl border border-white/10 bg-black/40 p-8 shadow-xl">
           <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Get Early Access
+              Get updates on the UK Take-Home Calculator
             </h1>
-            <p className="mt-4 text-lg font-semibold text-emerald-400">
-              Get 50% off your first annual plan
-            </p>
-            <p className="mt-1 text-sm font-medium text-blue-400">
-              or 25% off all future plans
-            </p>
-            <p className="mt-2 text-sm text-white/70">
-              Join our waitlist to be among the first to access the full dashboard
-              with analytics, trend tracking, and role comparison tools.
-            </p>
-            <p className="mt-2 text-xs text-white/60 italic">
-              Offers are separate and cannot be combined.
-            </p>
+            <ul className="mt-4 space-y-2 text-left text-sm text-white/70">
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-400">✓</span>
+                <span>Early access to new features</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-400">✓</span>
+                <span>Notification when new tax years are supported</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-400">✓</span>
+                <span>Occasional product-only emails, no spam</span>
+              </li>
+            </ul>
           </div>
 
           {isSubmitted ? (
