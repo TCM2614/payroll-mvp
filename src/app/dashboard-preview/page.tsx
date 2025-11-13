@@ -1,138 +1,139 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
-import AppShell from "@/components/layout/AppShell";
-import { formatGBP } from "@/lib/format";
 
 export default function DashboardPreviewPage() {
-  // Mock data
-  const mockUser = {
-    name: "Alex",
-    lastCalculation: {
-      grossAnnual: 60000,
-      takeHomeAnnual: 45320,
-      date: "2024-01-15",
-    },
-  };
+  const [status, setStatus] = React.useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (status === "submitting") return;
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") || "");
+    const feedback = String(formData.get("feedback") || "");
+
+    if (!feedback.trim()) {
+      // require at least some feedback text
+      return;
+    }
+
+    try {
+      setStatus("submitting");
+      const response = await fetch("/api/dashboard-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, feedback }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit feedback");
+      }
+
+      setStatus("success");
+      event.currentTarget.reset();
+    } catch (e) {
+      setStatus("error");
+    }
+  }
 
   return (
-    <AppShell>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-white">
-            UK Take-Home Dashboard – Compare Your Salary Scenarios
-          </h1>
-          <p className="mt-2 text-sm text-white/70">
-            Compare UK take-home pay scenarios for the 2024/25 tax year. Explore different salaries, pension rates and student loan plans to see how they affect your take-home pay. The Periodic tax check feature uses real payslips to highlight potential over-taxation or underpayments during the tax year.
-          </p>
-        </div>
-
-        {/* Mock user card */}
-        <div className="relative rounded-2xl border border-white/10 bg-black/40 p-6 shadow-xl">
-          {/* Lock overlay */}
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/80 backdrop-blur-sm">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Sign up to unlock analytics and trend tracking
-              </h3>
-              <p className="text-sm text-white/70 mb-4">
-                Get early access to track your take-home, compare roles, and see trends over time.
-              </p>
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
-              >
-                Get Early Access
-              </Link>
-            </div>
-          </div>
-
-          {/* Preview content (blurred behind overlay) */}
-          <div className="opacity-30 blur-sm">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-white">
-                Welcome back, {mockUser.name}!
-              </h2>
-              <p className="text-sm text-white/70">
-                Last calculation: {mockUser.lastCalculation.date}
-              </p>
-            </div>
-
-            {/* Last calculation summary */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 mb-6">
-              <h3 className="text-sm font-semibold text-white mb-3">
-                Last Calculation Summary
-              </h3>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div>
-                  <div className="text-xs text-white/70">Gross Annual</div>
-                  <div className="text-lg font-semibold text-white">
-                    {formatGBP(mockUser.lastCalculation.grossAnnual)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-white/70">Take-Home Annual</div>
-                  <div className="text-lg font-semibold text-emerald-400">
-                    {formatGBP(mockUser.lastCalculation.takeHomeAnnual)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Mock chart placeholder */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 mb-6">
-              <h3 className="text-sm font-semibold text-white mb-4">
-                Take-Home Trend (Last 6 Months)
-              </h3>
-              <div className="h-48 flex items-end justify-between gap-2">
-                {[65, 70, 68, 72, 75, 78].map((height, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 bg-emerald-500/50 rounded-t"
-                    style={{ height: `${height}%` }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Mock features */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-2xl mb-2">📊</div>
-                <h4 className="text-sm font-semibold text-white mb-1">Analytics</h4>
-                <p className="text-xs text-white/70">
-                  Track your take-home over time and see trends
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-2xl mb-2">🔄</div>
-                <h4 className="text-sm font-semibold text-white mb-1">Compare Roles</h4>
-                <p className="text-xs text-white/70">
-                  Compare PAYE, Umbrella, and Limited side-by-side
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-2xl mb-2">💾</div>
-                <h4 className="text-sm font-semibold text-white mb-1">Save Calculations</h4>
-                <p className="text-xs text-white/70">
-                  Save and revisit your calculations anytime
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-center">
-          <Link
-            href="/signup"
-            className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
-          >
-            Get Early Access
-          </Link>
-        </div>
+    <main className="min-h-[calc(100vh-4rem)] bg-slate-950 relative overflow-hidden">
+      {/* Background blur / gradient */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+      >
+        <div className="absolute -left-32 top-0 h-64 w-64 rounded-full bg-indigo-500/40 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-sky-400/30 blur-3xl" />
       </div>
-    </AppShell>
+
+      {/* Content wrapper */}
+      <div className="flex items-center justify-center px-3 py-10 sm:px-4 md:px-6">
+        <section className="w-full max-w-xl rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 backdrop-blur-md shadow-xl space-y-4">
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-50">
+            Dashboard coming soon
+          </h1>
+          <p className="text-sm text-slate-200/80">
+            We&apos;re building a dashboard to let you compare scenarios, track your take-home
+            over time and spot tax changes at a glance. Tell us what you&apos;d like to see and
+            we&apos;ll use your feedback to shape the roadmap.
+          </p>
+          <p className="text-[11px] text-slate-400">
+            You can already use the calculator tabs to explore Standard PAYE, Umbrella,
+            Limited and Periodic analysis. The dashboard will bring these together into a
+            single, visual view.
+          </p>
+
+          <form
+            className="space-y-4"
+            onSubmit={handleSubmit}
+          >
+            <div className="space-y-1">
+              <label htmlFor="email" className="text-xs font-medium text-slate-200">
+                Email address (optional but helpful)
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="you@example.com"
+                className="w-full h-10 rounded-lg border border-slate-600 bg-slate-900/80 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <p className="text-[11px] text-slate-400">
+                We&apos;ll only use this to send you updates about the dashboard and calculator.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="feedback" className="text-xs font-medium text-slate-200">
+                What would you like this dashboard to do?
+              </label>
+              <textarea
+                id="feedback"
+                name="feedback"
+                rows={4}
+                placeholder="For example: compare two salaries, track my PAYE over the year, export a PDF for my accountant..."
+                className="w-full rounded-lg border border-slate-600 bg-slate-900/80 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                required
+              />
+              <p className="text-[11px] text-slate-400">
+                The more specific you can be, the better we can design it.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="submit"
+                disabled={status === "submitting"}
+                className="inline-flex items-center justify-center rounded-full bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {status === "submitting" ? "Submitting..." : "Submit feedback"}
+              </button>
+              <p className="text-[11px] text-slate-400">
+                Or go back to the{" "}
+                <Link href="/calc" className="underline decoration-indigo-400 text-indigo-400 hover:text-indigo-300">
+                  main calculator
+                </Link>
+                .
+              </p>
+            </div>
+          </form>
+
+          {/* Status messages */}
+          {status === "success" && (
+            <p className="text-[11px] text-emerald-400">
+              Thanks — your feedback has been sent.
+            </p>
+          )}
+          {status === "error" && (
+            <p className="text-[11px] text-rose-400">
+              Something went wrong sending your feedback. Please try again later.
+            </p>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }
-
