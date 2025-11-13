@@ -78,7 +78,7 @@ export function LimitedCompanyCalculator() {
   }, [result.supported, result.annual]);
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-3 sm:space-y-4">
+    <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-4">
       {/* Header */}
       <header>
         <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
@@ -90,7 +90,7 @@ export function LimitedCompanyCalculator() {
       </header>
 
       {/* Section 1: Configuration */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 space-y-3">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 space-y-3">
         <header className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Configuration</h2>
         </header>
@@ -228,7 +228,7 @@ export function LimitedCompanyCalculator() {
       </section>
 
       {/* Section 2: Results */}
-      <section className="rounded-2xl border border-slate-200 bg-indigo-50 p-3 sm:p-4 space-y-3">
+      <section className="rounded-2xl border border-slate-200 bg-indigo-50 p-4 sm:p-5 space-y-3">
         <header className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Take-home pay</h2>
         </header>

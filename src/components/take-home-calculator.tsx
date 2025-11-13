@@ -5,13 +5,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PayeTab } from "./tabs/PayeTab";
 import { UmbrellaTab } from "./tabs/UmbrellaTab";
 import { LimitedTab } from "./tabs/LimitedTab";
-import { CombinedIncomeTab } from "./tabs/CombinedIncomeTab";
-import { FeatureRequestTab } from "./tabs/FeatureRequestTab";
 import { PeriodicTaxTab } from "./tabs/PeriodicTaxTab";
 
 
 
-type TabValue = "paye" | "umbrella" | "limited" | "additional-jobs" | "combined" | "periodic";
+type TabValue = "paye" | "umbrella" | "limited" | "periodic";
 
 
 
@@ -85,38 +83,6 @@ export function TakeHomeCalculator() {
 
             <TabsTrigger 
 
-              value="additional-jobs" 
-
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
-
-            >
-
-              <span className="text-sm sm:text-base">+</span>
-
-              <span className="text-xs sm:text-sm font-medium">Jobs</span>
-
-            </TabsTrigger>
-
-
-
-            <TabsTrigger 
-
-              value="combined" 
-
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
-
-            >
-
-              <span className="text-sm sm:text-base">📊</span>
-
-              <span className="text-xs sm:text-sm font-medium">Compare</span>
-
-            </TabsTrigger>
-
-
-
-            <TabsTrigger 
-
               value="periodic" 
 
               className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
@@ -133,7 +99,7 @@ export function TakeHomeCalculator() {
           </div>
 
           {/* Desktop: grid layout */}
-          <TabsList className="hidden md:grid md:grid-cols-6 gap-1 bg-transparent p-0 h-auto">
+          <TabsList className="hidden md:grid md:grid-cols-4 gap-1 bg-transparent p-0 h-auto">
 
             <TabsTrigger 
 
@@ -195,7 +161,7 @@ export function TakeHomeCalculator() {
 
             >
 
-              <span className="text-base">Ltd</span>
+              <span className="text-base">🏢</span>
 
               <span className="flex flex-col leading-tight">
 
@@ -203,59 +169,7 @@ export function TakeHomeCalculator() {
 
                 <span className="text-[10px] text-white/60">
 
-                  Director/Shareholder route
-
-                </span>
-
-              </span>
-
-            </TabsTrigger>
-
-
-
-            <TabsTrigger 
-
-              value="additional-jobs" 
-
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-amber-400 hover:border-amber-500 data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:hover:bg-amber-700 data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/30"
-
-            >
-
-              <span className="text-base">+</span>
-
-              <span className="flex flex-col leading-tight">
-
-                <span className="text-sm font-semibold">Jobs</span>
-
-                <span className="text-[10px] text-white/60">
-
-                  Additional jobs
-
-                </span>
-
-              </span>
-
-            </TabsTrigger>
-
-
-
-            <TabsTrigger 
-
-              value="combined" 
-
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-zinc-200 hover:text-zinc-400 hover:border-zinc-500 data-[state=active]:bg-zinc-700 data-[state=active]:text-white data-[state=active]:hover:bg-zinc-600 data-[state=active]:shadow-md data-[state=active]:shadow-zinc-500/30"
-
-            >
-
-              <span className="text-base">📊</span>
-
-              <span className="flex flex-col leading-tight">
-
-                <span className="text-sm font-semibold">Compare</span>
-
-                <span className="text-[10px] text-white/60">
-
-                  Side by side
+                  Limited company
 
                 </span>
 
@@ -314,22 +228,6 @@ export function TakeHomeCalculator() {
         <TabsContent value="limited" className="pt-4">
 
           <LimitedTab />
-
-        </TabsContent>
-
-
-
-        <TabsContent value="additional-jobs" className="pt-4">
-
-          <CombinedIncomeTab />
-
-        </TabsContent>
-
-
-
-        <TabsContent value="combined" className="pt-4">
-
-          <FeatureRequestTab />
 
         </TabsContent>
 
