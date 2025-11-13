@@ -1,17 +1,11 @@
 "use client";
 
-
-
-import { useState, useEffect } from "react";
-
+import { useState, useEffect, useMemo } from "react";
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
-
+import { StudentLoanMultiSelect, type StudentLoanPlan } from "@/components/StudentLoanMultiSelect";
 import { calcPayeMonthly } from "@/lib/calculators/paye";
-
 import { formatGBP } from "@/lib/format";
-
 import { LoanKey } from "@/lib/tax/uk2025";
-
 import {
   trackCalculatorSubmit,
   trackResultsView,
@@ -94,19 +88,7 @@ export function PayeTab() {
 
 
 
-  const [loanPlan, setLoanPlan] = useState<string | null>(null); // "plan1" | "plan2" | "plan4" | null
-
-  const [hasPostgrad, setHasPostgrad] = useState(false);
-
-
-
-  const loans: LoanKey[] = [
-
-    ...(loanPlan ? [loanPlan as LoanKey] : []),
-
-    ...(hasPostgrad ? ["postgrad" as LoanKey] : []),
-
-  ];
+  const [selectedPlans, setSelectedPlans] = useState<StudentLoanPlan[]>(["none"]);
 
   const [pensionPct, setPensionPct] = useState(5);
 
@@ -150,50 +132,52 @@ export function PayeTab() {
 
 
 
-  // Example simple combined PAYE calc – plug into your real calc
+  // Calculate scenarios per selected student loan plan
+  const scenarios = useMemo(() => {
+    return selectedPlans.map((plan) => {
+      const loansForPlan: LoanKey[] = plan === "none" ? [] : [plan as LoanKey];
+      
+      const totalTakeHome = allJobs.reduce((sum, job) => {
+        return (
+          sum +
+          calcPayeMonthly({
+            grossMonthly: job.grossMonthly,
+            taxCode: job.taxCode,
+            loans: loansForPlan,
+            pensionPct,
+            sippPct: 0, // SIPP is handled separately via sippPersonal
+          })
+        );
+      }, 0);
 
-  const totalTakeHome = allJobs.reduce((sum, job) => {
-
-    return (
-
-      sum +
-
-      calcPayeMonthly({
-
-        grossMonthly: job.grossMonthly,
-
-        taxCode: job.taxCode,
-
-        loans,
-
-        pensionPct,
-
-        sippPct: 0, // SIPP is handled separately via sippPersonal
-
-      })
-
-    );
-
-  }, 0);
+      return {
+        plan,
+        totalTakeHome,
+        annualTakeHome: totalTakeHome * 12,
+        weeklyTakeHome: (totalTakeHome * 12) / 52,
+      };
+    });
+  }, [selectedPlans, allJobs, pensionPct]);
 
   // Track calculator submission
   useEffect(() => {
     if (annualGross > 0) {
+      const hasStudentLoan = selectedPlans.some((p) => p !== "none");
       trackCalculatorSubmit({
         tab: "standard",
         hasPension: pensionPct > 0 || salarySacrificeFixed > 0 || sippPersonal > 0,
-        hasStudentLoan: loans.length > 0,
+        hasStudentLoan,
         salaryBand: getSalaryBand(annualGross),
       });
     }
-  }, [annualGross, pensionPct, salarySacrificeFixed, sippPersonal, loans.length]);
+  }, [annualGross, pensionPct, salarySacrificeFixed, sippPersonal, selectedPlans]);
 
   // Track results view
   useEffect(() => {
-    if (totalTakeHome > 0) {
+    if (scenarios.length > 0 && scenarios[0].totalTakeHome > 0) {
       trackResultsView();
     }
-  }, [totalTakeHome]);
+  }, [scenarios]);
 
 
 
@@ -315,34 +299,11 @@ export function PayeTab() {
           </div>
 
           {/* Student loans */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700">Student loan plan</label>
-            <select
-              value={loanPlan ?? ""}
-              onChange={(e) =>
-                setLoanPlan(e.target.value === "" ? null : e.target.value)
-              }
-              className="w-full h-9 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-            >
-              <option value="">No plan</option>
-              <option value="plan1">Plan 1</option>
-              <option value="plan2">Plan 2</option>
-              <option value="plan4">Plan 4</option>
-            </select>
-            <button
-              type="button"
-              onClick={() => setHasPostgrad((v) => !v)}
-              className={`w-full h-9 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
-                hasPostgrad
-                  ? "border-indigo-500 bg-indigo-600 text-white"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              {hasPostgrad ? "✓ Postgrad loan included" : "+ Add Postgrad loan"}
-            </button>
-            <p className="text-[11px] text-slate-500">
-              Choose your main loan plan and optionally add a Postgrad loan.
-            </p>
+          <div className="md:col-span-2">
+            <StudentLoanMultiSelect
+              selectedPlans={selectedPlans}
+              onChange={setSelectedPlans}
+            />
           </div>
 
         </div>
@@ -440,21 +401,32 @@ export function PayeTab() {
         </header>
         
         <div className="space-y-3">
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-xs text-slate-600">Monthly take-home</p>
-            <p className="mt-1 text-2xl font-semibold text-indigo-600">{formatGBP(totalTakeHome)}</p>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-lg border border-slate-200 bg-white p-2">
-              <span className="text-slate-600">Annual:</span>
-              <span className="ml-1 font-semibold text-slate-900">{formatGBP(totalTakeHome * 12)}</span>
+          {scenarios.map(({ plan, totalTakeHome, annualTakeHome, weeklyTakeHome }) => (
+            <div
+              key={plan}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4 space-y-2"
+            >
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wide">
+                {plan === "none" ? "No student loan" : `Student loan: ${plan === "postgrad" ? "Postgraduate" : plan.toUpperCase()}`}
+              </h3>
+              
+              <div className="rounded-lg border border-slate-200 bg-white p-3">
+                <p className="text-xs text-slate-600">Monthly take-home</p>
+                <p className="mt-1 text-2xl font-semibold text-indigo-600">{formatGBP(totalTakeHome)}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-lg border border-slate-200 bg-white p-2">
+                  <span className="text-slate-600">Annual:</span>
+                  <span className="ml-1 font-semibold text-slate-900">{formatGBP(annualTakeHome)}</span>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white p-2">
+                  <span className="text-slate-600">Weekly:</span>
+                  <span className="ml-1 font-semibold text-slate-900">{formatGBP(weeklyTakeHome)}</span>
+                </div>
+              </div>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-2">
-              <span className="text-slate-600">Weekly:</span>
-              <span className="ml-1 font-semibold text-slate-900">{formatGBP(totalTakeHome * 12 / 52)}</span>
-            </div>
-          </div>
+          ))}
         </div>
         
         <p className="text-xs text-slate-500">

@@ -8,6 +8,7 @@ import {
   type Ir35Status,
 } from "@/domain/tax/contracting";
 import { createUK2025Config, calculateAnnualTax } from "@/domain/tax/periodTax";
+import { StudentLoanMultiSelect, type StudentLoanPlan } from "@/components/StudentLoanMultiSelect";
 import {
   trackCalculatorSubmit,
   trackResultsView,
@@ -23,59 +24,58 @@ export function LimitedCompanyCalculator() {
   const [ir35Status, setIr35Status] = useState<Ir35Status>("inside");
   const [taxCode, setTaxCode] = useState("1257L");
   const [pensionPct, setPensionPct] = useState(5);
-  const [studentLoanPlan, setStudentLoanPlan] = useState<
-    "none" | "plan1" | "plan2" | "plan4" | "plan5" | "postgrad"
-  >("none");
+  const [selectedPlans, setSelectedPlans] = useState<StudentLoanPlan[]>(["none"]);
 
-  // Build contractor inputs
-  const contractorInputs: ContractorInputs = {
-    engagementType: "limited",
-    ir35Status,
-    monthlyRate,
-    dayRate,
-    daysPerWeek,
-    hourlyRate,
-    hoursPerDay,
-    taxYear: "2024-25",
-    taxCode,
-    pensionEmployeePercent: pensionPct,
-    studentLoanPlan: studentLoanPlan === "none" ? undefined : studentLoanPlan,
-  };
+  // Calculate scenarios per selected student loan plan
+  const scenarios = useMemo(() => {
+    return selectedPlans.map((plan) => {
+      const contractorInputs: ContractorInputs = {
+        engagementType: "limited",
+        ir35Status,
+        monthlyRate,
+        dayRate,
+        daysPerWeek,
+        hourlyRate,
+        hoursPerDay,
+        taxYear: "2024-25",
+        taxCode,
+        pensionEmployeePercent: pensionPct,
+        studentLoanPlan: plan === "none" ? undefined : plan,
+      };
 
-  // Calculate using contractor engine
-  const result = useMemo(() => {
-    return calculateContractorAnnual(contractorInputs, {
-      createConfigForYear: () => createUK2025Config(),
-      calculateAnnual: (input) => calculateAnnualTax(input),
+      const result = calculateContractorAnnual(contractorInputs, {
+        createConfigForYear: () => createUK2025Config(),
+        calculateAnnual: (input) => calculateAnnualTax(input),
+      });
+
+      return {
+        plan,
+        result,
+        netMonthly: result.supported && result.annual ? result.annual.net / 12 : 0,
+        netWeekly: result.supported && result.annual ? result.annual.net / 52 : 0,
+      };
     });
-  }, [contractorInputs]);
-
-  // Derive net monthly/weekly/daily if supported
-  const netMonthly = result.supported && result.annual
-    ? result.annual.net / 12
-    : 0;
-  const netWeekly = result.supported && result.annual
-    ? result.annual.net / 52
-    : 0;
+  }, [selectedPlans, ir35Status, monthlyRate, dayRate, daysPerWeek, hourlyRate, hoursPerDay, taxCode, pensionPct]);
 
   // Track calculator submission
   useEffect(() => {
-    if (result.grossAnnualIncome > 0) {
+    if (scenarios.length > 0 && scenarios[0].result.grossAnnualIncome > 0) {
+      const hasStudentLoan = selectedPlans.some((p) => p !== "none");
       trackCalculatorSubmit({
         tab: "limited",
         hasPension: pensionPct > 0,
-        hasStudentLoan: studentLoanPlan !== "none",
-        salaryBand: getSalaryBand(result.grossAnnualIncome),
+        hasStudentLoan,
+        salaryBand: getSalaryBand(scenarios[0].result.grossAnnualIncome),
       });
     }
-  }, [result.grossAnnualIncome, pensionPct, studentLoanPlan]);
+  }, [scenarios, pensionPct, selectedPlans]);
 
   // Track results view
   useEffect(() => {
-    if (result.supported && result.annual && result.annual.net > 0) {
+    if (scenarios.length > 0 && scenarios[0].result.supported && scenarios[0].result.annual && scenarios[0].result.annual.net > 0) {
       trackResultsView();
     }
-  }, [result.supported, result.annual]);
+  }, [scenarios]);
 
   return (
     <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-4">
@@ -199,30 +199,11 @@ export function LimitedCompanyCalculator() {
             />
           </div>
 
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-xs font-medium text-slate-700">Student loan plan</label>
-            <select
-              value={studentLoanPlan}
-              onChange={(e) =>
-                setStudentLoanPlan(
-                  e.target.value as
-                    | "none"
-                    | "plan1"
-                    | "plan2"
-                    | "plan4"
-                    | "plan5"
-                    | "postgrad"
-                )
-              }
-              className="w-full h-9 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-            >
-              <option value="none">None</option>
-              <option value="plan1">Plan 1</option>
-              <option value="plan2">Plan 2</option>
-              <option value="plan4">Plan 4</option>
-              <option value="plan5">Plan 5</option>
-              <option value="postgrad">Postgraduate</option>
-            </select>
+          <div className="md:col-span-2">
+            <StudentLoanMultiSelect
+              selectedPlans={selectedPlans}
+              onChange={setSelectedPlans}
+            />
           </div>
         </div>
       </section>
@@ -233,81 +214,94 @@ export function LimitedCompanyCalculator() {
           <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Take-home pay</h2>
         </header>
 
-        {!result.supported ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
-            <p className="text-sm font-semibold text-rose-700">Outside IR35 not yet supported</p>
-            <p className="mt-2 text-xs text-rose-600">
-              We do not currently model full limited company and dividend tax. We only provide inside IR35 / PAYE-style estimates.
-            </p>
-            <p className="mt-2 text-xs text-rose-600">
-              {result.reasonIfUnsupported}
-            </p>
-          </div>
-        ) : result.annual ? (
-          <>
-            <div className="space-y-3">
-              <div className="rounded-lg border border-slate-200 bg-white p-3">
-                <p className="text-xs text-slate-600">Gross annual income</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900">
-                  {formatGBP(result.grossAnnualIncome)}
-                </p>
-              </div>
+        <div className="space-y-3">
+          {scenarios.map(({ plan, result, netMonthly, netWeekly }) => (
+            <div
+              key={plan}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4 space-y-2"
+            >
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wide">
+                {plan === "none" ? "No student loan" : `Student loan: ${plan === "postgrad" ? "Postgraduate" : plan.toUpperCase()}`}
+              </h3>
 
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-lg border border-slate-200 bg-white p-2">
-                  <span className="text-slate-600">Monthly:</span>
-                  <span className="ml-1 font-semibold text-indigo-600">
-                    {formatGBP(netMonthly)}
-                  </span>
+              {!result.supported ? (
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
+                  <p className="text-sm font-semibold text-rose-700">Outside IR35 not yet supported</p>
+                  <p className="mt-2 text-xs text-rose-600">
+                    We do not currently model full limited company and dividend tax. We only provide inside IR35 / PAYE-style estimates.
+                  </p>
+                  <p className="mt-2 text-xs text-rose-600">
+                    {result.reasonIfUnsupported}
+                  </p>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-2">
-                  <span className="text-slate-600">Weekly:</span>
-                  <span className="ml-1 font-semibold text-indigo-600">
-                    {formatGBP(netWeekly)}
-                  </span>
-                </div>
-              </div>
+              ) : result.annual ? (
+                <>
+                  <div className="space-y-3">
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <p className="text-xs text-slate-600">Gross annual income</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {formatGBP(result.grossAnnualIncome)}
+                      </p>
+                    </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-lg border border-slate-200 bg-white p-2">
-                  <span className="text-slate-600">PAYE:</span>
-                  <span className="ml-1 font-semibold text-slate-900">
-                    {formatGBP(result.annual.paye)}
-                  </span>
-                </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-2">
-                  <span className="text-slate-600">NI:</span>
-                  <span className="ml-1 font-semibold text-slate-900">
-                    {formatGBP(result.annual.ni)}
-                  </span>
-                </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-2">
-                  <span className="text-slate-600">Pension:</span>
-                  <span className="ml-1 font-semibold text-slate-900">
-                    {formatGBP(result.annual.pensionEmployee)}
-                  </span>
-                </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-2">
-                  <span className="text-slate-600">Student loan:</span>
-                  <span className="ml-1 font-semibold text-slate-900">
-                    {formatGBP(result.annual.studentLoan)}
-                  </span>
-                </div>
-              </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-lg border border-slate-200 bg-white p-2">
+                        <span className="text-slate-600">Monthly:</span>
+                        <span className="ml-1 font-semibold text-indigo-600">
+                          {formatGBP(netMonthly)}
+                        </span>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-white p-2">
+                        <span className="text-slate-600">Weekly:</span>
+                        <span className="ml-1 font-semibold text-indigo-600">
+                          {formatGBP(netWeekly)}
+                        </span>
+                      </div>
+                    </div>
 
-              <div className="rounded-lg border border-slate-200 bg-white p-3">
-                <p className="text-xs text-slate-600">Net annual income</p>
-                <p className="mt-1 text-xl font-semibold text-indigo-600">
-                  {formatGBP(result.annual.net)}
-                </p>
-              </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-lg border border-slate-200 bg-white p-2">
+                        <span className="text-slate-600">PAYE:</span>
+                        <span className="ml-1 font-semibold text-slate-900">
+                          {formatGBP(result.annual.paye)}
+                        </span>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-white p-2">
+                        <span className="text-slate-600">NI:</span>
+                        <span className="ml-1 font-semibold text-slate-900">
+                          {formatGBP(result.annual.ni)}
+                        </span>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-white p-2">
+                        <span className="text-slate-600">Pension:</span>
+                        <span className="ml-1 font-semibold text-slate-900">
+                          {formatGBP(result.annual.pensionEmployee)}
+                        </span>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-white p-2">
+                        <span className="text-slate-600">Student loan:</span>
+                        <span className="ml-1 font-semibold text-slate-900">
+                          {formatGBP(result.annual.studentLoan)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <p className="text-xs text-slate-600">Net annual income</p>
+                      <p className="mt-1 text-xl font-semibold text-indigo-600">
+                        {formatGBP(result.annual.net)}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              ) : null}
             </div>
+          ))}
+        </div>
 
-            <p className="text-xs text-slate-500">
-              These figures use PAYE-style rules for guidance only and are not an official HMRC calculation. This is an inside IR35 estimate.
-            </p>
-          </>
-        ) : null}
+        <p className="text-xs text-slate-500">
+          These figures use PAYE-style rules for guidance only and are not an official HMRC calculation. This is an inside IR35 estimate.
+        </p>
       </section>
     </div>
   );

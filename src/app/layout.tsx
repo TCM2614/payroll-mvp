@@ -80,7 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
     <html lang="en" suppressHydrationWarning>
 
-      <body>
+      <body className="min-h-screen bg-slate-50 bg-gradient-to-b from-slate-50 via-slate-100 to-slate-50 text-slate-900">
 
         <SchemaMarkup />
 
