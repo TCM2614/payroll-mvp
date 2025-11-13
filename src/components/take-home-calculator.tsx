@@ -23,7 +23,7 @@ export function TakeHomeCalculator() {
     <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
         {/* Tab bar container - mobile: horizontal scroll, desktop: grid */}
-        <div className="mb-4 sm:mb-6 rounded-2xl border border-white/10 bg-black/20 p-1">
+        <div className="mb-4 sm:mb-6 rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/40 p-1">
 
           {/* Mobile: horizontal scrollable tabs */}
           <div className="md:hidden overflow-x-auto -mx-1 px-1 scrollbar-hide">
@@ -33,7 +33,7 @@ export function TakeHomeCalculator() {
 
               value="paye" 
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-black/20 text-white/70 hover:bg-white/10 hover:text-white data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-md"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-sea-jet-900/40 text-navy-200 hover:bg-sea-jet-800/50 hover:text-navy-50 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
 
             >
 
@@ -49,7 +49,7 @@ export function TakeHomeCalculator() {
 
               value="umbrella" 
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-black/20 text-white/70 hover:bg-white/10 hover:text-white data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-md"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-sea-jet-900/40 text-navy-200 hover:bg-sea-jet-800/50 hover:text-navy-50 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
 
             >
 
@@ -65,7 +65,7 @@ export function TakeHomeCalculator() {
 
               value="limited" 
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-black/20 text-white/70 hover:bg-white/10 hover:text-white data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-md"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-sea-jet-900/40 text-navy-200 hover:bg-sea-jet-800/50 hover:text-navy-50 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
 
             >
 
@@ -81,7 +81,7 @@ export function TakeHomeCalculator() {
 
               value="periodic" 
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-black/20 text-white/70 hover:bg-white/10 hover:text-white data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-md"
+              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-sea-jet-900/40 text-navy-200 hover:bg-sea-jet-800/50 hover:text-navy-50 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
 
             >
 
@@ -101,7 +101,7 @@ export function TakeHomeCalculator() {
 
               value="paye" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:hover:bg-emerald-400 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-navy-200 hover:text-navy-50 hover:bg-sea-jet-800/30 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:hover:bg-brilliant-600 data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
 
             >
 
@@ -111,7 +111,7 @@ export function TakeHomeCalculator() {
 
                 <span className="text-sm font-semibold">Standard</span>
 
-                <span className="text-[10px] text-white/60">
+                <span className="text-[10px] text-navy-300">
 
                   Standard employment
 
@@ -127,7 +127,7 @@ export function TakeHomeCalculator() {
 
               value="umbrella" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:hover:bg-emerald-400 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-navy-200 hover:text-navy-50 hover:bg-sea-jet-800/30 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:hover:bg-brilliant-600 data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
 
             >
 
@@ -137,7 +137,7 @@ export function TakeHomeCalculator() {
 
                 <span className="text-sm font-semibold">Umbrella</span>
 
-                <span className="text-[10px] text-white/60">
+                <span className="text-[10px] text-navy-300">
 
                   Contracting via umbrella
 
@@ -153,7 +153,7 @@ export function TakeHomeCalculator() {
 
               value="limited" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:hover:bg-emerald-400 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-navy-200 hover:text-navy-50 hover:bg-sea-jet-800/30 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:hover:bg-brilliant-600 data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
 
             >
 
@@ -163,7 +163,7 @@ export function TakeHomeCalculator() {
 
                 <span className="text-sm font-semibold">Limited</span>
 
-                <span className="text-[10px] text-white/60">
+                <span className="text-[10px] text-navy-300">
 
                   Limited company
 
@@ -179,7 +179,7 @@ export function TakeHomeCalculator() {
 
               value="periodic" 
 
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:hover:bg-emerald-400 data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-navy-200 hover:text-navy-50 hover:bg-sea-jet-800/30 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:hover:bg-brilliant-600 data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
 
             >
 
@@ -189,7 +189,7 @@ export function TakeHomeCalculator() {
 
                 <span className="text-sm font-semibold">Periodic</span>
 
-                <span className="text-[10px] text-white/60">
+                <span className="text-[10px] text-navy-300">
 
                   Periodic tax check
 

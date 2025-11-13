@@ -3,6 +3,72 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Pantone Color Palette - Financial & Phantom Theme */
+  /* PANTONE® 15-4323 TCX - Ethereal Blue */
+  --ethereal-blue: #A8D8EA;
+  --ethereal-blue-50: #E8F5F9;
+  --ethereal-blue-100: #D1EBF3;
+  --ethereal-blue-200: #A8D8EA;
+  --ethereal-blue-300: #7FC5E1;
+  --ethereal-blue-400: #56B2D8;
+  --ethereal-blue-500: #2D9FCF;
+  --ethereal-blue-600: #257F9F;
+  --ethereal-blue-700: #1C5F6F;
+  --ethereal-blue-800: #133F3F;
+  --ethereal-blue-900: #0A1F1F;
+  
+  /* PANTONE® 15-4713 TCX - Sea Jet */
+  --sea-jet: #4A8B9E;
+  --sea-jet-50: #E8F2F5;
+  --sea-jet-100: #D1E5EB;
+  --sea-jet-200: #A3CBD7;
+  --sea-jet-300: #75B1C3;
+  --sea-jet-400: #4A8B9E;
+  --sea-jet-500: #3A6F7E;
+  --sea-jet-600: #2A535E;
+  --sea-jet-700: #1A373F;
+  --sea-jet-800: #0A1B1F;
+  --sea-jet-900: #050F12;
+  
+  /* PANTONE® 13-5411 TCX - Aqua-esque */
+  --aqua-esque: #7BC4C4;
+  --aqua-esque-50: #E8F7F7;
+  --aqua-esque-100: #D1EFEF;
+  --aqua-esque-200: #A3DFDF;
+  --aqua-esque-300: #7BC4C4;
+  --aqua-esque-400: #62A4A4;
+  --aqua-esque-500: #4A8484;
+  --aqua-esque-600: #3A6A6A;
+  --aqua-esque-700: #2A5050;
+  --aqua-esque-800: #1A3636;
+  --aqua-esque-900: #0A1C1C;
+  
+  /* PANTONE® 18-4247 TCX - Brilliant Blue */
+  --brilliant-blue: #2E5C8A;
+  --brilliant-blue-50: #E8F0F7;
+  --brilliant-blue-100: #D1E1EF;
+  --brilliant-blue-200: #A3C3DF;
+  --brilliant-blue-300: #75A5CF;
+  --brilliant-blue-400: #4A7FAF;
+  --brilliant-blue-500: #2E5C8A;
+  --brilliant-blue-600: #254A6E;
+  --brilliant-blue-700: #1C3852;
+  --brilliant-blue-800: #132636;
+  --brilliant-blue-900: #0A141A;
+  
+  /* PANTONE® 19-4029 TCX - Navy Peony */
+  --navy-peony: #1A2B3C;
+  --navy-peony-50: #E8EAED;
+  --navy-peony-100: #D1D5DB;
+  --navy-peony-200: #A3ABBA;
+  --navy-peony-300: #758198;
+  --navy-peony-400: #47576D;
+  --navy-peony-500: #1A2B3C;
+  --navy-peony-600: #15222F;
+  --navy-peony-700: #101922;
+  --navy-peony-800: #0A1115;
+  --navy-peony-900: #05080A;
 }
 
 @theme inline {
@@ -10,12 +76,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Pantone Color Palette */
+  --color-ethereal-blue: var(--ethereal-blue);
+  --color-sea-jet: var(--sea-jet);
+  --color-aqua-esque: var(--aqua-esque);
+  --color-brilliant-blue: var(--brilliant-blue);
+  --color-navy-peony: var(--navy-peony);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #05080A; /* Navy Peony 900 */
+    --foreground: #E8EAED; /* Navy Peony 50 */
   }
 }
 
