@@ -49,9 +49,9 @@ export default function ContractorComparisonTabs() {
   ]);
 
   const payeCombined = useMemo(() => {
-    const input: CombinedPayeInput = { streams, sippPersonal: sipp };
+    const input: CombinedPayeInput = { streams, sippPersonal: sipp, loans };
     return calcPAYECombined(input);
-  }, [streams, sipp]);
+  }, [streams, sipp, loans]);
 
   const umbrella = useMemo(
     () =>
@@ -69,6 +69,7 @@ export default function ContractorComparisonTabs() {
         salarySacrificeFixed: ssFixed,
         sippPersonal: sipp,
         taxCode: taxCodeForUmbrella,
+        loans,
       }),
     [
       basePay,
@@ -82,6 +83,7 @@ export default function ContractorComparisonTabs() {
       ssFixed,
       sipp,
       taxCodeForUmbrella,
+      loans,
     ],
   );
 
@@ -98,6 +100,11 @@ export default function ContractorComparisonTabs() {
         salaryAnnual: directorSalary,
         allowableExpensesAnnual: companyExpenses,
         employerPension,
+        loans,
+        salarySacrificePct: ssPct,
+        salarySacrificeFixed: ssFixed,
+        sippPersonal: sipp,
+        taxCode: taxCodeForUmbrella,
       }),
     [
       basePay,
@@ -108,6 +115,11 @@ export default function ContractorComparisonTabs() {
       directorSalary,
       companyExpenses,
       employerPension,
+      loans,
+      ssPct,
+      ssFixed,
+      sipp,
+      taxCodeForUmbrella,
     ],
   );
 
@@ -166,6 +178,12 @@ export default function ContractorComparisonTabs() {
               <span className="opacity-70">Total employee NI:</span> £
               {payeCombined.totalEmployeeNI.toFixed(0)}
             </li>
+            {payeCombined.totalStudentLoans > 0 && (
+              <li>
+                <span className="opacity-70">Total student loans:</span> £
+                {payeCombined.totalStudentLoans.toFixed(0)}
+              </li>
+            )}
             <li className="mt-2 font-semibold">
               Net take-home (annual): £{payeCombined.totalTakeHomeAnnual.toFixed(0)}
             </li>
@@ -312,6 +330,12 @@ export default function ContractorComparisonTabs() {
                 <span className="opacity-70">Employee NI (total):</span> £
                 {payeCombined.totalEmployeeNI.toFixed(0)}
               </li>
+              {payeCombined.totalStudentLoans > 0 && (
+                <li>
+                  <span className="opacity-70">Student loans:</span> £
+                  {payeCombined.totalStudentLoans.toFixed(0)}
+                </li>
+              )}
               <li>
                 <span className="opacity-70">SIPP grossed:</span> £
                 {payeCombined.sippGrossed.toFixed(0)}{" "}
@@ -341,6 +365,20 @@ export default function ContractorComparisonTabs() {
                 {umbrella.grossToEmployeeAnnual.toFixed(0)}
               </li>
               <li>
+                <span className="opacity-70">Income tax:</span> £
+                {umbrella.paye.totalIncomeTax.toFixed(0)}
+              </li>
+              <li>
+                <span className="opacity-70">Employee NI:</span> £
+                {umbrella.paye.totalEmployeeNI.toFixed(0)}
+              </li>
+              {umbrella.paye.totalStudentLoans > 0 && (
+                <li>
+                  <span className="opacity-70">Student loans:</span> £
+                  {umbrella.paye.totalStudentLoans.toFixed(0)}
+                </li>
+              )}
+              <li>
                 <span className="opacity-70">Rolled holiday (info):</span> £
                 {umbrella.rolledHoliday.toFixed(0)}
               </li>
@@ -364,8 +402,34 @@ export default function ContractorComparisonTabs() {
                 <span className="opacity-70">Corporation tax:</span> £{limited.corpTax.toFixed(0)}
               </li>
               <li>
+                <span className="opacity-70">Director salary (gross):</span> £
+                {limited.salary.toFixed(0)}
+              </li>
+              <li>
+                <span className="opacity-70">Income tax on salary:</span> £
+                {limited.paye.totalIncomeTax.toFixed(0)}
+              </li>
+              <li>
+                <span className="opacity-70">Employee NI on salary:</span> £
+                {limited.paye.totalEmployeeNI.toFixed(0)}
+              </li>
+              {limited.paye.totalStudentLoans > 0 && (
+                <li>
+                  <span className="opacity-70">Student loans:</span> £
+                  {limited.paye.totalStudentLoans.toFixed(0)}
+                </li>
+              )}
+              <li>
+                <span className="opacity-70">Net salary (after PAYE/NI):</span> £
+                {limited.netSalary.toFixed(0)}
+              </li>
+              <li>
                 <span className="opacity-70">Distributable:</span> £
                 {limited.distributable.toFixed(0)}
+              </li>
+              <li>
+                <span className="opacity-70">Dividend tax:</span> £
+                {limited.dividendTax.toFixed(0)}
               </li>
               <li>
                 <span className="opacity-70">Net dividends:</span> £

@@ -104,7 +104,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
         <p className="mt-1 text-xs text-white/60">
 
-          Tell us what you'd like to see next — PAYE tweaks, Umbrella
+          Tell us what you&apos;d like to see next — PAYE tweaks, Umbrella
 
           breakdowns, Limited company features, SIPP, student loans, multi-job
 

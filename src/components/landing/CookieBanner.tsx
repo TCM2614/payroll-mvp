@@ -18,21 +18,31 @@ export default function CookieBanner() {
 
   useEffect(() => {
 
-    try {
+    const checkVisibility = () => {
 
-      const stored = window.localStorage.getItem(STORAGE_KEY);
+      try {
 
-      if (!stored) {
+        const stored = window.localStorage.getItem(STORAGE_KEY);
+
+        if (!stored) {
+
+          setVisible(true);
+
+        }
+
+      } catch {
 
         setVisible(true);
 
       }
 
-    } catch {
+    };
 
-      setVisible(true);
+    // Use setTimeout to defer state update outside of render phase
 
-    }
+    const timer = setTimeout(checkVisibility, 0);
+
+    return () => clearTimeout(timer);
 
   }, []);
 

@@ -10,7 +10,11 @@ export type PayeIncomeStream = {
   salarySacrificePct?: number; salarySacrificeFixed?: number;
 };
 
-export type CombinedPayeInput = { streams: PayeIncomeStream[]; sippPersonal?: number; };
+export type CombinedPayeInput = { 
+  streams: PayeIncomeStream[]; 
+  sippPersonal?: number;
+  loans?: LoanKey[];
+};
 export type StreamResult = {
   id: string; label: string; frequency: Frequency;
   grossEntered: number; annualisedGross: number;
@@ -21,6 +25,7 @@ export type CombinedPayeOutput = {
   streams: StreamResult[];
   sippGrossed: number; sippExtraReliefEstimate: number;
   totalIncomeTax: number; totalEmployeeNI: number;
+  totalStudentLoans: number;
   totalGrossAnnual: number; totalTakeHomeAnnual: number;
 };
 
@@ -69,6 +74,22 @@ function applySS(annualGross: number, pct?: number, fixed?: number) {
   const ssf = fixed ?? 0;
   const sacrifice = Math.max(0, ssp + ssf);
   return { adjustedGross: Math.max(0, annualGross - sacrifice), sacrifice };
+}
+
+/**
+ * Calculate student loan repayments for given loan plans.
+ * Student loans are calculated on gross income (after salary sacrifice) above the threshold.
+ * Each loan plan is calculated separately and added together.
+ */
+function calculateStudentLoans(grossAnnual: number, loans: LoanKey[]): number {
+  let total = 0;
+  for (const loanKey of loans) {
+    const loan = UK_TAX_2025.studentLoans[loanKey];
+    if (!loan) continue;
+    const repayable = Math.max(0, grossAnnual - loan.threshold);
+    total += repayable * loan.rate;
+  }
+  return total;
 }
 
 function allocatePA(streams: PayeIncomeStream[], basePA: number, totalIncomeAfterSSOnPrimary: number) {
@@ -127,7 +148,7 @@ function calcStreamAnnual(stream: PayeIncomeStream, paShare: number, isPrimary: 
 }
 
 export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
-  const { streams, sippPersonal = 0 } = input;
+  const { streams, sippPersonal = 0, loans = [] } = input;
 
   let totalAfterSSPrimary = 0;
   for (const s of streams) {
@@ -160,10 +181,15 @@ export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
   const totalIncomeTax = Math.max(0, totalIncomeTaxBefore - taxSavingFromSipp);
   const totalEmployeeNI = totalEmployeeNIBefore;
 
+  // Calculate gross income after salary sacrifice for student loan calculation
+  // Student loans are calculated on gross income (after salary sacrifice) above threshold
   const annualGrossAfterSS = results.reduce((sum, r) =>
     sum + (r.id === "primary" ? (r.annualisedGross - r.salarySacrifice) : r.annualisedGross), 0);
+  
+  // Calculate student loan repayments
+  const totalStudentLoans = calculateStudentLoans(annualGrossAfterSS, loans);
 
-  const totalTakeHomeAnnual = annualGrossAfterSS - totalIncomeTax - totalEmployeeNI - sippPersonal;
+  const totalTakeHomeAnnual = annualGrossAfterSS - totalIncomeTax - totalEmployeeNI - totalStudentLoans - sippPersonal;
 
   return {
     streams: results,
@@ -171,6 +197,7 @@ export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
     sippExtraReliefEstimate,
     totalIncomeTax,
     totalEmployeeNI,
+    totalStudentLoans,
     totalGrossAnnual: totalAnnualGross,
     totalTakeHomeAnnual,
   };
@@ -187,7 +214,6 @@ export function calcPayeMonthly(input: {
   const { grossMonthly, taxCode, loans = [], pensionPct = 0, sippPct = 0 } = input;
   
   const annualGross = grossMonthly * 12;
-  const pensionAmount = (annualGross * pensionPct) / 100;
   const sippPersonal = (annualGross * sippPct) / 100;
   
   const result = calcPAYECombined({
@@ -200,12 +226,8 @@ export function calcPayeMonthly(input: {
       salarySacrificePct: pensionPct > 0 ? pensionPct : undefined,
     }],
     sippPersonal,
+    loans,
   });
   
-  // Calculate student loan repayments (simplified)
-  let studentLoanTotal = 0;
-  // This is a placeholder - you'd need to implement proper student loan calculation
-  // based on the loan plans in the loans array
-  
-  return (result.totalTakeHomeAnnual - studentLoanTotal) / 12;
+  return result.totalTakeHomeAnnual / 12;
 }

@@ -26,7 +26,9 @@ export function UmbrellaCalculator() {
 
 
 
-  // TODO: adjust args to match your real calcUmbrella signature if different
+  const revenueAnnual = dayRate * daysPerWeek * weeksPerYear;
+
+  const sippPersonalAnnual = (revenueAnnual * sippPct) / 100;
 
   const result = calcUmbrella({
 
@@ -38,13 +40,13 @@ export function UmbrellaCalculator() {
 
     salarySacrificePct: pensionPct,
 
-    sippPersonal: (dayRate * daysPerWeek * weeksPerYear * sippPct) / 100 / 12,
+    sippPersonal: sippPersonalAnnual,
 
   });
 
 
 
-  const monthlyGross = (dayRate * daysPerWeek * weeksPerYear) / 12;
+  const monthlyGross = revenueAnnual / 12;
 
   const monthlyTakeHome = result.netTakeHomeAnnual / 12;
 

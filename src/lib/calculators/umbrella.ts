@@ -1,4 +1,4 @@
-import { UK_TAX_2025 } from "../tax/uk2025";
+import { UK_TAX_2025, LoanKey } from "../tax/uk2025";
 import { calcPAYECombined, PayeIncomeStream } from "./paye";
 
 export type UmbrellaInput = {
@@ -10,6 +10,7 @@ export type UmbrellaInput = {
   taxCode?: string;
   salarySacrificePct?: number; salarySacrificeFixed?: number;
   sippPersonal?: number;
+  loans?: LoanKey[];
 };
 
 export function calcUmbrella(i: UmbrellaInput) {
@@ -46,7 +47,11 @@ export function calcUmbrella(i: UmbrellaInput) {
     salarySacrificeFixed: i.salarySacrificeFixed,
   };
 
-  const paye = calcPAYECombined({ streams: [stream], sippPersonal: i.sippPersonal ?? 0 });
+  const paye = calcPAYECombined({ 
+    streams: [stream], 
+    sippPersonal: i.sippPersonal ?? 0,
+    loans: i.loans ?? [],
+  });
 
   const rolledHoliday = i.holidayPayPct ? grossToEmployeeAnnual * (i.holidayPayPct / 100) : 0;
 

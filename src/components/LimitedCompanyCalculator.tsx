@@ -34,9 +34,7 @@ export function LimitedCompanyCalculator() {
 
   const employerPension = (revenueAnnual * pensionPct) / 100;
 
-
-
-  // TODO: adjust to your calcLimited signature
+  const sippPersonalAnnual = (revenueAnnual * sippPct) / 100;
 
   const result = calcLimited({
 
@@ -49,6 +47,8 @@ export function LimitedCompanyCalculator() {
     salaryAnnual,
 
     employerPension,
+
+    sippPersonal: sippPersonalAnnual,
 
   });
 

@@ -102,8 +102,6 @@ export function PayeTab() {
 
   ];
 
-  const [sippPct, setSippPct] = useState(0);
-
   const [pensionPct, setPensionPct] = useState(5);
 
   const [salarySacrificeFixed, setSalarySacrificeFixed] = useState(0);
@@ -164,7 +162,7 @@ export function PayeTab() {
 
         pensionPct,
 
-        sippPct,
+        sippPct: 0, // SIPP is handled separately via sippPersonal
 
       })
 

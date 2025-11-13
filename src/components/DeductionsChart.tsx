@@ -62,15 +62,20 @@ export function DeductionsChart({
             <LabelList
               dataKey="takehome"
               position="top"
-              content={(props) => {
-                const { x, y, value, index } = props as any;
-                if (x == null || y == null) return null;
+              content={(props: unknown) => {
+                const p = props as { x?: number | string; y?: number | string; value?: number | string | null };
+                const { x, y, value } = p;
+                if (x == null || y == null || value == null) return null;
+                const xNum = typeof x === 'number' ? x : parseFloat(String(x));
+                const yNum = typeof y === 'number' ? y : parseFloat(String(y));
+                if (isNaN(xNum) || isNaN(yNum)) return null;
                 return (
                   <text
-                    x={x}
-                    y={y - 6}
+                    x={xNum}
+                    y={yNum - 6}
                     textAnchor="middle"
                     fontSize={12}
+                    fill="currentColor"
                   >
                     {formatGBPShort(Number(value))}
                   </text>

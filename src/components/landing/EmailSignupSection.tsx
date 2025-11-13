@@ -154,7 +154,7 @@ export default function EmailSignupSection({
 
           <span>
 
-            I agree to receive emails and confirm I've read the{" "}
+            I agree to receive emails and confirm I&apos;ve read the{" "}
 
             <a
 
@@ -192,7 +192,7 @@ export default function EmailSignupSection({
 
           <p className="text-xs font-medium text-emerald-400">
 
-            Thanks! You're on the list.
+            Thanks! You&apos;re on the list.
 
           </p>
 
