@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { nanoid } from "nanoid";
 import {
   calculatePeriodTax,
@@ -10,6 +10,10 @@ import {
   type PeriodTaxResult,
   type TaxWarning,
 } from "@/domain/tax/periodTax";
+import {
+  analyseActualVsExpectedTax,
+  type PeriodActualInput,
+} from "@/domain/tax/periodActuals";
 import { formatGBP } from "@/lib/format";
 
 type PayFrequency = "monthly" | "weekly" | "four-weekly";
@@ -20,6 +24,7 @@ type PeriodRow = {
   gross: number;
   pension: number;
   taxCode?: string; // optional override for this period
+  actualTaxForPeriod?: number; // actual PAYE tax from payslip
 };
 
 /**
@@ -122,6 +127,36 @@ export function PeriodicTaxTab() {
     ytdStudentLoan = result.ytdActual.studentLoan;
   });
 
+  // Actual tax analysis
+  const actualTaxAnalysis = useMemo(() => {
+    const periodsWithActualTax: PeriodActualInput[] = periods
+      .filter((row) => row.actualTaxForPeriod !== undefined && row.actualTaxForPeriod !== null)
+      .map((row) => ({
+        periodIndex: row.periodIndex,
+        grossForPeriod: row.gross,
+        pensionForPeriod: row.pension,
+        actualTaxForPeriod: row.actualTaxForPeriod!,
+        taxCodeOverride: row.taxCode,
+      }));
+
+    if (periodsWithActualTax.length === 0) {
+      return null;
+    }
+
+    return analyseActualVsExpectedTax(
+      {
+        taxYear: "2024-25",
+        payFrequency,
+        totalPeriodsInYear,
+        baseTaxCode: taxCode,
+        config,
+        toleranceAmount: 50,
+        tolerancePercent: 0.1,
+      },
+      periodsWithActualTax
+    );
+  }, [periods, payFrequency, totalPeriodsInYear, taxCode, config]);
+
   // Range aggregation state
   const [rangeFrom, setRangeFrom] = useState(0);
   const [rangeTo, setRangeTo] = useState(Math.min(2, results.length - 1));
@@ -187,7 +222,7 @@ export function PeriodicTaxTab() {
         <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
           Periodic PAYE Check
         </h2>
-        <p className="mt-1 text-sm sm:text-[15px] text-slate-700">
+        <p className="mt-1 text-sm text-slate-700">
           Analyse your PAYE tax on a period-by-period basis. Enter your actual pay for each period and we&apos;ll compare what you&apos;ve paid so far against what you&apos;d usually expect for this point in the 2024/25 tax year.
         </p>
       </header>
@@ -195,14 +230,14 @@ export function PeriodicTaxTab() {
       {/* Section 1: Configuration */}
       <section className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 space-y-3">
         <header className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Configuration</h2>
+          <h2 className="text-sm sm:text-base font-semibold text-slate-900">Configuration</h2>
         </header>
-        <p className="text-xs text-slate-500">
+        <p className="text-[11px] text-slate-500">
           Use this with your payslips to check for possible over-taxation, underpayments or issues with emergency or non-cumulative tax codes.
         </p>
         <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4">
           <div className="space-y-1">
-            <label htmlFor="pay-frequency" className="text-xs font-medium text-slate-700">
+            <label htmlFor="pay-frequency" className="text-xs font-medium text-slate-600">
               Pay Frequency
             </label>
             <select
@@ -218,13 +253,13 @@ export function PeriodicTaxTab() {
               <option value="weekly">Weekly</option>
               <option value="four-weekly">Four-Weekly</option>
             </select>
-            <p id="pay-frequency-help" className="text-xs text-slate-500">
+            <p id="pay-frequency-help" className="text-[11px] text-slate-500">
               Choose how often you are paid (monthly, weekly or four-weekly).
             </p>
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="tax-code" className="text-xs font-medium text-slate-700">
+            <label htmlFor="tax-code" className="text-xs font-medium text-slate-600">
               Tax Code
             </label>
             <input
@@ -236,13 +271,13 @@ export function PeriodicTaxTab() {
               placeholder="1257L"
               aria-describedby="tax-code-help"
             />
-            <p id="tax-code-help" className="text-xs text-slate-500">
+            <p id="tax-code-help" className="text-[11px] text-slate-500">
               This is your default tax code. You can override it per period if your tax code changed mid-year.
             </p>
           </div>
 
           <div className="space-y-1 md:col-span-2">
-            <label htmlFor="student-loan" className="text-xs font-medium text-slate-700">
+            <label htmlFor="student-loan" className="text-xs font-medium text-slate-600">
               Student Loan Plan
             </label>
             <select
@@ -269,7 +304,7 @@ export function PeriodicTaxTab() {
               <option value="plan5">Plan 5</option>
               <option value="postgrad">Postgraduate</option>
             </select>
-            <p id="student-loan-help" className="text-xs text-slate-500">
+            <p id="student-loan-help" className="text-[11px] text-slate-500">
               Select your student loan plan if repayments are taken from this income.
             </p>
           </div>
@@ -279,7 +314,7 @@ export function PeriodicTaxTab() {
       {/* Section 2: Periods Input */}
       <section className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 space-y-3">
         <header className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Pay Periods</h2>
+          <h2 className="text-sm sm:text-base font-semibold text-slate-900">Pay Periods</h2>
           <button
             type="button"
             onClick={addPeriod}
@@ -289,7 +324,7 @@ export function PeriodicTaxTab() {
             + Add Period
           </button>
         </header>
-        <p className="text-xs text-slate-500">
+        <p className="text-[11px] text-slate-500">
           Enter the gross and pension from your payslip. We&apos;ll calculate the tax, NI and net pay for each period.
         </p>
         
@@ -341,7 +376,7 @@ export function PeriodicTaxTab() {
                   {/* Left: Inputs */}
                   <div className="space-y-2">
                     <div>
-                      <label className="text-[11px] uppercase tracking-wide text-slate-500 block mb-1">
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
                         Gross pay
                       </label>
                       <input
@@ -355,7 +390,7 @@ export function PeriodicTaxTab() {
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] uppercase tracking-wide text-slate-500 block mb-1">
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
                         Pension
                       </label>
                       <input
@@ -369,7 +404,27 @@ export function PeriodicTaxTab() {
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] uppercase tracking-wide text-slate-500 block mb-1">
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
+                        Actual PAYE tax (£)
+                      </label>
+                      <input
+                        type="number"
+                        value={row.actualTaxForPeriod ?? ""}
+                        onChange={(e) =>
+                          updatePeriod(row.id, {
+                            actualTaxForPeriod: e.target.value ? Number(e.target.value) : undefined,
+                          })
+                        }
+                        className="w-full h-9 rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                        aria-label={`Actual PAYE tax for period ${row.periodIndex}`}
+                        placeholder="From payslip"
+                      />
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Use the PAYE tax taken from this payslip.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
                         Tax code
                       </label>
                       <div className="flex items-center gap-1">
@@ -402,23 +457,23 @@ export function PeriodicTaxTab() {
                   {/* Right: Outputs */}
                   <div className="space-y-2">
                     <div>
-                      <span className="text-[11px] uppercase tracking-wide text-slate-500 block mb-1">
+                      <span className="text-xs font-medium text-slate-600 block mb-1">
                         PAYE
                       </span>
-                      <span className="text-sm font-medium text-slate-900 block">
+                      <span className="text-sm text-slate-700 font-medium block">
                         {hasResult && hasValidTaxCode ? formatGBP(result.period.paye) : "-"}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[11px] uppercase tracking-wide text-slate-500 block mb-1">
+                      <span className="text-xs font-medium text-slate-600 block mb-1">
                         NI
                       </span>
-                      <span className="text-sm font-medium text-slate-900 block">
+                      <span className="text-sm text-slate-700 font-medium block">
                         {hasResult && hasValidTaxCode ? formatGBP(result.period.ni) : "-"}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[11px] uppercase tracking-wide text-slate-500 block mb-1">
+                      <span className="text-xs font-medium text-slate-600 block mb-1">
                         Net pay
                       </span>
                       <span className="text-sm font-semibold text-indigo-600 block">
@@ -427,7 +482,7 @@ export function PeriodicTaxTab() {
                     </div>
                     {hasResult && hasValidTaxCode && (
                       <div>
-                        <span className="text-[11px] uppercase tracking-wide text-slate-500 block mb-1">
+                        <span className="text-xs font-medium text-slate-600 block mb-1">
                           Variance
                         </span>
                         <span
@@ -483,8 +538,11 @@ export function PeriodicTaxTab() {
                 <th className="text-left py-2 px-3 text-xs font-semibold text-slate-700">
                   Tax code (per period)
                 </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-700">
+                  Actual PAYE tax (£)
+                </th>
                 <th className="text-right py-2 px-3 text-xs font-semibold text-slate-700">
-                  PAYE
+                  PAYE (expected)
                 </th>
                 <th className="text-right py-2 px-3 text-xs font-semibold text-slate-700">
                   NI
@@ -574,6 +632,26 @@ export function PeriodicTaxTab() {
                           </p>
                         )}
                       </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
+                        Actual PAYE tax (£)
+                      </label>
+                      <input
+                        type="number"
+                        value={row.actualTaxForPeriod ?? ""}
+                        onChange={(e) =>
+                          updatePeriod(row.id, {
+                            actualTaxForPeriod: e.target.value ? Number(e.target.value) : undefined,
+                          })
+                        }
+                        className="w-full h-9 rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                        aria-label={`Actual PAYE tax for period ${row.periodIndex}`}
+                        placeholder="From payslip"
+                      />
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Use PAYE tax from payslip.
+                      </p>
                     </td>
                     <td className="py-3 px-3 text-right text-xs font-semibold text-slate-900">
                       {hasResult && hasValidTaxCode ? formatGBP(result.period.paye) : "-"}
@@ -673,11 +751,11 @@ export function PeriodicTaxTab() {
       {results.length > 0 && (
         <section className="rounded-2xl border border-slate-200 bg-indigo-50 p-3 sm:p-4 space-y-2 md:sticky md:top-2 md:z-10">
           <header className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-slate-900 sm:text-base">
+            <h2 className="text-sm sm:text-base font-semibold text-slate-900">
               Year-to-date PAYE position
             </h2>
           </header>
-          <p className="text-xs text-slate-600">
+          <p className="text-sm text-slate-700">
             Period {periods[periods.length - 1]?.periodIndex || 0} of{" "}
             {payFrequency === "monthly"
               ? 12
@@ -688,8 +766,8 @@ export function PeriodicTaxTab() {
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
-              <h3 className="text-xs font-medium text-slate-700">Actual YTD</h3>
-              <div className="space-y-1.5 text-sm">
+              <h3 className="text-xs font-medium text-slate-600">Actual YTD</h3>
+              <div className="space-y-1.5 text-sm text-slate-700">
                 <div className="flex justify-between">
                   <span className="text-slate-600">Gross Income:</span>
                   <span className="font-semibold text-slate-900">
@@ -726,10 +804,10 @@ export function PeriodicTaxTab() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xs font-medium text-slate-700">
+              <h3 className="text-xs font-medium text-slate-600">
                 Expected YTD (Projected)
               </h3>
-              <div className="space-y-1.5 text-sm">
+              <div className="space-y-1.5 text-sm text-slate-700">
                 <div className="flex justify-between">
                   <span className="text-slate-600">Gross Income:</span>
                   <span className="font-semibold text-slate-900">
@@ -777,7 +855,7 @@ export function PeriodicTaxTab() {
           {/* Variance Summary - Prominent display */}
           {results[results.length - 1] && (
             <div className="mt-3 pt-3 border-t border-slate-200">
-              <h3 className="text-xs font-medium text-slate-700 mb-2">
+              <h3 className="text-xs font-medium text-slate-600 mb-2">
                 Cumulative PAYE over/under payment
               </h3>
               <div className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
@@ -826,11 +904,11 @@ export function PeriodicTaxTab() {
                   </span>
                 </div>
                 {results[results.length - 1].variance.toleranceBreached && (
-                  <p className="text-xs text-slate-600 mt-2">
+                  <p className="text-sm text-slate-700 mt-2">
                     We compare your actual PAYE so far with what we&apos;d expect based on your income pattern. A large difference can indicate potential over- or under-taxation.
                   </p>
                 )}
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-[11px] text-slate-500 mt-2">
                   These figures are estimates based on the 2024/25 UK PAYE rules and your inputs. They&apos;re for guidance only and not an official HMRC calculation.
                 </p>
               </div>
@@ -839,15 +917,149 @@ export function PeriodicTaxTab() {
         </section>
       )}
 
+      {/* Section 3.5: Actual Tax Paid Analysis */}
+      {actualTaxAnalysis && actualTaxAnalysis.items.length > 0 && (
+        <section className="rounded-2xl border border-slate-200 bg-indigo-50 p-3 sm:p-4 space-y-3 md:sticky md:top-2 md:z-10">
+          <header className="flex items-center justify-between gap-2">
+            <h2 className="text-sm sm:text-base font-semibold text-slate-900">
+              Actual tax paid vs expected
+            </h2>
+          </header>
+          <p className="text-sm text-slate-700">
+            Compare the actual PAYE tax from your payslips against what we&apos;d expect based on your income.
+          </p>
+
+          {/* Per-period analysis */}
+          <div className="space-y-2">
+            {actualTaxAnalysis.items.map((item) => {
+              const periodRow = periods.find((p) => p.periodIndex === item.periodIndex);
+              if (!periodRow) return null;
+
+              const periodVarianceBadge =
+                item.variance.periodDirection === "over"
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : item.variance.periodDirection === "under"
+                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                  : "bg-sky-50 text-sky-700 border-sky-200";
+
+              const periodVarianceText =
+                item.variance.periodDirection === "over"
+                  ? `Over-taxed this period by ${formatGBP(Math.abs(item.variance.periodAmount))}`
+                  : item.variance.periodDirection === "under"
+                  ? `Under-taxed this period by ${formatGBP(Math.abs(item.variance.periodAmount))}`
+                  : "Within normal range";
+
+              return (
+                <div
+                  key={item.periodIndex}
+                  className="rounded-lg border border-slate-200 bg-slate-50 p-2 space-y-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-600">
+                      Period {item.periodIndex}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border ${periodVarianceBadge}`}
+                    >
+                      {periodVarianceText}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm text-slate-700">
+                    <div>
+                      <span className="text-slate-600">Expected:</span>
+                      <span className="ml-1 font-semibold text-slate-900">
+                        {formatGBP(item.expected.payeForPeriod)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Actual:</span>
+                      <span className="ml-1 font-semibold text-slate-900">
+                        {formatGBP(item.actual.taxForPeriod)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Cumulative summary */}
+          <div className="mt-3 pt-3 border-t border-slate-200">
+            <h3 className="text-xs font-medium text-slate-600 mb-2">
+              Cumulative over/under payment
+            </h3>
+            <div className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-700">Cumulative variance:</span>
+                <span
+                  className={`text-lg font-semibold ${
+                    actualTaxAnalysis.finalDirection === "over"
+                      ? "text-emerald-700"
+                      : actualTaxAnalysis.finalDirection === "under"
+                      ? "text-rose-700"
+                      : "text-slate-800"
+                  }`}
+                >
+                  {actualTaxAnalysis.finalDirection === "over" ? "+" : actualTaxAnalysis.finalDirection === "under" ? "-" : ""}
+                  {formatGBP(Math.abs(actualTaxAnalysis.finalCumulativeAmount))}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-700">Status:</span>
+                <span
+                  className={`text-xs font-medium px-2 py-1 rounded ${
+                    actualTaxAnalysis.finalDirection === "over"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : actualTaxAnalysis.finalDirection === "under"
+                      ? "bg-rose-100 text-rose-700"
+                      : "bg-slate-100 text-slate-800"
+                  }`}
+                >
+                  {actualTaxAnalysis.finalDirection === "over"
+                    ? "Estimated overpayment so far"
+                    : actualTaxAnalysis.finalDirection === "under"
+                    ? "Estimated underpayment so far"
+                    : "Your PAYE looks broadly in line with expectations so far"}
+                </span>
+              </div>
+
+              {/* This month's difference */}
+              {actualTaxAnalysis.items.length > 0 && (() => {
+                const lastItem = actualTaxAnalysis.items[actualTaxAnalysis.items.length - 1];
+                const diffThisMonth = lastItem.actual.taxForPeriod - lastItem.expected.payeForPeriod;
+                const absDiff = Math.abs(diffThisMonth);
+                if (absDiff > 10) {
+                  return (
+                    <p className="text-sm text-slate-700 mt-2">
+                      This month you paid about {formatGBP(absDiff)}{" "}
+                      {diffThisMonth > 0 ? "more" : "less"} tax than expected for this income.
+                    </p>
+                  );
+                }
+                return (
+                  <p className="text-sm text-slate-700 mt-2">
+                    This month&apos;s PAYE looks close to the expected amount.
+                  </p>
+                );
+              })()}
+
+              <p className="text-[11px] text-slate-500 mt-2">
+                These figures are estimates based on the 2024/25 UK PAYE rules and your inputs. They are for guidance only and not an official HMRC calculation.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Section 4: Period Range Aggregation */}
       {results.length > 0 && (
         <section className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 space-y-3">
           <header className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-slate-900 sm:text-base">
+            <h2 className="text-sm sm:text-base font-semibold text-slate-900">
               Totals for selected pay periods
             </h2>
           </header>
-          <p className="text-xs text-slate-500">
+          <p className="text-[11px] text-slate-500">
             Choose a start and end period to see total gross, tax, NI, pension and net pay for that block of payslips.
           </p>
 
@@ -855,7 +1067,7 @@ export function PeriodicTaxTab() {
             <div className="space-y-1 flex-1">
               <label
                 htmlFor="range-from"
-                className="text-xs font-medium text-slate-700"
+                className="text-xs font-medium text-slate-600"
               >
                 From Period (0-based index)
               </label>
@@ -878,7 +1090,7 @@ export function PeriodicTaxTab() {
             <div className="space-y-1 flex-1">
               <label
                 htmlFor="range-to"
-                className="text-xs font-medium text-slate-700"
+                className="text-xs font-medium text-slate-600"
               >
                 To Period (0-based index)
               </label>
