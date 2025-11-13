@@ -43,19 +43,24 @@ function isProduction(): boolean {
 
 /**
  * Fire an analytics event (no-op in development)
+ * 
+ * @param name - Event name
+ * @param props - Optional event properties
  */
-function trackEvent(
-  eventName: string,
+export function trackEvent(
+  name: string,
   props?: Record<string, string | number | boolean>
 ): void {
+  if (typeof window === "undefined") return;
+  
   if (!isProduction()) {
     // No-op in development
     return;
   }
 
   // Fire-and-forget call to Plausible
-  if (typeof window !== "undefined" && window.plausible) {
-    window.plausible(eventName, { props });
+  if (window.plausible) {
+    window.plausible(name, { props });
   }
 }
 

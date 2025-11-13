@@ -83,7 +83,7 @@ export default function CalcPage() {
 
       {/* FAQ Section */}
       <section className="mt-12 space-y-6">
-        <h2 className="text-xl font-semibold text-white">Frequently Asked Questions</h2>
+        <h2 className="text-xl font-semibold text-white">Frequently asked questions about UK take-home pay</h2>
         
         <div className="space-y-6">
           <div>
@@ -213,7 +213,7 @@ export default function CalcPage() {
             name: "UK Take Home Calculator",
             applicationCategory: "FinanceApplication",
             operatingSystem: "Web",
-            url: typeof window !== "undefined" ? window.location.origin : "https://yourdomain.com",
+            url: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/calc` : "https://yourdomain.com/calc",
             description: "Calculate your UK salary after tax, National Insurance, pension and student loan deductions for the 2024/25 tax year.",
             offers: {
               "@type": "Offer",

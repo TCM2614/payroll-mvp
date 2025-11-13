@@ -8,11 +8,17 @@ import { SchemaMarkup } from "@/components/SEO/SchemaMarkup";
 
 
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
+
 export const metadata: Metadata = {
 
   title: "UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK",
 
   description: "Free UK take-home pay calculator for the 2024/25 tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.",
+
+  alternates: {
+    canonical: siteUrl,
+  },
 
   keywords: ["UK payroll calculator", "take-home pay", "PAYE calculator", "umbrella company calculator", "limited company calculator", "UK tax calculator", "student loan calculator", "UK salary calculator", "salary after tax", "take home pay calculator UK"],
 
