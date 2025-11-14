@@ -137,47 +137,60 @@ export default function DashboardPage() {
             <span className="text-brand-text/80">Coming soon</span>
           </div>
 
-          <h1 className="mb-3 text-2xl font-semibold tracking-tight text-brand-text sm:text-3xl">
-            Your take-home insights dashboard is on the way
-          </h1>
+          <header className="space-y-2 mb-6">
+            <p className="text-xs uppercase tracking-wide text-brand-textMuted opacity-70">
+              Coming soon
+            </p>
+            <h1 className="text-xl md:text-2xl font-semibold text-brand-text">
+              Dashboard: from payslip to plan
+            </h1>
+            <p className="text-sm md:text-base text-brand-textMuted opacity-80 max-w-2xl">
+              A live control panel for your income, expenses and debt – built on the same
+              UK take-home engine powering this calculator.
+            </p>
+          </header>
 
-          <p className="mx-auto mb-6 max-w-xl text-sm leading-relaxed text-brand-textMuted">
-            Soon you&apos;ll be able to pin multiple salary and contracting scenarios,
-            track changes across tax years, and see how PAYE, NI, pensions and
-            student loans shape your take-home pay over time — all in one place.
-          </p>
+          <div className="grid gap-4 text-left sm:grid-cols-2 mb-6">
+            <section className="rounded-2xl border border-brand-border/60 bg-brand-bg/80 p-4 text-sm space-y-1 shadow-sm">
+              <h3 className="font-medium text-brand-text">All your money in one view</h3>
+              <p className="text-brand-textMuted opacity-80">
+                See PAYE, Umbrella and Limited Company take-home side by side, with clear
+                breakdowns for tax, NI, pensions, SIPPs and student loans.
+              </p>
+            </section>
 
-          <div className="grid gap-4 text-left text-xs text-brand-textMuted sm:grid-cols-3 mb-6">
-            <div className="rounded-2xl border border-brand-border/60 bg-brand-bg/60 p-3">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text/70">
-                Scenario snapshots
-              </p>
-              <p className="leading-relaxed">
-                Save PAYE, umbrella and limited company setups side by side and
-                revisit them instantly.
-              </p>
-            </div>
+            <section className="rounded-2xl border border-brand-border/60 bg-brand-bg/80 p-4 text-sm space-y-1 shadow-sm">
+              <h3 className="font-medium text-brand-text">Smart expense tracking</h3>
+              <ul className="list-disc pl-4 space-y-1 text-brand-textMuted opacity-80">
+                <li>Log fixed bills and everyday spending.</li>
+                <li>Tag and group categories to see where money leaks.</li>
+                <li>Get a "safe to spend" number matched to your net pay.</li>
+              </ul>
+            </section>
 
-            <div className="rounded-2xl border border-brand-border/60 bg-brand-bg/60 p-3">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text/70">
-                Period breakdowns
-              </p>
-              <p className="leading-relaxed">
-                See annual, monthly, weekly, daily and hourly take-home in one
-                consolidated view.
-              </p>
-            </div>
+            <section className="rounded-2xl border border-brand-border/60 bg-brand-bg/80 p-4 text-sm space-y-1 shadow-sm">
+              <h3 className="font-medium text-brand-text">Debt management mode</h3>
+              <ul className="list-disc pl-4 space-y-1 text-brand-textMuted opacity-80">
+                <li>Add credit cards, loans, overdrafts and BNPL balances.</li>
+                <li>Compare Snowball vs Avalanche pay-down strategies.</li>
+                <li>See debt-free dates and interest saved based on your income.</li>
+              </ul>
+            </section>
 
-            <div className="rounded-2xl border border-brand-border/60 bg-brand-bg/60 p-3">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text/70">
-                Change tracking
-              </p>
-              <p className="leading-relaxed">
-                Understand what changed between scenarios — tax bands, pension
-                contributions or student loans.
-              </p>
-            </div>
+            <section className="rounded-2xl border border-brand-border/60 bg-brand-bg/80 p-4 text-sm space-y-1 shadow-sm">
+              <h3 className="font-medium text-brand-text">Strategy engine</h3>
+              <ul className="list-disc pl-4 space-y-1 text-brand-textMuted opacity-80">
+                <li>Suggests how to adjust expenses, savings and repayments.</li>
+                <li>Models changes like new jobs, side income and pension tweaks.</li>
+                <li>Turns your payslip into a month-by-month action plan.</li>
+              </ul>
+            </section>
           </div>
+
+          <p className="text-xs text-brand-textMuted opacity-70 max-w-2xl mb-6">
+            This dashboard is built directly on top of the calculator, so your real tax year,
+            student loans and pension choices flow into your expense and debt strategy automatically.
+          </p>
 
           {/* Email + Message Form */}
           <form onSubmit={handleSubmit} className="mt-6 space-y-3 text-left">
