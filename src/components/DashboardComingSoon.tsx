@@ -18,10 +18,25 @@ export function DashboardComingSoon() {
 
     try {
       setStatus("submitting");
-      const response = await fetch("/api/dashboard-feedback", {
+      const endpoint = process.env.NEXT_PUBLIC_SIGNUP_SHEET_ENDPOINT;
+      
+      if (!endpoint) {
+        throw new Error("Sheet endpoint not configured");
+      }
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, feedback, source: "Dashboard" }),
+        body: JSON.stringify({
+          values: [
+            [
+              new Date().toISOString(),
+              email || "",
+              feedback.trim(),
+              "Dashboard",
+            ],
+          ],
+        }),
       });
 
       if (!response.ok) {
@@ -130,14 +145,14 @@ export function DashboardComingSoon() {
         </p>
 
         {/* Feedback form */}
-        <div className="pt-6 border-t border-brand-border/60">
-          <h3 className="text-sm font-medium text-brand-text mb-3">
-            Tell us what you&apos;d like this dashboard to do
+        <div className="rounded-xl border border-brand-border/60 bg-brand-surface/80 p-4 space-y-3 text-sm">
+          <h3 className="text-sm font-medium text-brand-text">
+            Tell us what you&apos;d like to see
           </h3>
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="space-y-1">
               <label htmlFor="dashboard-email" className="block text-xs font-medium text-brand-text">
-                Email address <span className="text-brand-textMuted">(optional)</span>
+                Email
               </label>
               <input
                 type="email"
@@ -148,14 +163,11 @@ export function DashboardComingSoon() {
                 placeholder="you@example.com"
                 className="w-full rounded-xl border border-brand-border/60 bg-brand-bg/80 px-3 py-2 text-sm text-brand-text placeholder:text-brand-textMuted focus:outline-none focus:ring-2 focus:ring-brand-primary/70 focus:border-brand-primary/60"
               />
-              <p className="text-xs text-brand-textMuted">
-                We&apos;ll only use this to send you updates about the dashboard.
-              </p>
             </div>
 
             <div className="space-y-1">
               <label htmlFor="dashboard-feedback" className="block text-xs font-medium text-brand-text">
-                What would you like this dashboard to do?
+                Message
               </label>
               <textarea
                 id="dashboard-feedback"
@@ -163,26 +175,23 @@ export function DashboardComingSoon() {
                 rows={4}
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                placeholder="For example: compare two salaries, track my PAYE over the year, export a PDF for my accountant..."
+                placeholder="What features would you like in the dashboard?"
                 className="w-full rounded-xl border border-brand-border/60 bg-brand-bg/80 px-3 py-2 text-sm text-brand-text placeholder:text-brand-textMuted focus:outline-none focus:ring-2 focus:ring-brand-primary/70 focus:border-brand-primary/60 resize-none"
                 required
               />
-              <p className="text-xs text-brand-textMuted">
-                The more specific you can be, the better we can design it.
-              </p>
             </div>
 
             <button
               type="submit"
               disabled={status === "submitting"}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-brand-primarySoft to-brand-primary px-4 py-2 text-xs font-medium text-white shadow-soft-xl transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-xl border border-brand-border/60 bg-brand-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {status === "submitting" ? "Submitting..." : status === "success" ? "Submitted!" : "Submit feedback"}
+              {status === "submitting" ? "Submitting..." : "Send feedback"}
             </button>
 
             {status === "success" && (
               <p className="text-xs text-brand-accent">
-                Thanks — your feedback has been sent. We&apos;ll use it to shape the dashboard.
+                Thanks — your feedback is saved.
               </p>
             )}
             {status === "error" && (
