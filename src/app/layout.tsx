@@ -3,6 +3,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 import { Header } from '@/components/Header';
+import { SiteFooter } from '@/components/SiteFooter';
 
 import { SchemaMarkup } from "@/components/SEO/SchemaMarkup";
 
@@ -62,6 +63,8 @@ export default function RootLayout({
           <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-10 pt-6 sm:pt-8">
             {children}
           </main>
+
+          <SiteFooter />
         </div>
       </body>
     </html>
