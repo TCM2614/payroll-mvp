@@ -1,4 +1,5 @@
-import { UK_TAX_2025, LoanKey } from "../tax/uk2025";
+import { getPayeTaxConfig, UK_TAX_2025, type LoanKey, type PayeTaxConfig } from "../tax/uk2025";
+import type { TaxYearLabel } from "../taxYear";
 
 export type Frequency = "hourly"|"daily"|"monthly"|"annual";
 export type TaxCodeFlavor = "L"|"BR"|"D0"|"D1"|"0T"|"NT";
@@ -10,10 +11,15 @@ export type PayeIncomeStream = {
   salarySacrificePct?: number; salarySacrificeFixed?: number;
 };
 
-export type CombinedPayeInput = { 
-  streams: PayeIncomeStream[]; 
+export type CombinedPayeInput = {
+  streams: PayeIncomeStream[];
   sippPersonal?: number;
   loans?: LoanKey[];
+  /**
+   * Optional tax year for PAYE calculations in the multi-job engine.
+   * Defaults to "2025-26" to preserve existing behaviour.
+   */
+  taxYear?: TaxYearLabel;
 };
 export type StreamResult = {
   id: string; label: string; frequency: Frequency;
@@ -51,20 +57,20 @@ function toAnnual(amount: number, frequency: Frequency): number {
     default: return amount;
   }
 }
-function clampPA(income: number, pa: number) {
-  if (income <= UK_TAX_2025.paTaperStart) return pa;
-  const lost = Math.min(pa, Math.max(0, Math.floor((income - UK_TAX_2025.paTaperStart) / 2)));
+function clampPA(income: number, pa: number, config: PayeTaxConfig) {
+  if (income <= config.paTaperStart) return pa;
+  const lost = Math.min(pa, Math.max(0, Math.floor((income - config.paTaperStart) / 2)));
   return Math.max(0, pa - lost);
 }
-function bandTax(taxable: number) {
-  const { basicRate, higherRate, additionalRate, basicBandTop, higherBandTop } = UK_TAX_2025;
+function bandTax(taxable: number, config: PayeTaxConfig) {
+  const { basicRate, higherRate, additionalRate, basicBandTop, higherBandTop } = config;
   const basic = Math.min(taxable, basicBandTop);
   const higher = Math.min(Math.max(0, taxable - basicBandTop), higherBandTop - basicBandTop);
   const addl = Math.max(0, taxable - higherBandTop);
   return Math.max(0, basic*basicRate + higher*higherRate + addl*additionalRate);
 }
-function eeNI(annualGross: number) {
-  const { primaryThreshold, upperEarningsLimit, mainRate, upperRate } = UK_TAX_2025.ni;
+function eeNI(annualGross: number, config: PayeTaxConfig) {
+  const { primaryThreshold, upperEarningsLimit, mainRate, upperRate } = config.ni;
   if (annualGross <= primaryThreshold) return 0;
   const main = Math.min(annualGross, upperEarningsLimit) - primaryThreshold;
   const upper = Math.max(0, annualGross - upperEarningsLimit);
@@ -86,7 +92,8 @@ function applySS(annualGross: number, pct?: number, fixed?: number) {
  */
 function calculateStudentLoans(
   grossAnnual: number,
-  loans: LoanKey[]
+  loans: LoanKey[],
+  config: PayeTaxConfig
 ): { total: number; breakdown: Array<{ plan: LoanKey; label: string; amount: number }> } {
   const breakdown: Array<{ plan: LoanKey; label: string; amount: number }> = [];
   let total = 0;
@@ -100,7 +107,7 @@ function calculateStudentLoans(
   };
   
   for (const loanKey of loans) {
-    const loan = UK_TAX_2025.studentLoans[loanKey];
+    const loan = config.studentLoans[loanKey];
     if (!loan) continue;
     const repayable = Math.max(0, grossAnnual - loan.threshold);
     const amount = repayable * loan.rate;
@@ -118,8 +125,13 @@ function calculateStudentLoans(
   return { total, breakdown };
 }
 
-function allocatePA(streams: PayeIncomeStream[], basePA: number, totalIncomeAfterSSOnPrimary: number) {
-  const tapered = clampPA(totalIncomeAfterSSOnPrimary, basePA);
+function allocatePA(
+  streams: PayeIncomeStream[],
+  basePA: number,
+  totalIncomeAfterSSOnPrimary: number,
+  config: PayeTaxConfig
+) {
+  const tapered = clampPA(totalIncomeAfterSSOnPrimary, basePA, config);
   const lStreams = streams.filter(s => parseTaxCode(s.taxCode).flavor === "L");
   const map = new Map<string, number>();
   if (!lStreams.length) return map;
@@ -142,7 +154,12 @@ function allocatePA(streams: PayeIncomeStream[], basePA: number, totalIncomeAfte
   return map;
 }
 
-function calcStreamAnnual(stream: PayeIncomeStream, paShare: number, isPrimary: boolean): StreamResult {
+function calcStreamAnnual(
+  stream: PayeIncomeStream,
+  paShare: number,
+  isPrimary: boolean,
+  config: PayeTaxConfig
+): StreamResult {
   const parsed = parseTaxCode(stream.taxCode);
   const raw = toAnnual(stream.amount, stream.frequency);
 
@@ -157,13 +174,13 @@ function calcStreamAnnual(stream: PayeIncomeStream, paShare: number, isPrimary: 
   let tax = 0, taxable = 0;
   switch (parsed.flavor) {
     case "NT": tax = 0; taxable = 0; notes.push("NT: no tax."); break;
-    case "BR": tax = gross * UK_TAX_2025.basicRate; taxable = gross; notes.push("BR: 20% flat."); break;
-    case "D0": tax = gross * UK_TAX_2025.higherRate; taxable = gross; notes.push("D0: 40% flat."); break;
-    case "D1": tax = gross * UK_TAX_2025.additionalRate; taxable = gross; notes.push("D1: 45% flat."); break;
-    case "0T": taxable = gross; tax = bandTax(taxable); notes.push("0T: no PA, banding."); break;
-    case "L":  taxable = Math.max(0, gross - paShare); tax = bandTax(taxable); notes.push(`L: PA £${paShare.toFixed(0)}.`); break;
+    case "BR": tax = gross * config.basicRate; taxable = gross; notes.push("BR: 20% flat."); break;
+    case "D0": tax = gross * config.higherRate; taxable = gross; notes.push("D0: 40% flat."); break;
+    case "D1": tax = gross * config.additionalRate; taxable = gross; notes.push("D1: 45% flat."); break;
+    case "0T": taxable = gross; tax = bandTax(taxable, config); notes.push("0T: no PA, banding."); break;
+    case "L":  taxable = Math.max(0, gross - paShare); tax = bandTax(taxable, config); notes.push(`L: PA £${paShare.toFixed(0)}.`); break;
   }
-  const ni = eeNI(gross);
+  const ni = eeNI(gross, config);
 
   return {
     id: stream.id, label: stream.label, frequency: stream.frequency,
@@ -174,7 +191,8 @@ function calcStreamAnnual(stream: PayeIncomeStream, paShare: number, isPrimary: 
 }
 
 export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
-  const { streams, sippPersonal = 0, loans = [] } = input;
+  const { streams, sippPersonal = 0, loans = [], taxYear = "2025-26" } = input;
+  const config = getPayeTaxConfig(taxYear);
 
   let totalAfterSSPrimary = 0;
   for (const s of streams) {
@@ -186,18 +204,20 @@ export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
 
   const primary = streams.find(s => s.id === "primary");
   const basePA = primary
-    ? (parseTaxCode(primary.taxCode).paFromCode ?? UK_TAX_2025.personalAllowance)
-    : UK_TAX_2025.personalAllowance;
+    ? (parseTaxCode(primary.taxCode).paFromCode ?? config.personalAllowance)
+    : config.personalAllowance;
 
-  const paAlloc = allocatePA(streams, basePA, totalAfterSSPrimary);
-  const results = streams.map(s => calcStreamAnnual(s, paAlloc.get(s.id) ?? 0, s.id === "primary"));
+  const paAlloc = allocatePA(streams, basePA, totalAfterSSPrimary, config);
+  const results = streams.map(s =>
+    calcStreamAnnual(s, paAlloc.get(s.id) ?? 0, s.id === "primary", config),
+  );
 
   const sippGrossed = sippPersonal > 0 ? sippPersonal / 0.8 : 0;
   const totalAnnualGross = results.reduce((a, r) => a + r.annualisedGross, 0);
   const marginal =
-    totalAnnualGross > UK_TAX_2025.higherBandTop ? UK_TAX_2025.additionalRate
-      : totalAnnualGross > UK_TAX_2025.basicBandTop ? UK_TAX_2025.higherRate
-      : UK_TAX_2025.basicRate;
+    totalAnnualGross > config.higherBandTop ? config.additionalRate
+      : totalAnnualGross > config.basicBandTop ? config.higherRate
+      : config.basicRate;
   const extraReliefRate = Math.max(0, marginal - 0.20);
   const sippExtraReliefEstimate = sippGrossed * extraReliefRate;
   const taxSavingFromSipp = sippGrossed * marginal;
@@ -213,7 +233,7 @@ export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
     sum + (r.id === "primary" ? (r.annualisedGross - r.salarySacrifice) : r.annualisedGross), 0);
   
   // Calculate student loan repayments (with breakdown)
-  const studentLoanResult = calculateStudentLoans(annualGrossAfterSS, loans);
+  const studentLoanResult = calculateStudentLoans(annualGrossAfterSS, loans, config);
   const totalStudentLoans = studentLoanResult.total;
 
   const totalTakeHomeAnnual = annualGrossAfterSS - totalIncomeTax - totalEmployeeNI - totalStudentLoans - sippPersonal;

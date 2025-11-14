@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { calcPAYECombined, PayeIncomeStream, Frequency } from "@/lib/calculators/paye";
+import { useState, useMemo } from "react";
 import { formatGBP } from "@/lib/format";
 import { LoanKey } from "@/lib/tax/uk2025";
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 import LoansMultiSelect from "@/components/LoansMultiSelect";
+import {
+  calculateMultiJob,
+  type JobInput,
+  type EmploymentKind,
+} from "@/domain/tax/multiJob";
+
+type Frequency = "hourly" | "daily" | "monthly" | "annual";
 
 type JobBlock = {
   id: string;
@@ -13,6 +19,7 @@ type JobBlock = {
   grossAmount: number;
   frequency: Frequency;
   taxCode: string;
+  pensionEmployeeAnnual?: number;
 };
 
 export function AdditionalJobsTab() {
@@ -30,6 +37,20 @@ export function AdditionalJobsTab() {
   const [pensionPct, setPensionPct] = useState(0);
   const [salarySacrificeFixed, setSalarySacrificeFixed] = useState(0);
   const [sippPersonal, setSippPersonal] = useState(0);
+
+  // Convert frequency to annual gross
+  const toAnnualGross = (amount: number, frequency: Frequency): number => {
+    switch (frequency) {
+      case "hourly":
+        return amount * 7.5 * 5 * 46; // 7.5 hours/day, 5 days/week, 46 weeks/year
+      case "daily":
+        return amount * 5 * 46; // 5 days/week, 46 weeks/year
+      case "monthly":
+        return amount * 12;
+      case "annual":
+        return amount;
+    }
+  };
 
   const addJob = () => {
     const newJob: JobBlock = {
@@ -54,23 +75,55 @@ export function AdditionalJobsTab() {
     );
   };
 
-  // Convert jobs to PayeIncomeStream format
-  const streams: PayeIncomeStream[] = jobs.map((job) => ({
-    id: job.id,
-    label: job.label,
-    frequency: job.frequency,
-    amount: job.grossAmount,
-    taxCode: job.taxCode,
-    salarySacrificePct: job.id === jobs[0]?.id ? pensionPct : undefined,
-    salarySacrificeFixed: job.id === jobs[0]?.id ? salarySacrificeFixed : undefined,
-  }));
+  // Convert jobs to domain format and calculate
+  const calculationResult = useMemo(() => {
+    if (jobs.length === 0) {
+      return null;
+    }
 
-  // Calculate combined PAYE
-  const result = calcPAYECombined({
-    streams,
-    sippPersonal,
-    loans,
-  });
+    // Convert to domain JobInput format
+    // First job is "main", others are "additional"
+    const jobInputs: JobInput[] = jobs.map((job, index) => {
+      const annualGross = toAnnualGross(job.grossAmount, job.frequency);
+      const kind: EmploymentKind = index === 0 ? "main" : "additional";
+      
+      // Calculate pension: first job gets percentage/fixed, others can have their own
+      let pensionEmployeeAnnual = 0;
+      if (index === 0) {
+        if (pensionPct > 0) {
+          pensionEmployeeAnnual = annualGross * (pensionPct / 100);
+        }
+        if (salarySacrificeFixed > 0) {
+          pensionEmployeeAnnual += salarySacrificeFixed * 12; // Convert monthly to annual
+        }
+      } else if (job.pensionEmployeeAnnual !== undefined) {
+        pensionEmployeeAnnual = job.pensionEmployeeAnnual;
+      }
+
+      return {
+        id: job.id,
+        label: job.label,
+        kind,
+        annualGross,
+        taxCode: job.taxCode,
+        pensionEmployeeAnnual,
+      };
+    });
+
+    // Calculate using domain function
+    try {
+      return calculateMultiJob({
+        taxYear: "2024-25",
+        jobs: jobInputs,
+        studentLoan: {
+          plans: loans,
+        },
+      });
+    } catch (error) {
+      console.error("Calculation error:", error);
+      return null;
+    }
+  }, [jobs, loans, pensionPct, salarySacrificeFixed]);
 
   return (
     <div className="space-y-6">
@@ -196,74 +249,141 @@ export function AdditionalJobsTab() {
       </section>
 
       {/* Results summary */}
-      <section className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-        <h3 className="text-sm font-semibold text-white">Combined Results</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-white/70">Total Gross (annual):</span>
-              <span className="font-semibold text-white">
-                {formatGBP(result.totalGrossAnnual)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-white/70">Income Tax:</span>
-              <span className="font-semibold text-white">
-                {formatGBP(result.totalIncomeTax)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-white/70">Employee NI:</span>
-              <span className="font-semibold text-white">
-                {formatGBP(result.totalEmployeeNI)}
-              </span>
-            </div>
-            {result.totalStudentLoans > 0 && (
-              <div className="flex justify-between">
-                <span className="text-white/70">Student Loans:</span>
-                <span className="font-semibold text-white">
-                  {formatGBP(result.totalStudentLoans)}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="space-y-2">
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4">
-              <div className="text-xs text-emerald-300/90">Take-Home (annual)</div>
-              <div className="text-2xl font-bold text-emerald-300 mt-1">
-                {formatGBP(result.totalTakeHomeAnnual)}
-              </div>
-              <div className="text-xs text-emerald-300/70 mt-1">
-                {formatGBP(result.totalTakeHomeAnnual / 12)}/month
-              </div>
-            </div>
-          </div>
-        </div>
+      {calculationResult && (
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
+          <h3 className="text-sm font-semibold text-white">Take-home pay breakdown</h3>
 
-        {/* Individual job breakdown */}
-        <div className="mt-4 pt-4 border-t border-white/10">
-          <h4 className="text-xs font-semibold text-white/90 mb-3">Job Breakdown</h4>
-          <div className="space-y-2">
-            {result.streams.map((stream) => (
+          {/* Per-job breakdowns */}
+          <div className="space-y-4">
+            {calculationResult.jobs.map((job) => (
               <div
-                key={stream.id}
-                className="flex justify-between text-xs bg-black/20 rounded-lg px-3 py-2"
+                key={job.id}
+                className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3"
               >
-                <span className="text-white/70">{stream.label}:</span>
-                <span className="text-white">
-                  {formatGBP(stream.annualisedGross)} gross →{" "}
-                  {formatGBP(
-                    stream.annualisedGross -
-                      stream.incomeTax -
-                      stream.employeeNI
-                  )}{" "}
-                  after tax/NI
-                </span>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-white/90">
+                    {job.kind === "main" ? "Main job" : "Additional job"} – {job.label}
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                    <span className="text-white/70">Gross annual:</span>
+                    <span className="ml-1 font-semibold text-white">
+                      {formatGBP(job.grossAnnual)}
+                    </span>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                    <span className="text-white/70">PAYE:</span>
+                    <span className="ml-1 font-semibold text-white">
+                      {formatGBP(job.annualPAYE)}
+                    </span>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                    <span className="text-white/70">NI:</span>
+                    <span className="ml-1 font-semibold text-white">
+                      {formatGBP(job.annualNI)}
+                    </span>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                    <span className="text-white/70">Pension:</span>
+                    <span className="ml-1 font-semibold text-white">
+                      {formatGBP(job.annualPensionEmployee)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                  <p className="text-xs text-white/70">Net annual</p>
+                  <p className="mt-1 text-lg font-semibold text-emerald-300">
+                    {formatGBP(job.netAnnual)}
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                    <span className="text-white/70">
+                      Monthly: <span className="font-semibold text-white">{formatGBP(job.netAnnual / 12)}</span>
+                    </span>
+                    <span className="text-white/70">
+                      Weekly: <span className="font-semibold text-white">{formatGBP(job.netAnnual / 52)}</span>
+                    </span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+
+          {/* Combined breakdown */}
+          <div className="rounded-xl border-2 border-emerald-500/40 bg-emerald-500/10 p-4 space-y-3 mt-4">
+            <h4 className="text-sm font-semibold text-white">
+              Combined across all jobs
+            </h4>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                <span className="text-white/70">Total gross annual:</span>
+                <span className="ml-1 font-semibold text-white">
+                  {formatGBP(calculationResult.combined.grossAnnual)}
+                </span>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                <span className="text-white/70">Total PAYE:</span>
+                <span className="ml-1 font-semibold text-white">
+                  {formatGBP(calculationResult.combined.annualPAYE)}
+                </span>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                <span className="text-white/70">Total NI:</span>
+                <span className="ml-1 font-semibold text-white">
+                  {formatGBP(calculationResult.combined.annualNI)}
+                </span>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                <span className="text-white/70">Total pension:</span>
+                <span className="ml-1 font-semibold text-white">
+                  {formatGBP(calculationResult.combined.annualPensionEmployee)}
+                </span>
+              </div>
+            </div>
+
+            {/* Student loan breakdown (only in combined, as it's calculated on total gross) */}
+            {calculationResult.combined.studentLoanBreakdown.length > 0 && (
+              <div className="rounded-lg border border-white/10 bg-black/20 p-3 space-y-2">
+                <h5 className="text-xs font-semibold text-white/90 uppercase tracking-wide">
+                  Student loan deductions
+                </h5>
+                <div className="space-y-1">
+                  {calculationResult.combined.studentLoanBreakdown.map(({ plan, label, amount }) => (
+                    <div key={plan} className="flex items-center justify-between text-xs">
+                      <span className="text-white/70">Student loan ({label}):</span>
+                      <span className="font-semibold text-white">{formatGBP(amount)}</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-white/10">
+                    <span className="font-medium text-white">Total student loans:</span>
+                    <span className="font-semibold text-white">
+                      {formatGBP(calculationResult.combined.annualStudentLoan)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
+              <p className="text-xs text-emerald-300/90">Total net annual</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-300">
+                {formatGBP(calculationResult.combined.netAnnual)}
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                <span className="text-emerald-300/70">
+                  Monthly: <span className="font-semibold text-emerald-300">{formatGBP(calculationResult.combined.netAnnual / 12)}</span>
+                </span>
+                <span className="text-emerald-300/70">
+                  Weekly: <span className="font-semibold text-emerald-300">{formatGBP(calculationResult.combined.netAnnual / 52)}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
