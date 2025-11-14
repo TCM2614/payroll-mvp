@@ -5,9 +5,11 @@ import { usePathname } from 'next/navigation';
 import { Calculator, LineChart, Info } from 'lucide-react';
 
 const navItems = [
-  { href: '/', label: 'Calculator', icon: Calculator },
-  { href: '/scenarios', label: 'Scenarios', icon: LineChart },
+  { href: '/', label: 'Home', icon: Calculator },
+  { href: '/calc', label: 'Calculator', icon: Calculator },
+  { href: '/contracting', label: 'Scenarios', icon: LineChart },
   { href: '/about', label: 'About', icon: Info },
+  { href: '/privacy', label: 'Privacy', icon: Info },
 ];
 
 export function Header() {
@@ -31,16 +33,17 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Nav */}
-        <nav className="hidden items-center gap-1 rounded-full border border-brand-border/70 bg-brand-surface/80 px-1 py-1 text-xs sm:flex">
+        {/* Nav - Desktop: pill-style navigation */}
+        <nav className="hidden items-center gap-1 rounded-full border border-brand-border/70 bg-brand-surface/80 px-1 py-1 text-xs sm:flex backdrop-blur">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href;
+            const isActive =
+              pathname === href || (href !== '/' && pathname?.startsWith(href));
             return (
               <Link
                 key={href}
                 href={href}
                 className={[
-                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors',
+                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70',
                   isActive
                     ? 'bg-brand-primary text-white shadow-soft-xl'
                     : 'text-brand-textMuted hover:text-brand-text hover:bg-brand-border/40',
@@ -53,14 +56,22 @@ export function Header() {
           })}
         </nav>
 
-        {/* CTA */}
-        <div className="flex items-center gap-2">
-          <span className="hidden text-xs text-brand-textMuted sm:inline">
-            Tax year 2024/25
-          </span>
+        {/* Mobile: simplified nav */}
+        <nav className="flex items-center gap-2 sm:hidden">
+          <Link
+            href="/calc"
+            className="rounded-full bg-brand-primary px-3 py-1.5 text-xs font-medium text-white shadow-soft-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70"
+          >
+            Calc
+          </Link>
+        </nav>
+
+        {/* CTA - Desktop */}
+        <div className="hidden items-center gap-2 sm:flex">
+          <span className="text-xs text-brand-textMuted">Tax year 2024/25</span>
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-primarySoft to-brand-primary px-3 py-1.5 text-xs font-medium text-white shadow-soft-xl hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70"
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-primarySoft to-brand-primary px-3 py-1.5 text-xs font-medium text-white shadow-soft-xl hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70 transition-colors"
           >
             New scenario
           </button>
