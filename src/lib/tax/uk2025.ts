@@ -40,10 +40,44 @@ export const UK_TAX_2025 = {
 
 export type LoanKey = keyof typeof UK_TAX_2025["studentLoans"];
 
-export type PayeTaxConfig = typeof UK_TAX_2025;
+export type PayeTaxConfig = {
+  personalAllowance: number;
+  paTaperStart: number;
+  paTaperEnd: number;
+  basicRate: number;
+  higherRate: number;
+  additionalRate: number;
+  basicBandTop: number;
+  higherBandTop: number;
+  ni: {
+    primaryThreshold: number;
+    upperEarningsLimit: number;
+    mainRate: number;
+    upperRate: number;
+  };
+  employerNi: {
+    secondaryThreshold: number;
+    rate: number;
+    apprenticeshipLevy: number;
+  };
+  corpTaxRate: number;
+  dividend: {
+    allowance: number;
+    basic: number;
+    higher: number;
+    additional: number;
+  };
+  studentLoans: {
+    plan1: { threshold: number; rate: number };
+    plan2: { threshold: number; rate: number };
+    plan4: { threshold: number; rate: number };
+    plan5: { threshold: number; rate: number };
+    postgrad: { threshold: number; rate: number };
+  };
+};
 
 // 2024/25 config for the PAYE multi-job engine (used when taxYear = "2024-25")
-export const UK_TAX_2024: PayeTaxConfig = {
+export const UK_TAX_2024 = {
   personalAllowance: 12_570,
   paTaperStart: 100_000,
   paTaperEnd: 125_140,
