@@ -66,15 +66,9 @@ export function Header() {
           </Link>
         </nav>
 
-        {/* CTA - Desktop */}
+        {/* Tax year - Desktop */}
         <div className="hidden items-center gap-2 sm:flex">
           <span className="text-xs text-brand-textMuted">Tax year 2024/25</span>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-primarySoft to-brand-primary px-3 py-1.5 text-xs font-medium text-white shadow-soft-xl hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70 transition-colors"
-          >
-            New scenario
-          </button>
         </div>
       </div>
     </header>
