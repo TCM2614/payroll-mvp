@@ -49,6 +49,8 @@ export interface ContractorAnnualResult {
     ni: number;
     pensionEmployee: number;
     studentLoan: number;
+    /** Per-plan student loan breakdown */
+    studentLoanBreakdown?: Array<{ plan: string; label: string; amount: number }>;
     net: number;
   };
 }
@@ -129,7 +131,10 @@ export interface ContractorEngineDeps {
     grossAnnualIncome: number;
     taxCode: string;
     pensionEmployeePercent?: number;
+    /** @deprecated Use studentLoanPlans instead */
     studentLoanPlan?: ContractorInputs["studentLoanPlan"];
+    /** Array of student loan plans (e.g., ["plan2", "postgrad"]) */
+    studentLoanPlans?: string[];
     config: TaxYearConfig;
   }): AnnualTaxBreakdown;
 }
@@ -184,11 +189,18 @@ export function calculateContractorAnnual(
   // Inside IR35: treat as PAYE employment income
   if (input.ir35Status === "inside") {
     const config = deps.createConfigForYear(input.taxYear);
+    
+    // Convert single plan to array format for new model
+    const studentLoanPlans = input.studentLoanPlan && input.studentLoanPlan !== "none"
+      ? [input.studentLoanPlan]
+      : undefined;
+    
     const breakdown = deps.calculateAnnual({
       grossAnnualIncome,
       taxCode: input.taxCode,
       pensionEmployeePercent: input.pensionEmployeePercent,
-      studentLoanPlan: input.studentLoanPlan,
+      studentLoanPlan: input.studentLoanPlan, // Keep for backwards compatibility
+      studentLoanPlans, // New multi-plan support
       config,
     });
 
@@ -200,6 +212,7 @@ export function calculateContractorAnnual(
         ni: breakdown.annualNI,
         pensionEmployee: breakdown.annualPensionEmployee,
         studentLoan: breakdown.annualStudentLoan,
+        studentLoanBreakdown: breakdown.studentLoanBreakdown,
         net: breakdown.netAnnualIncome,
       },
     };

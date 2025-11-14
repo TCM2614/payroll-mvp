@@ -26,6 +26,7 @@ export type CombinedPayeOutput = {
   sippGrossed: number; sippExtraReliefEstimate: number;
   totalIncomeTax: number; totalEmployeeNI: number;
   totalStudentLoans: number;
+  studentLoanBreakdown: Array<{ plan: LoanKey; label: string; amount: number }>;
   totalGrossAnnual: number; totalTakeHomeAnnual: number;
 };
 
@@ -80,16 +81,41 @@ function applySS(annualGross: number, pct?: number, fixed?: number) {
  * Calculate student loan repayments for given loan plans.
  * Student loans are calculated on gross income (after salary sacrifice) above the threshold.
  * Each loan plan is calculated separately and added together.
+ * 
+ * Returns both per-plan breakdown and total for display purposes.
  */
-function calculateStudentLoans(grossAnnual: number, loans: LoanKey[]): number {
+function calculateStudentLoans(
+  grossAnnual: number,
+  loans: LoanKey[]
+): { total: number; breakdown: Array<{ plan: LoanKey; label: string; amount: number }> } {
+  const breakdown: Array<{ plan: LoanKey; label: string; amount: number }> = [];
   let total = 0;
+  
+  const planLabels: Record<LoanKey, string> = {
+    plan1: "Plan 1",
+    plan2: "Plan 2",
+    plan4: "Plan 4",
+    plan5: "Plan 5",
+    postgrad: "Postgraduate loan",
+  };
+  
   for (const loanKey of loans) {
     const loan = UK_TAX_2025.studentLoans[loanKey];
     if (!loan) continue;
     const repayable = Math.max(0, grossAnnual - loan.threshold);
-    total += repayable * loan.rate;
+    const amount = repayable * loan.rate;
+    
+    if (amount > 0) {
+      breakdown.push({
+        plan: loanKey,
+        label: planLabels[loanKey] || loanKey,
+        amount,
+      });
+      total += amount;
+    }
   }
-  return total;
+  
+  return { total, breakdown };
 }
 
 function allocatePA(streams: PayeIncomeStream[], basePA: number, totalIncomeAfterSSOnPrimary: number) {
@@ -186,8 +212,9 @@ export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
   const annualGrossAfterSS = results.reduce((sum, r) =>
     sum + (r.id === "primary" ? (r.annualisedGross - r.salarySacrifice) : r.annualisedGross), 0);
   
-  // Calculate student loan repayments
-  const totalStudentLoans = calculateStudentLoans(annualGrossAfterSS, loans);
+  // Calculate student loan repayments (with breakdown)
+  const studentLoanResult = calculateStudentLoans(annualGrossAfterSS, loans);
+  const totalStudentLoans = studentLoanResult.total;
 
   const totalTakeHomeAnnual = annualGrossAfterSS - totalIncomeTax - totalEmployeeNI - totalStudentLoans - sippPersonal;
 
@@ -198,12 +225,14 @@ export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
     totalIncomeTax,
     totalEmployeeNI,
     totalStudentLoans,
+    studentLoanBreakdown: studentLoanResult.breakdown,
     totalGrossAnnual: totalAnnualGross,
     totalTakeHomeAnnual,
   };
 }
 
 // Helper function for simple monthly PAYE calculation
+// Returns just the monthly take-home (for backwards compatibility)
 export function calcPayeMonthly(input: {
   grossMonthly: number;
   taxCode: string;
@@ -211,12 +240,24 @@ export function calcPayeMonthly(input: {
   pensionPct?: number;
   sippPct?: number;
 }): number {
+  const result = calcPayeMonthlyFull(input);
+  return result.totalTakeHomeAnnual / 12;
+}
+
+// Full breakdown version that includes student loan breakdown
+export function calcPayeMonthlyFull(input: {
+  grossMonthly: number;
+  taxCode: string;
+  loans?: LoanKey[];
+  pensionPct?: number;
+  sippPct?: number;
+}): CombinedPayeOutput {
   const { grossMonthly, taxCode, loans = [], pensionPct = 0, sippPct = 0 } = input;
   
   const annualGross = grossMonthly * 12;
   const sippPersonal = (annualGross * sippPct) / 100;
   
-  const result = calcPAYECombined({
+  return calcPAYECombined({
     streams: [{
       id: "primary",
       label: "Primary job",
@@ -228,6 +269,4 @@ export function calcPayeMonthly(input: {
     sippPersonal,
     loans,
   });
-  
-  return result.totalTakeHomeAnnual / 12;
 }

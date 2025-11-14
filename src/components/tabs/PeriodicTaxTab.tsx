@@ -15,6 +15,9 @@ import {
   type PeriodActualInput,
 } from "@/domain/tax/periodActuals";
 import { formatGBP } from "@/lib/format";
+import { StudentLoanSelector } from "@/components/StudentLoanSelector";
+import type { StudentLoanSelection } from "@/lib/student-loans";
+import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import {
   trackCalculatorSubmit,
   trackResultsView,
@@ -74,9 +77,10 @@ export function PeriodicTaxTab() {
   // Input state
   const [payFrequency, setPayFrequency] = useState<PayFrequency>("monthly");
   const [taxCode, setTaxCode] = useState("1257L");
-  const [studentLoanPlan, setStudentLoanPlan] = useState<
-    "none" | "plan1" | "plan2" | "plan4" | "plan5" | "postgrad"
-  >("none");
+  const [studentLoanSelection, setStudentLoanSelection] = useState<StudentLoanSelection>({
+    undergraduatePlan: "none",
+    hasPostgraduateLoan: false,
+  });
 
   // Period data: array of PeriodRow
   // If taxCode is not provided for a period, it falls back to the global taxCode
@@ -116,7 +120,7 @@ export function PeriodicTaxTab() {
       totalPeriodsInYear,
       grossForPeriod: row.gross,
       pensionForPeriod: row.pension,
-      studentLoanPlan: studentLoanPlan === "none" ? undefined : studentLoanPlan,
+      studentLoanPlans: studentLoanSelectionToLoanKeys(studentLoanSelection),
       ytdGrossBeforeThisPeriod: ytdGross,
       ytdTaxBeforeThisPeriod: ytdTax,
       ytdNiBeforeThisPeriod: ytdNI,
@@ -184,11 +188,13 @@ export function PeriodicTaxTab() {
       trackCalculatorSubmit({
         tab: "periodic",
         hasPension,
-        hasStudentLoan: studentLoanPlan !== "none",
+        hasStudentLoan:
+          studentLoanSelection.undergraduatePlan !== "none" ||
+          studentLoanSelection.hasPostgraduateLoan,
         salaryBand: getSalaryBand(annualGross),
       });
     }
-  }, [periods.length, annualGross, studentLoanPlan]);
+  }, [periods.length, annualGross, studentLoanSelection]);
 
   // Track results view
   useEffect(() => {

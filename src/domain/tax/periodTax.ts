@@ -37,7 +37,10 @@ export interface TaxYearConfig {
 export interface AnnualTaxInputs {
   grossAnnualIncome: number;
   pensionEmployeeAnnual?: number;
+  /** @deprecated Use studentLoanPlans instead */
   studentLoanPlan?: "none" | "plan1" | "plan2" | "plan4" | "plan5" | "postgrad";
+  /** Array of student loan plans (e.g., ["plan2", "postgrad"]) */
+  studentLoanPlans?: string[];
   taxCode: string;
   config: TaxYearConfig;
 }
@@ -48,7 +51,9 @@ export interface AnnualTaxBreakdown {
   annualPAYE: number;
   annualNI: number;
   annualStudentLoan: number;
-  annualPensionEmployee: number;
+  /** Per-plan student loan breakdown */
+  studentLoanBreakdown?: Array<{ plan: string; label: string; amount: number }>;
+  annualPensionEmployee?: number;
   netAnnualIncome: number;
 }
 
@@ -67,7 +72,10 @@ export interface PeriodTaxInput {
   pensionForPeriod?: number;
 
   /** Optional student loan deduction for this period, if we're directly passing it. */
+  /** @deprecated Use studentLoanPlans instead */
   studentLoanPlan?: "none" | "plan1" | "plan2" | "plan4" | "plan5" | "postgrad";
+  /** Array of student loan plans (e.g., ["plan2", "postgrad"]) */
+  studentLoanPlans?: string[];
 
   /** Cumulative gross income from the start of the tax year up to (but excluding) this period. */
   ytdGrossBeforeThisPeriod: number;
@@ -176,7 +184,8 @@ export function calculateAnnualTax(inputs: AnnualTaxInputs): AnnualTaxBreakdown 
   const {
     grossAnnualIncome,
     pensionEmployeeAnnual = 0,
-    studentLoanPlan = "none",
+    studentLoanPlan,
+    studentLoanPlans,
     taxCode,
     config,
   } = inputs;
@@ -215,12 +224,40 @@ export function calculateAnnualTax(inputs: AnnualTaxInputs): AnnualTaxBreakdown 
   // Calculate NI
   const annualNI = calculateAnnualNI(grossAfterPension, config.ni);
 
-  // Calculate student loan
-  const annualStudentLoan = calculateAnnualStudentLoan(
-    grossAfterPension,
-    studentLoanPlan,
-    config.studentLoans
-  );
+  // Calculate student loans (support multiple plans)
+  let annualStudentLoan = 0;
+  let studentLoanBreakdown: AnnualTaxBreakdown["studentLoanBreakdown"] = undefined;
+  
+  if (studentLoanPlans && studentLoanPlans.length > 0) {
+    const result = calculateAnnualStudentLoansMultiple(
+      grossAfterPension,
+      studentLoanPlans,
+      config.studentLoans
+    );
+    annualStudentLoan = result.total;
+    studentLoanBreakdown = result.breakdown;
+  } else if (studentLoanPlan) {
+    // Backwards compatibility: single plan
+    annualStudentLoan = calculateAnnualStudentLoan(
+      grossAfterPension,
+      studentLoanPlan,
+      config.studentLoans
+    );
+    if (annualStudentLoan > 0 && studentLoanPlan !== "none") {
+      const planLabels: Record<string, string> = {
+        plan1: "Plan 1",
+        plan2: "Plan 2",
+        plan4: "Plan 4",
+        plan5: "Plan 5",
+        postgrad: "Postgraduate loan",
+      };
+      studentLoanBreakdown = [{
+        plan: studentLoanPlan,
+        label: planLabels[studentLoanPlan] || studentLoanPlan,
+        amount: annualStudentLoan,
+      }];
+    }
+  }
 
   return {
     grossAnnualIncome,
@@ -228,6 +265,7 @@ export function calculateAnnualTax(inputs: AnnualTaxInputs): AnnualTaxBreakdown 
     annualPAYE,
     annualNI,
     annualStudentLoan,
+    studentLoanBreakdown,
     annualPensionEmployee: pensionEmployeeAnnual,
     netAnnualIncome:
       grossAfterPension - annualPAYE - annualNI - annualStudentLoan,
@@ -255,7 +293,8 @@ export function calculatePeriodTax(
     totalPeriodsInYear,
     grossForPeriod,
     pensionForPeriod = 0,
-    studentLoanPlan = "none",
+    studentLoanPlan,
+    studentLoanPlans,
     ytdGrossBeforeThisPeriod,
     ytdTaxBeforeThisPeriod,
     ytdNiBeforeThisPeriod = 0,
@@ -263,6 +302,9 @@ export function calculatePeriodTax(
     taxCode,
     config,
   } = input;
+  
+  // Use studentLoanPlans if provided, otherwise fall back to studentLoanPlan for backwards compatibility
+  const effectiveLoanPlans = studentLoanPlans || (studentLoanPlan && studentLoanPlan !== "none" ? [studentLoanPlan] : undefined);
 
   // Compute YTD including current period
   const ytdGross = ytdGrossBeforeThisPeriod + grossForPeriod;
@@ -278,7 +320,8 @@ export function calculatePeriodTax(
   const annualBreakdown = calculateAnnualTax({
     grossAnnualIncome: projectedAnnualGross,
     pensionEmployeeAnnual: (ytdPensionSimple / periodFraction) || 0,
-    studentLoanPlan,
+    studentLoanPlan, // Keep for backwards compatibility
+    studentLoanPlans: effectiveLoanPlans, // Use new multi-plan support
     taxCode,
     config,
   });
@@ -296,7 +339,8 @@ export function calculatePeriodTax(
   const actualYtdBreakdown = calculateAnnualTax({
     grossAnnualIncome: ytdGross * (totalPeriodsInYear / periodIndex),
     pensionEmployeeAnnual: (ytdPensionSimple * totalPeriodsInYear) / periodIndex,
-    studentLoanPlan,
+    studentLoanPlan, // Keep for backwards compatibility
+    studentLoanPlans: effectiveLoanPlans, // Use new multi-plan support
     taxCode,
     config,
   });
@@ -381,7 +425,8 @@ export function calculatePeriodTax(
   const previousYtdBreakdown = calculateAnnualTax({
     grossAnnualIncome: previousYtdGross * (totalPeriodsInYear / Math.max(1, periodIndex - 1)),
     pensionEmployeeAnnual: (previousYtdPension * totalPeriodsInYear) / Math.max(1, periodIndex - 1),
-    studentLoanPlan,
+    studentLoanPlan, // Keep for backwards compatibility
+    studentLoanPlans: effectiveLoanPlans, // Use new multi-plan support
     taxCode,
     config,
   });
@@ -584,6 +629,9 @@ function calculateAnnualNI(
   return mainBand * niConfig.mainRate + upperBand * niConfig.upperRate;
 }
 
+/**
+ * Calculate annual student loan deduction for a single plan
+ */
 function calculateAnnualStudentLoan(
   grossIncome: number,
   plan: string,
@@ -596,6 +644,48 @@ function calculateAnnualStudentLoan(
 
   const repayable = Math.max(0, grossIncome - loanConfig.threshold);
   return repayable * loanConfig.rate;
+}
+
+/**
+ * Calculate annual student loan deductions for multiple plans
+ * Returns total and per-plan breakdown
+ */
+function calculateAnnualStudentLoansMultiple(
+  grossIncome: number,
+  plans: string[],
+  studentLoans: TaxYearConfig["studentLoans"]
+): { total: number; breakdown: Array<{ plan: string; label: string; amount: number }> } {
+  const breakdown: Array<{ plan: string; label: string; amount: number }> = [];
+  let total = 0;
+
+  const planLabels: Record<string, string> = {
+    plan1: "Plan 1",
+    plan2: "Plan 2",
+    plan4: "Plan 4",
+    plan5: "Plan 5",
+    postgrad: "Postgraduate loan",
+  };
+
+  for (const plan of plans) {
+    if (plan === "none") continue;
+
+    const loanConfig = studentLoans[plan];
+    if (!loanConfig) continue;
+
+    const repayable = Math.max(0, grossIncome - loanConfig.threshold);
+    const amount = repayable * loanConfig.rate;
+
+    if (amount > 0) {
+      breakdown.push({
+        plan,
+        label: planLabels[plan] || plan,
+        amount,
+      });
+      total += amount;
+    }
+  }
+
+  return { total, breakdown };
 }
 
 function formatGBP(amount: number): string {
