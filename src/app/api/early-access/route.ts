@@ -17,6 +17,10 @@ export async function POST(req: Request) {
   const fromEmail = process.env.RESEND_FROM_EMAIL;
   const businessEmail = process.env.BUSINESS_EMAIL;
 
+  if (!fromEmail) {
+    return NextResponse.json({ ok: false, error: "Email config missing" });
+  }
+
   try {
     const json = await req.json();
     const { email } = bodySchema.parse(json);
