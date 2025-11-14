@@ -77,12 +77,65 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   
-  /* Pantone Color Palette */
-  --color-ethereal-blue: var(--ethereal-blue);
-  --color-sea-jet: var(--sea-jet);
-  --color-aqua-esque: var(--aqua-esque);
-  --color-brilliant-blue: var(--brilliant-blue);
-  --color-navy-peony: var(--navy-peony);
+  /* Pantone Color Palette - Ethereal Blue (PANTONE® 15-4323 TCX) */
+  --color-ethereal-50: #E8F5F9;
+  --color-ethereal-100: #D1EBF3;
+  --color-ethereal-200: #A8D8EA;
+  --color-ethereal-300: #7FC5E1;
+  --color-ethereal-400: #56B2D8;
+  --color-ethereal-500: #2D9FCF;
+  --color-ethereal-600: #257F9F;
+  --color-ethereal-700: #1C5F6F;
+  --color-ethereal-800: #133F3F;
+  --color-ethereal-900: #0A1F1F;
+  
+  /* Pantone Color Palette - Sea Jet (PANTONE® 15-4713 TCX) */
+  --color-sea-jet-50: #E8F2F5;
+  --color-sea-jet-100: #D1E5EB;
+  --color-sea-jet-200: #A3CBD7;
+  --color-sea-jet-300: #75B1C3;
+  --color-sea-jet-400: #4A8B9E;
+  --color-sea-jet-500: #3A6F7E;
+  --color-sea-jet-600: #2A535E;
+  --color-sea-jet-700: #1A373F;
+  --color-sea-jet-800: #0A1B1F;
+  --color-sea-jet-900: #050F12;
+  
+  /* Pantone Color Palette - Aqua (PANTONE® 13-5411 TCX) */
+  --color-aqua-50: #E8F7F7;
+  --color-aqua-100: #D1EFEF;
+  --color-aqua-200: #A3DFDF;
+  --color-aqua-300: #7BC4C4;
+  --color-aqua-400: #62A4A4;
+  --color-aqua-500: #4A8484;
+  --color-aqua-600: #3A6A6A;
+  --color-aqua-700: #2A5050;
+  --color-aqua-800: #1A3636;
+  --color-aqua-900: #0A1C1C;
+  
+  /* Pantone Color Palette - Brilliant Blue (PANTONE® 18-4247 TCX) */
+  --color-brilliant-50: #E8F0F7;
+  --color-brilliant-100: #D1E1EF;
+  --color-brilliant-200: #A3C3DF;
+  --color-brilliant-300: #75A5CF;
+  --color-brilliant-400: #4A7FAF;
+  --color-brilliant-500: #2E5C8A;
+  --color-brilliant-600: #254A6E;
+  --color-brilliant-700: #1C3852;
+  --color-brilliant-800: #132636;
+  --color-brilliant-900: #0A141A;
+  
+  /* Pantone Color Palette - Navy (PANTONE® 19-4029 TCX) */
+  --color-navy-50: #E8EAED;
+  --color-navy-100: #D1D5DB;
+  --color-navy-200: #A3ABBA;
+  --color-navy-300: #758198;
+  --color-navy-400: #47576D;
+  --color-navy-500: #1A2B3C;
+  --color-navy-600: #15222F;
+  --color-navy-700: #101922;
+  --color-navy-800: #0A1115;
+  --color-navy-900: #05080A;
 }
 
 @media (prefers-color-scheme: dark) {
