@@ -210,7 +210,7 @@ export function calculateContractorAnnual(
       annual: {
         paye: breakdown.annualPAYE,
         ni: breakdown.annualNI,
-        pensionEmployee: breakdown.annualPensionEmployee,
+        pensionEmployee: breakdown.annualPensionEmployee ?? 0,
         studentLoan: breakdown.annualStudentLoan,
         studentLoanBreakdown: breakdown.studentLoanBreakdown,
         net: breakdown.netAnnualIncome,
