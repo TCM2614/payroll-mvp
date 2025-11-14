@@ -357,37 +357,11 @@ export function PeriodicTaxTab() {
             </p>
           </div>
 
-          <div className="space-y-1 md:col-span-2">
-            <label htmlFor="student-loan" className="block text-sm font-medium text-navy-100">
-              Student Loan Plan
-            </label>
-            <select
-              id="student-loan"
-              value={studentLoanPlan}
-              onChange={(e) =>
-                setStudentLoanPlan(
-                  e.target.value as
-                    | "none"
-                    | "plan1"
-                    | "plan2"
-                    | "plan4"
-                    | "plan5"
-                    | "postgrad"
-                )
-              }
-              className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-900/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
-              aria-describedby="student-loan-help"
-            >
-              <option value="none">None</option>
-              <option value="plan1">Plan 1</option>
-              <option value="plan2">Plan 2</option>
-              <option value="plan4">Plan 4</option>
-              <option value="plan5">Plan 5</option>
-              <option value="postgrad">Postgraduate</option>
-            </select>
-            <p id="student-loan-help" className="text-xs text-navy-200">
-              Select your student loan plan if repayments are taken from this income.
-            </p>
+          <div className="md:col-span-2">
+            <StudentLoanSelector
+              selection={studentLoanSelection}
+              onChange={setStudentLoanSelection}
+            />
           </div>
         </div>
       </section>
