@@ -22,79 +22,55 @@ export function TakeHomeCalculator() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
-        {/* Tab bar container - mobile: horizontal scroll, desktop: grid */}
-        <div className="mb-4 sm:mb-6 rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/40 p-1">
+        {/* Mobile: stacked full-width buttons */}
+        <div className="mb-4 flex flex-col gap-2 md:hidden">
+          <TabsTrigger
+            value="paye"
+            className="w-full rounded-xl border border-brand-border/60 bg-brand-surface/80 px-4 py-3 text-left text-sm font-medium transition-colors text-brand-text hover:bg-brand-surface data-[state=active]:bg-brand-primary data-[state=active]:text-white data-[state=active]:border-brand-primary"
+            aria-pressed={activeTab === "paye"}
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-base">£</span>
+              <span>Standard PAYE</span>
+            </span>
+          </TabsTrigger>
 
-          {/* Mobile: horizontal scrollable tabs */}
-          <div className="md:hidden overflow-x-auto -mx-1 px-1 scrollbar-hide">
-            <TabsList className="inline-flex flex-nowrap gap-2 bg-transparent p-0 h-auto min-w-max">
+          <TabsTrigger
+            value="umbrella"
+            className="w-full rounded-xl border border-brand-border/60 bg-brand-surface/80 px-4 py-3 text-left text-sm font-medium transition-colors text-brand-text hover:bg-brand-surface data-[state=active]:bg-brand-primary data-[state=active]:text-white data-[state=active]:border-brand-primary"
+            aria-pressed={activeTab === "umbrella"}
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-base">☂</span>
+              <span>Umbrella Company</span>
+            </span>
+          </TabsTrigger>
 
-            <TabsTrigger 
+          <TabsTrigger
+            value="limited"
+            className="w-full rounded-xl border border-brand-border/60 bg-brand-surface/80 px-4 py-3 text-left text-sm font-medium transition-colors text-brand-text hover:bg-brand-surface data-[state=active]:bg-brand-primary data-[state=active]:text-white data-[state=active]:border-brand-primary"
+            aria-pressed={activeTab === "limited"}
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-base">🏢</span>
+              <span>Limited Company</span>
+            </span>
+          </TabsTrigger>
 
-              value="paye" 
+          <TabsTrigger
+            value="periodic"
+            className="w-full rounded-xl border border-brand-border/60 bg-brand-surface/80 px-4 py-3 text-left text-sm font-medium transition-colors text-brand-text hover:bg-brand-surface data-[state=active]:bg-brand-primary data-[state=active]:text-white data-[state=active]:border-brand-primary"
+            aria-pressed={activeTab === "periodic"}
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-base">📅</span>
+              <span>Periodic Tax Check</span>
+            </span>
+          </TabsTrigger>
+        </div>
 
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-sea-jet-900/40 text-navy-200 hover:bg-sea-jet-800/50 hover:text-navy-50 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
-
-            >
-
-              <span className="text-sm sm:text-base">£</span>
-
-              <span className="text-xs sm:text-sm font-medium">Standard</span>
-
-            </TabsTrigger>
-
-
-
-            <TabsTrigger 
-
-              value="umbrella" 
-
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-sea-jet-900/40 text-navy-200 hover:bg-sea-jet-800/50 hover:text-navy-50 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
-
-            >
-
-              <span className="text-sm sm:text-base">☂</span>
-
-              <span className="text-xs sm:text-sm font-medium">Umbrella</span>
-
-            </TabsTrigger>
-
-
-
-            <TabsTrigger 
-
-              value="limited" 
-
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-sea-jet-900/40 text-navy-200 hover:bg-sea-jet-800/50 hover:text-navy-50 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
-
-            >
-
-              <span className="text-sm sm:text-base">🏢</span>
-
-              <span className="text-xs sm:text-sm font-medium">Limited</span>
-
-            </TabsTrigger>
-
-
-
-            <TabsTrigger 
-
-              value="periodic" 
-
-              className="min-w-[40%] sm:min-w-[35%] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2 h-9 text-xs sm:text-sm font-medium transition-colors bg-sea-jet-900/40 text-navy-200 hover:bg-sea-jet-800/50 hover:text-navy-50 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
-
-            >
-
-              <span className="text-sm sm:text-base">📅</span>
-
-              <span className="text-xs sm:text-sm font-medium">Periodic</span>
-
-            </TabsTrigger>
-
-          </TabsList>
-          </div>
-
-          {/* Desktop: grid layout */}
+        {/* Desktop: grid layout */}
+        <div className="mb-4 sm:mb-6 rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/40 p-1 hidden md:block">
           <TabsList className="hidden md:grid md:grid-cols-4 gap-1 bg-transparent p-0 h-auto">
 
             <TabsTrigger 
@@ -200,7 +176,6 @@ export function TakeHomeCalculator() {
             </TabsTrigger>
 
           </TabsList>
-
         </div>
 
 

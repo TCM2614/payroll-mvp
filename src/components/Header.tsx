@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calculator, LineChart, Info } from 'lucide-react';
+import { Calculator, LineChart, Info, Menu, X } from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Calculator },
@@ -14,6 +15,7 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b border-brand-border/60 bg-brand-bg/80 backdrop-blur-xl">
@@ -56,21 +58,54 @@ export function Header() {
           })}
         </nav>
 
-        {/* Mobile: simplified nav */}
-        <nav className="flex items-center gap-2 sm:hidden">
-          <Link
-            href="/calc"
-            className="rounded-full bg-brand-primary px-3 py-1.5 text-xs font-medium text-white shadow-soft-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70"
-          >
-            Calc
-          </Link>
-        </nav>
-
         {/* Tax year - Desktop */}
         <div className="hidden items-center gap-2 sm:flex">
           <span className="text-xs text-brand-textMuted">Tax year 2024/25</span>
         </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-full p-2 text-brand-text hover:bg-brand-surface/60 sm:hidden"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle navigation"
+          aria-expanded={mobileMenuOpen}
+        >
+          {mobileMenuOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
+        </button>
       </div>
+
+      {/* Mobile Nav Panel */}
+      {mobileMenuOpen && (
+        <div className="border-t border-brand-border/60 bg-brand-bg/95 px-4 py-3 sm:hidden">
+          <nav className="flex flex-col gap-2">
+            {navItems.map(({ href, label, icon: Icon }) => {
+              const isActive =
+                pathname === href || (href !== '/' && pathname?.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={[
+                    'flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-brand-primary/20 text-brand-text'
+                      : 'text-brand-textMuted hover:bg-brand-surface/60 hover:text-brand-text',
+                  ].join(' ')}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
