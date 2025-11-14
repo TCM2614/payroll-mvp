@@ -72,9 +72,8 @@ export function PayeTab() {
   const [hoursPerWeek, setHoursPerWeek] = useState(37.5);
   const [daysPerWeek, setDaysPerWeek] = useState(5);
 
-  // Optional UX inputs for hourly context (always available, not used in calculations)
+  // Optional UX input for hourly context (always available, not used in calculations)
   const [optionalHoursPerWeek, setOptionalHoursPerWeek] = useState<string>("");
-  const [customHourlyRate, setCustomHourlyRate] = useState<string>("");
 
   function toMonthly(value: string | number, freq: typeof primaryFrequency): number {
     const numericValue = typeof value === "string" 
@@ -383,8 +382,8 @@ export function PayeTab() {
             )}
           </div>
 
-          {/* Optional Hours per week & Custom hourly rate (always visible, UX only) */}
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 md:col-span-2">
+          {/* Optional Hours per week (always visible, UX only) */}
+          <div className="mt-3 md:col-span-2">
             <div className="flex flex-col space-y-1">
               <label className="text-sm font-medium text-navy-100">
                 Hours per week (optional)
@@ -407,29 +406,9 @@ export function PayeTab() {
                 placeholder="e.g. 37.5"
                 className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
               />
-            </div>
-            <div className="flex flex-col space-y-1">
-              <label className="text-sm font-medium text-navy-100">
-                Custom hourly rate (optional)
-              </label>
-              <input
-                type="text"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={customHourlyRate}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  if (raw === "") {
-                    setCustomHourlyRate("");
-                    return;
-                  }
-                  const cleaned = raw.replace(/[^0-9.,]/g, "");
-                  setCustomHourlyRate(cleaned);
-                }}
-                placeholder="e.g. 25.00"
-                className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
-              />
+              <p className="text-xs text-navy-300">
+                Used to derive hourly breakdown from your results
+              </p>
             </div>
           </div>
 
@@ -833,22 +812,23 @@ export function PayeTab() {
           {/* Optional Hourly Context Section */}
           {(() => {
             // Derive hourly breakdown from existing calculations (no new calculations)
-            const effectiveHoursPerWeek = optionalHoursPerWeek 
-              ? parseFloat(optionalHoursPerWeek.replace(/,/g, "")) || 0 
-              : (primaryFrequency === "hourly" ? hoursPerWeek : 37.5);
-            
-            const effectiveHourlyRate = customHourlyRate
-              ? parseFloat(customHourlyRate.replace(/,/g, "")) || 0
-              : (primaryFrequency === "hourly" 
-                  ? numericPrimaryIncome 
-                  : (effectiveHoursPerWeek > 0 ? weeklyGross / effectiveHoursPerWeek : 0));
+            // Use optionalHoursPerWeek if provided, otherwise fall back to calculation hours or default
+            const numericHoursPerWeek = optionalHoursPerWeek 
+              ? parseFloat(optionalHoursPerWeek.replace(/,/g, "")) 
+              : (primaryFrequency === "hourly" ? hoursPerWeek : undefined);
 
-            // Only show if we have valid hourly context
-            if (effectiveHoursPerWeek > 0 && effectiveHourlyRate > 0) {
-              const grossHourly = calculationResult.combined.grossAnnual / (effectiveHoursPerWeek * 52);
-              const netHourly = calculationResult.combined.netAnnual / (effectiveHoursPerWeek * 52);
-              const taxHourly = calculationResult.combined.annualPAYE / (effectiveHoursPerWeek * 52);
-              const niHourly = calculationResult.combined.annualNI / (effectiveHoursPerWeek * 52);
+            // Only show if we have valid hours per week and existing weekly results
+            if (numericHoursPerWeek && numericHoursPerWeek > 0 && calculationResult.combined.weekly > 0) {
+              // Derive hourly rates from existing weekly results
+              const grossWeekly = calculationResult.combined.grossAnnual / 52;
+              const netWeekly = calculationResult.combined.weekly;
+              const taxWeekly = calculationResult.combined.annualPAYE / 52;
+              const niWeekly = calculationResult.combined.annualNI / 52;
+
+              const impliedGrossHourly = grossWeekly / numericHoursPerWeek;
+              const impliedNetHourly = netWeekly / numericHoursPerWeek;
+              const impliedTaxHourly = taxWeekly / numericHoursPerWeek;
+              const impliedNiHourly = niWeekly / numericHoursPerWeek;
 
               return (
                 <div className="mt-4 pt-4 border-t border-brand-border/40">
@@ -857,32 +837,32 @@ export function PayeTab() {
                       Hourly breakdown (derived)
                     </p>
                     <p className="mt-1 text-xxs text-brand-textMuted">
-                      Based on {effectiveHoursPerWeek} hours/week × 52 weeks
+                      Based on {numericHoursPerWeek.toFixed(1)} hours/week × 52 weeks
                     </p>
                   </div>
                   <dl className="space-y-2 text-sm">
                     <div className="flex items-center justify-between gap-2">
                       <dt className="text-brand-textMuted">Gross pay (per hour)</dt>
                       <dd className="text-right font-medium text-brand-text">
-                        {formatGBP(grossHourly)}
+                        {formatGBP(impliedGrossHourly)}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <dt className="text-brand-textMuted">PAYE income tax (per hour)</dt>
                       <dd className="text-right font-medium text-brand-text">
-                        {formatGBP(taxHourly)}
+                        {formatGBP(impliedTaxHourly)}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <dt className="text-brand-textMuted">National Insurance (per hour)</dt>
                       <dd className="text-right font-medium text-brand-text">
-                        {formatGBP(niHourly)}
+                        {formatGBP(impliedNiHourly)}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
                       <dt className="text-brand-text font-medium">Net take-home (per hour)</dt>
                       <dd className="text-right font-semibold text-brand-accent">
-                        {formatGBP(netHourly)}
+                        {formatGBP(impliedNetHourly)}
                       </dd>
                     </div>
                   </dl>
