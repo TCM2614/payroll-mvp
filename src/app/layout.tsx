@@ -1,6 +1,7 @@
 import './globals.css';
 
 import type { Metadata } from 'next';
+import Script from 'next/script';
 
 import { Header } from '@/components/Header';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_GB",
     siteName: "UK Take-Home Calculator",
+    url: siteUrl,
   },
   twitter: {
     card: "summary_large_image",
@@ -50,6 +52,24 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className="min-h-full bg-brand-bg text-brand-text antialiased">
+        {/* Plausible Analytics */}
+        {process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && (
+          <Script
+            defer
+            data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
+            src="https://plausible.io/js/script.js"
+            strategy="afterInteractive"
+          />
+        )}
+        {/* Umami Analytics - Alternative option */}
+        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL && (
+          <Script
+            async
+            src={process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL}
+            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+            strategy="afterInteractive"
+          />
+        )}
         <SchemaMarkup />
         <div className="relative min-h-screen">
           {/* Background gradient */}

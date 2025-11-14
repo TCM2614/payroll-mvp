@@ -1,0 +1,9 @@
+# robots.txt for UK Take-Home Pay Calculator
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://yourdomain.com/sitemap.xml
+

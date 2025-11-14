@@ -26,14 +26,16 @@ export async function POST(request: NextRequest) {
     // TODO: Replace with actual webhook integration
     // Example: Notion API, Brevo, Mailchimp, etc.
     
-    // For now, just log the signup (in production, save to database/webhook)
-    console.log("New signup:", {
-      email,
-      consent,
-      featureRequest: featureRequest || null,
-      source: source || "signup-page",
-      timestamp: new Date().toISOString(),
-    });
+    // Log only in development (in production, save to database/webhook)
+    if (process.env.NODE_ENV === "development") {
+      console.log("New signup:", {
+        email,
+        consent,
+        featureRequest: featureRequest || null,
+        source: source || "signup-page",
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // Example webhook call (uncomment and configure when ready):
     /*
@@ -61,7 +63,10 @@ export async function POST(request: NextRequest) {
       email,
     });
   } catch (error) {
-    console.error("Signup error:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Signup error:", error);
+    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
