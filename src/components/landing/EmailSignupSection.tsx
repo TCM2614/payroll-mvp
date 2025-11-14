@@ -34,35 +34,22 @@ export default function EmailSignupSection({
 
 
 
-  const handleSubmit = (e: FormEvent) => {
-
+  // 🚨 IMPORTANT: this must be async
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
     setError(null);
 
-
-
     if (!email) {
-
       setError("Please enter your email address.");
-
       return;
-
     }
-
-
 
     if (!consent) {
-
       setError("Please agree to the privacy terms to continue.");
-
       return;
-
     }
 
-
-
-    setStatus("submitting");
+    setStatus("loading");
 
     try {
       const response = await fetch("/api/signup", {
@@ -78,8 +65,8 @@ export default function EmailSignupSection({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to sign up");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to sign up");
       }
 
       // Track email signup goal
@@ -88,12 +75,12 @@ export default function EmailSignupSection({
       }
 
       setStatus("success");
+      setEmail("");
       if (onSuccess) onSuccess();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign up. Please try again.");
-      setStatus("idle");
+    } catch (err: any) {
+      setStatus("error");
+      setError(err.message || "Something went wrong. Please try again.");
     }
-
   };
 
 
@@ -220,13 +207,13 @@ export default function EmailSignupSection({
 
           type="submit"
 
-          disabled={status === "submitting" || status === "success"}
+          disabled={status === "loading" || status === "success"}
 
           className="flex w-full items-center justify-center rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-emerald-700/70"
 
         >
 
-          {status === "submitting" ? "Submitting…" : "Join Now"}
+          {status === "loading" ? "Joining..." : "Join Now"}
 
         </button>
 
