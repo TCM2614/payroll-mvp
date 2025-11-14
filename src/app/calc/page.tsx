@@ -238,7 +238,7 @@ export default function CalcPage() {
 
           <div className="pt-2 text-center">
             <Link
-              href="/dashboard-preview"
+              href="/dashboard"
               className="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
             >
               View full dashboard preview page →
