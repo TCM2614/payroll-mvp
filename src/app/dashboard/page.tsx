@@ -145,8 +145,7 @@ export default function DashboardPage() {
               Dashboard: from payslip to plan
             </h1>
             <p className="text-sm md:text-base text-brand-textMuted opacity-80 max-w-2xl">
-              A live control panel for your income, expenses and debt – built on the same
-              UK take-home engine powering this calculator.
+              Turn your payslip into a financial plan. The dashboard connects your take-home pay calculations to expense tracking, debt management, and savings goals – all powered by the same accurate UK tax calculator you're using now.
             </p>
           </header>
 

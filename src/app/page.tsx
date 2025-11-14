@@ -44,7 +44,7 @@ export default function LandingPage() {
 
           <h1 className="mt-5 text-balance text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
 
-            UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK
+            UK Take-Home Pay Calculator 2024/25 – Calculate Your Net Pay After Tax
 
           </h1>
 
@@ -52,7 +52,7 @@ export default function LandingPage() {
 
           <p className="mt-4 text-balance text-sm text-white/70 sm:text-base">
 
-            Calculate your UK take-home pay for the 2024/25 tax year. Our free calculator shows your salary after tax, National Insurance, pension contributions and student loan deductions. Use it to compare PAYE employment, umbrella company and limited company scenarios. All calculations use official 2024/25 PAYE and National Insurance rates. This tool provides guidance only and is not an official HMRC service.
+            Calculate your UK take-home pay instantly. Our free PAYE calculator shows your salary after tax, National Insurance (NI), pension contributions, and student loan repayments. Compare PAYE employment, umbrella company, and limited company scenarios side-by-side to see which structure gives you the best net pay. All calculations use official HMRC rates for the 2024/25 tax year. See clear breakdowns of income tax, NI contributions, student loan deductions, and pension contributions. This calculator provides guidance only and is not affiliated with HMRC.
 
           </p>
 
@@ -68,7 +68,7 @@ export default function LandingPage() {
 
             >
 
-              Enter App
+              Calculate Take-Home Pay
 
             </Link>
 
@@ -120,9 +120,7 @@ export default function LandingPage() {
 
             <p className="mt-2">
 
-              PAYE, Umbrella and Limited company scenarios, including multi-job
-
-              setups and student loans.
+              Compare PAYE, Umbrella, and Limited Company take-home pay. Calculate multiple jobs, all student loan plans (1, 2, 4, 5, and Postgraduate), and see how IR35 status affects your net pay.
 
             </p>
 
@@ -138,9 +136,7 @@ export default function LandingPage() {
 
             <p className="mt-2">
 
-              Clear breakdowns of gross, tax, NI, student loans and pension
-
-              deductions on every calculation.
+              Clear breakdowns of gross pay, income tax, National Insurance, student loan repayments, and pension contributions on every calculation. See exactly where your money goes.
 
             </p>
 
