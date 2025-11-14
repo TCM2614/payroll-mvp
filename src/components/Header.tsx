@@ -8,6 +8,7 @@ const navItems = [
   { href: '/', label: 'Home', icon: Calculator },
   { href: '/calc', label: 'Calculator', icon: Calculator },
   { href: '/contracting', label: 'Scenarios', icon: LineChart },
+  { href: '/dashboard', label: 'Dashboard (Coming Soon)', icon: LineChart },
   { href: '/about', label: 'About', icon: Info },
   { href: '/privacy', label: 'Privacy', icon: Info },
 ];
