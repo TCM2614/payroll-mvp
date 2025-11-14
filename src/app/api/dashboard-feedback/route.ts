@@ -5,7 +5,7 @@ export const runtime = "edge";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, feedback } = body;
+    const { email, feedback, source } = body;
 
     if (!feedback || !feedback.trim()) {
       return NextResponse.json(
@@ -26,13 +26,13 @@ export async function POST(request: NextRequest) {
     }
 
     // TODO: Replace with actual webhook integration
-    // Example: Notion API, Brevo, Mailchimp, etc.
+    // Example: Notion API, Brevo, Mailchimp, Google Sheets API, etc.
     
     // For now, just log the feedback (in production, save to database/webhook)
     console.log("Dashboard feedback:", {
       email: email || null,
       feedback: feedback.trim(),
-      source: "dashboard-preview",
+      source: source || "dashboard-preview",
       timestamp: new Date().toISOString(),
     });
 
