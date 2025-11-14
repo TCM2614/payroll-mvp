@@ -122,9 +122,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Main content */}
-      <div className="mx-auto flex max-w-5xl flex-col items-center px-4 py-12 text-center sm:py-20">
+      <div className="mx-auto flex max-w-5xl flex-col items-center px-4 pt-8 pb-12 text-center sm:pt-12 sm:pb-20">
         {/* Eyebrow label */}
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-textMuted">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-textMuted">
           Insights · Scenarios · History
         </p>
 
