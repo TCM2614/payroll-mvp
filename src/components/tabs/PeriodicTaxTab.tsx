@@ -23,6 +23,7 @@ import {
   trackResultsView,
   trackWarningShown,
   trackPeriodicAnalysisUsed,
+  trackCalculatorRun,
   getSalaryBand,
 } from "@/lib/analytics";
 
@@ -181,7 +182,7 @@ export function PeriodicTaxTab() {
     }
   }, [periods, payFrequency]);
 
-  // Track calculator submission
+  // Track calculator submission and calculator_run goal
   useEffect(() => {
     if (periods.length > 0 && annualGross > 0) {
       const hasPension = periods.some((p) => p.pension > 0);
@@ -193,6 +194,8 @@ export function PeriodicTaxTab() {
           studentLoanSelection.hasPostgraduateLoan,
         salaryBand: getSalaryBand(annualGross),
       });
+      // Track calculator_run goal
+      trackCalculatorRun("periodic");
     }
   }, [periods.length, annualGross, studentLoanSelection]);
 

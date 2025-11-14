@@ -13,6 +13,7 @@ import type { TaxYearLabel } from "@/lib/taxYear";
 import {
   trackCalculatorSubmit,
   trackResultsView,
+  trackCalculatorRun,
   getSalaryBand,
 } from "@/lib/analytics";
 
@@ -223,7 +224,7 @@ export function PayeTab() {
     };
   }, [studentLoanSelection, allJobs, pensionPct, sippPersonal]);
 
-  // Track calculator submission
+  // Track calculator submission and calculator_run goal
   useEffect(() => {
     const totalGross = calculationResult.combined.grossAnnual;
     if (totalGross > 0) {
@@ -236,6 +237,8 @@ export function PayeTab() {
         hasStudentLoan,
         salaryBand: getSalaryBand(totalGross),
       });
+      // Track calculator_run goal
+      trackCalculatorRun("standard");
     }
   }, [calculationResult, pensionPct, salarySacrificeFixed, sippPersonal, studentLoanSelection]);
 

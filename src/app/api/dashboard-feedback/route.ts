@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hashEmail } from "@/lib/hash";
+import { storeFeedback } from "@/lib/storage";
 
 export const runtime = "edge";
 
@@ -15,6 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate email format if provided
+    let emailHash: string | undefined;
     if (email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
@@ -23,20 +26,17 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+      // Hash email for storage
+      emailHash = await hashEmail(email);
     }
 
-    // TODO: Replace with actual webhook integration
-    // Example: Notion API, Brevo, Mailchimp, Google Sheets API, etc.
-    
-    // Log only in development (in production, save to database/webhook)
-    if (process.env.NODE_ENV === "development") {
-      console.log("Dashboard feedback:", {
-        email: email || null,
-        feedback: feedback.trim(),
-        source: source || "dashboard-preview",
-        timestamp: new Date().toISOString(),
-      });
-    }
+    // Store feedback with hashed email
+    await storeFeedback({
+      email: email || undefined, // Keep temporarily if needed for follow-up
+      emailHash,
+      feedback: feedback.trim(),
+      source: source || "dashboard-preview",
+    });
 
     return NextResponse.json({
       success: true,

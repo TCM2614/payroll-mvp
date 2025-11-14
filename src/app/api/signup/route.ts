@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hashEmail } from "@/lib/hash";
+import { storeSignup, emailExists } from "@/lib/storage";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export const runtime = "edge";
 
@@ -23,44 +26,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Replace with actual webhook integration
-    // Example: Notion API, Brevo, Mailchimp, etc.
-    
-    // Log only in development (in production, save to database/webhook)
-    if (process.env.NODE_ENV === "development") {
-      console.log("New signup:", {
-        email,
-        consent,
-        featureRequest: featureRequest || null,
-        source: source || "signup-page",
-        timestamp: new Date().toISOString(),
+    // Hash email for storage
+    const emailHash = await hashEmail(email);
+
+    // Check if email already exists (prevent duplicates)
+    const exists = await emailExists(emailHash);
+    if (exists) {
+      // Still return success to prevent email enumeration
+      return NextResponse.json({
+        success: true,
+        message: "Signup successful",
       });
     }
 
-    // Example webhook call (uncomment and configure when ready):
-    /*
-    const webhookUrl = process.env.NOTION_WEBHOOK_URL || process.env.BREVO_WEBHOOK_URL;
-    if (webhookUrl) {
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          consent,
-          featureRequest: featureRequest || null,
-          source: source || "signup-page",
-          timestamp: new Date().toISOString(),
-        }),
+    // Store signup with hashed email
+    await storeSignup({
+      email, // Keep temporarily for welcome email
+      emailHash,
+      source: source || "signup-page",
+      featureRequest: featureRequest || undefined,
+      consent,
+    });
+
+    // Send welcome email (non-blocking)
+    try {
+      await sendWelcomeEmail({
+        to: email,
+        source: source || "signup-page",
       });
+    } catch (emailError) {
+      // Log but don't fail the request
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Signup] Email error (non-fatal):", emailError);
+      }
     }
-    */
 
     return NextResponse.json({
       success: true,
       message: "Signup successful",
-      email,
     });
   } catch (error) {
     // Log errors only in development

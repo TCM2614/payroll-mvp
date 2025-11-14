@@ -64,19 +64,35 @@ export default function EmailSignupSection({
 
     setStatus("submitting");
 
+    try {
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          consent,
+          source: "landing_page",
+        }),
+      });
 
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to sign up");
+      }
 
-    // 🔁 Dummy handler – replace with Supabase / Firebase / Mailchimp
-
-    setTimeout(() => {
-
-      console.log("Email signup submitted:", { email, consent });
+      // Track email signup goal
+      if (typeof window !== "undefined" && (window as any).plausible) {
+        (window as any).plausible("email_signup", { props: { source: "landing_page" } });
+      }
 
       setStatus("success");
-
       if (onSuccess) onSuccess();
-
-    }, 800);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to sign up. Please try again.");
+      setStatus("idle");
+    }
 
   };
 

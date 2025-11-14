@@ -52,15 +52,22 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className="min-h-full bg-brand-bg text-brand-text antialiased">
-        {/* Plausible Analytics */}
-        {process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && (
-          <Script
-            defer
-            data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
-            src="https://plausible.io/js/script.js"
-            strategy="afterInteractive"
-          />
-        )}
+        {/* Privacy-friendly analytics by Plausible */}
+        <Script
+          async
+          src="https://plausible.io/js/pa-EfUItWB8oR-Vv2yMj1I_h.js"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="plausible-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+              plausible.init()
+            `,
+          }}
+        />
         {/* Umami Analytics - Alternative option */}
         {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL && (
           <Script

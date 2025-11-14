@@ -14,6 +14,7 @@ import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import {
   trackCalculatorSubmit,
   trackResultsView,
+  trackCalculatorRun,
   getSalaryBand,
 } from "@/lib/analytics";
 
@@ -69,7 +70,7 @@ export function UmbrellaCalculator() {
     };
   }, [studentLoanSelection, monthlyRate, dayRate, daysPerWeek, hourlyRate, hoursPerDay, taxCode, pensionPct]);
 
-  // Track calculator submission
+  // Track calculator submission and calculator_run goal
   useEffect(() => {
     if (calculationResult.result.grossAnnualIncome > 0) {
       const hasStudentLoan =
@@ -81,6 +82,8 @@ export function UmbrellaCalculator() {
         hasStudentLoan,
         salaryBand: getSalaryBand(calculationResult.result.grossAnnualIncome),
       });
+      // Track calculator_run goal
+      trackCalculatorRun("umbrella");
     }
   }, [calculationResult, pensionPct, studentLoanSelection]);
 

@@ -14,6 +14,8 @@ import FeedbackModal from "@/components/landing/FeedbackModal";
 
 import CookieBanner from "@/components/landing/CookieBanner";
 
+import { EarlyAccessForm } from "@/components/EarlyAccessForm";
+
 
 
 export default function LandingPage() {
@@ -56,13 +58,25 @@ export default function LandingPage() {
 
           </p>
 
+          <p className="mt-5 text-sm text-white/80">
+            Join early access to save and compare your take-home pay scenarios.
+          </p>
 
+          <div className="mt-4 flex justify-center">
+            <EarlyAccessForm />
+          </div>
 
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
 
             <Link
 
               href="/calc"
+
+              onClick={() => {
+                if (typeof window !== "undefined" && (window as any).plausible) {
+                  (window as any).plausible("cta_click", { props: { cta: "calculate_take_home_pay", location: "landing_hero" } });
+                }
+              }}
 
               className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
 

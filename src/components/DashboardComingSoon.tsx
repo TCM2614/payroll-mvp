@@ -18,24 +18,14 @@ export function DashboardComingSoon() {
 
     try {
       setStatus("submitting");
-      const endpoint = process.env.NEXT_PUBLIC_SIGNUP_SHEET_ENDPOINT;
-      
-      if (!endpoint) {
-        throw new Error("Sheet endpoint not configured");
-      }
 
-      const response = await fetch(endpoint, {
+      const response = await fetch("/api/dashboard-feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          values: [
-            [
-              new Date().toISOString(),
-              email || "",
-              feedback.trim(),
-              "Dashboard",
-            ],
-          ],
+          email: email || undefined,
+          feedback: feedback.trim(),
+          source: "Dashboard",
         }),
       });
 

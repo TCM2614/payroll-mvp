@@ -108,6 +108,27 @@ export function trackPeriodicAnalysisUsed(): void {
   trackEvent("periodic_analysis_used");
 }
 
+/**
+ * Track email signup goal
+ */
+export function trackEmailSignup(source?: string): void {
+  trackEvent("email_signup", source ? { source } : undefined);
+}
+
+/**
+ * Track calculator run goal
+ */
+export function trackCalculatorRun(tab: CalculatorTab): void {
+  trackEvent("calculator_run", { tab });
+}
+
+/**
+ * Track CTA click goal
+ */
+export function trackCTAClick(ctaName: string, location?: string): void {
+  trackEvent("cta_click", { cta: ctaName, location: location || "unknown" });
+}
+
 // Extend Window interface for Plausible
 declare global {
   interface Window {
