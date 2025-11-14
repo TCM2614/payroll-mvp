@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { hashEmail } from "@/lib/hash";
 import { storeSignup, emailExists } from "@/lib/storage";
 import { sendWelcomeEmail } from "@/lib/email";
+import { logError, logInfo, logWarn } from "@/lib/logger";
 
 export const runtime = "edge";
 
@@ -54,22 +55,20 @@ export async function POST(request: NextRequest) {
         to: email,
         source: source || "signup-page",
       });
+      logInfo("Welcome email sent", { to: email, source: source || "signup-page" });
     } catch (emailError) {
-      // Log but don't fail the request
-      if (process.env.NODE_ENV === "development") {
-        console.error("[Signup] Email error (non-fatal):", emailError);
-      }
+      logError("Failed to send welcome email (non-fatal)", emailError, { to: email });
+      // Don't fail the request if email fails
     }
+
+    logInfo("Signup successful", { emailHash, source: source || "signup-page" });
 
     return NextResponse.json({
       success: true,
       message: "Signup successful",
     });
   } catch (error) {
-    // Log errors only in development
-    if (process.env.NODE_ENV === "development") {
-      console.error("Signup error:", error);
-    }
+    logError("Signup error", error, { endpoint: "/api/signup" });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
