@@ -9,20 +9,13 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  // ✅ Read env vars at runtime, not build time
   const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL;
-  const businessEmail = process.env.BUSINESS_EMAIL;
-
-  if (!apiKey || !fromEmail) {
-    console.error("Resend API key or FROM email missing");
-    return NextResponse.json(
-      { ok: false, error: "Email configuration missing" },
-      { status: 500 },
-    );
-  }
+  if (!apiKey) return NextResponse.json({ ok: false, error: "Email config missing" });
 
   const resend = new Resend(apiKey);
+
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
+  const businessEmail = process.env.BUSINESS_EMAIL;
 
   try {
     const json = await req.json();
