@@ -60,7 +60,7 @@ type CombinedJobsBreakdown = {
 
 
 export function PayeTab() {
-  const [primaryIncome, setPrimaryIncome] = useState(6000);
+  const [primaryIncome, setPrimaryIncome] = useState("6000");
 
   const [primaryFrequency, setPrimaryFrequency] = useState<
 
@@ -68,42 +68,43 @@ export function PayeTab() {
 
   >("monthly");
 
+  // Hourly mode inputs (for calculations when frequency is hourly)
+  const [hoursPerWeek, setHoursPerWeek] = useState(37.5);
+  const [daysPerWeek, setDaysPerWeek] = useState(5);
 
+  // Optional UX inputs for hourly context (always available, not used in calculations)
+  const [optionalHoursPerWeek, setOptionalHoursPerWeek] = useState<string>("");
+  const [customHourlyRate, setCustomHourlyRate] = useState<string>("");
 
-  const assumedHoursPerWeek = 37.5; // adjust if you prefer
-
-
-
-  function toMonthly(value: number, freq: typeof primaryFrequency): number {
-
+  function toMonthly(value: string | number, freq: typeof primaryFrequency): number {
+    const numericValue = typeof value === "string" 
+      ? parseFloat(value.replace(/,/g, "")) || 0 
+      : value;
+    
     switch (freq) {
-
       case "annual":
-
-        return value / 12;
+        return numericValue / 12;
 
       case "weekly":
-
-        return (value * 52) / 12;
+        return (numericValue * 52) / 12;
 
       case "daily":
-
         // assume 5 working days per week
+        return (numericValue * 5 * 52) / 12;
 
-        return (value * 5 * 52) / 12;
-
-      case "hourly":
-
-        return (value * assumedHoursPerWeek * 52) / 12;
+      case "hourly": {
+        // weeklyIncome = hourlyRate * hoursPerWeek
+        // annualIncome = weeklyIncome * 52
+        // monthlyIncome = annualIncome / 12
+        const weeklyIncome = numericValue * hoursPerWeek;
+        const annualIncome = weeklyIncome * 52;
+        return annualIncome / 12;
+      }
 
       case "monthly":
-
       default:
-
-        return value;
-
+        return numericValue;
     }
-
   }
 
 
@@ -151,7 +152,11 @@ export function PayeTab() {
 
   const weeklyGross = annualGross / 52;
 
-  const hourlyRate = weeklyGross / assumedHoursPerWeek;
+  // Calculate hourly rate for display (only when not in hourly mode)
+  const numericPrimaryIncome = parseFloat(primaryIncome.replace(/,/g, "")) || 0;
+  const hourlyRate = primaryFrequency === "hourly" 
+    ? numericPrimaryIncome 
+    : weeklyGross / (hoursPerWeek || 37.5);
 
 
 
@@ -222,7 +227,7 @@ export function PayeTab() {
       jobs: jobBreakdowns,
       combined,
     };
-  }, [studentLoanSelection, allJobs, pensionPct, sippPersonal]);
+  }, [studentLoanSelection, allJobs, pensionPct, sippPersonal, hoursPerWeek]);
 
   // Track calculator submission and calculator_run goal
   useEffect(() => {
@@ -329,12 +334,28 @@ export function PayeTab() {
 
           {/* Income input with frequency selector */}
           <div className="space-y-1 md:col-span-2">
-            <label className="block text-sm font-medium text-navy-100">Income</label>
+            <label className="block text-sm font-medium text-navy-100">
+              {primaryFrequency === "hourly" ? "Hourly rate" : "Income"}
+            </label>
             <div className="flex gap-2">
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={primaryIncome}
-                onChange={(e) => setPrimaryIncome(Number(e.target.value) || 0)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+
+                  // Allow empty string
+                  if (raw === "") {
+                    setPrimaryIncome("");
+                    return;
+                  }
+
+                  // Allow only numbers + decimals + commas
+                  const cleaned = raw.replace(/[^0-9.,]/g, "");
+                  setPrimaryIncome(cleaned);
+                }}
+                placeholder="Enter your income"
                 className="flex-1 rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
               />
               <select
@@ -351,10 +372,154 @@ export function PayeTab() {
                 <option value="hourly">per hour</option>
               </select>
             </div>
-            <p className="text-xs text-navy-300">
-              Annual: {formatGBP(annualGross)} | Hourly (est.): £{hourlyRate.toFixed(2)}
-            </p>
+            {primaryFrequency === "hourly" ? (
+              <p className="text-xs text-navy-300">
+                Annual: {formatGBP(annualGross)} | Monthly: {formatGBP(primaryGrossMonthly)}
+              </p>
+            ) : (
+              <p className="text-xs text-navy-300">
+                Annual: {formatGBP(annualGross)} | Hourly (est.): £{hourlyRate.toFixed(2)}
+              </p>
+            )}
           </div>
+
+          {/* Optional Hours per week & Custom hourly rate (always visible, UX only) */}
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 md:col-span-2">
+            <div className="flex flex-col space-y-1">
+              <label className="text-sm font-medium text-navy-100">
+                Hours per week (optional)
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                min="0"
+                step="0.1"
+                value={optionalHoursPerWeek}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setOptionalHoursPerWeek("");
+                    return;
+                  }
+                  const cleaned = raw.replace(/[^0-9.,]/g, "");
+                  setOptionalHoursPerWeek(cleaned);
+                }}
+                placeholder="e.g. 37.5"
+                className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+              />
+            </div>
+            <div className="flex flex-col space-y-1">
+              <label className="text-sm font-medium text-navy-100">
+                Custom hourly rate (optional)
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={customHourlyRate}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setCustomHourlyRate("");
+                    return;
+                  }
+                  const cleaned = raw.replace(/[^0-9.,]/g, "");
+                  setCustomHourlyRate(cleaned);
+                }}
+                placeholder="e.g. 25.00"
+                className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+              />
+            </div>
+          </div>
+
+          {/* Hours and Days inputs (only when hourly) */}
+          {primaryFrequency === "hourly" && (
+            <>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-navy-100">
+                  Hours worked per week
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="80"
+                  step="0.5"
+                  value={hoursPerWeek}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (isNaN(val) || val < 1) {
+                      setHoursPerWeek(1);
+                    } else if (val > 80) {
+                      setHoursPerWeek(80);
+                    } else {
+                      setHoursPerWeek(val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const val = Number(e.target.value);
+                    if (isNaN(val) || val < 1) {
+                      setHoursPerWeek(1);
+                    } else if (val > 80) {
+                      setHoursPerWeek(80);
+                    }
+                  }}
+                  required={primaryFrequency === "hourly"}
+                  className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+                />
+                <p className="text-xs text-navy-300">
+                  Min: 1, Max: 80
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-navy-100">
+                  Days worked per week
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="7"
+                  step="1"
+                  value={daysPerWeek}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (isNaN(val) || val < 1) {
+                      setDaysPerWeek(1);
+                    } else if (val > 7) {
+                      setDaysPerWeek(7);
+                    } else {
+                      setDaysPerWeek(Math.floor(val));
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const val = Number(e.target.value);
+                    if (isNaN(val) || val < 1) {
+                      setDaysPerWeek(1);
+                    } else if (val > 7) {
+                      setDaysPerWeek(7);
+                    } else {
+                      setDaysPerWeek(Math.floor(val));
+                    }
+                  }}
+                  required={primaryFrequency === "hourly"}
+                  className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+                />
+                <p className="text-xs text-navy-300">
+                  Min: 1, Max: 7
+                </p>
+              </div>
+
+              {/* Validation error message */}
+              {primaryFrequency === "hourly" && (hoursPerWeek < 1 || hoursPerWeek > 80 || daysPerWeek < 1 || daysPerWeek > 7) && (
+                <div className="md:col-span-2">
+                  <p className="text-xs text-rose-400">
+                    Please enter valid hours (1-80) and days (1-7) worked per week for accurate calculations.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
 
           {/* Tax code */}
           <div className="space-y-1">
@@ -664,6 +829,68 @@ export function PayeTab() {
               </span>
             </div>
           </dl>
+
+          {/* Optional Hourly Context Section */}
+          {(() => {
+            // Derive hourly breakdown from existing calculations (no new calculations)
+            const effectiveHoursPerWeek = optionalHoursPerWeek 
+              ? parseFloat(optionalHoursPerWeek.replace(/,/g, "")) || 0 
+              : (primaryFrequency === "hourly" ? hoursPerWeek : 37.5);
+            
+            const effectiveHourlyRate = customHourlyRate
+              ? parseFloat(customHourlyRate.replace(/,/g, "")) || 0
+              : (primaryFrequency === "hourly" 
+                  ? numericPrimaryIncome 
+                  : (effectiveHoursPerWeek > 0 ? weeklyGross / effectiveHoursPerWeek : 0));
+
+            // Only show if we have valid hourly context
+            if (effectiveHoursPerWeek > 0 && effectiveHourlyRate > 0) {
+              const grossHourly = calculationResult.combined.grossAnnual / (effectiveHoursPerWeek * 52);
+              const netHourly = calculationResult.combined.netAnnual / (effectiveHoursPerWeek * 52);
+              const taxHourly = calculationResult.combined.annualPAYE / (effectiveHoursPerWeek * 52);
+              const niHourly = calculationResult.combined.annualNI / (effectiveHoursPerWeek * 52);
+
+              return (
+                <div className="mt-4 pt-4 border-t border-brand-border/40">
+                  <div className="mb-3">
+                    <p className="text-xxs font-semibold text-brand-textMuted uppercase tracking-wide">
+                      Hourly breakdown (derived)
+                    </p>
+                    <p className="mt-1 text-xxs text-brand-textMuted">
+                      Based on {effectiveHoursPerWeek} hours/week × 52 weeks
+                    </p>
+                  </div>
+                  <dl className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="text-brand-textMuted">Gross pay (per hour)</dt>
+                      <dd className="text-right font-medium text-brand-text">
+                        {formatGBP(grossHourly)}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="text-brand-textMuted">PAYE income tax (per hour)</dt>
+                      <dd className="text-right font-medium text-brand-text">
+                        {formatGBP(taxHourly)}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="text-brand-textMuted">National Insurance (per hour)</dt>
+                      <dd className="text-right font-medium text-brand-text">
+                        {formatGBP(niHourly)}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
+                      <dt className="text-brand-text font-medium">Net take-home (per hour)</dt>
+                      <dd className="text-right font-semibold text-brand-accent">
+                        {formatGBP(netHourly)}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <p className="mt-2 text-xxs text-brand-textMuted">
             These figures are estimates based on current UK PAYE rules and your inputs.
