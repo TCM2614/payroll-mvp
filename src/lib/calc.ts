@@ -126,3 +126,4 @@ export function compute(inputs: Inputs): ComputeResult {
     daily: divideTotals(annualTotals, WORKING_DAYS),
   };
 }
+

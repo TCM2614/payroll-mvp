@@ -394,3 +394,4 @@ import { trackCalculatorSubmit, trackResultsView } from "@/lib/analytics";
 
 **Ready for Lovable conversion and design upgrade!**
 
+

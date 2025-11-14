@@ -1,125 +1,69 @@
-import "./globals.css";
+import './globals.css';
 
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
 
-import { ThemeProvider } from "@/components/theme-provider";
+import { Header } from '@/components/Header';
 
 import { SchemaMarkup } from "@/components/SEO/SchemaMarkup";
-
-
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 export const metadata: Metadata = {
-
-  title: "UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK",
-
-  description: "Free UK take-home pay calculator for the 2024/25 tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.",
-
+  title: 'UK Take-Home Calculator · 2024/25',
+  description: 'High-accuracy UK take-home pay calculator for PAYE, NI, and pensions.',
   alternates: {
     canonical: siteUrl,
   },
-
   keywords: ["UK payroll calculator", "take-home pay", "PAYE calculator", "umbrella company calculator", "limited company calculator", "UK tax calculator", "student loan calculator", "UK salary calculator", "salary after tax", "take home pay calculator UK"],
-
   authors: [{ name: "Payroll MVP" }],
-
   openGraph: {
-
     title: "UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK",
-
     description: "Free UK take-home pay calculator for the 2024/25 tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.",
-
     type: "website",
-
     locale: "en_GB",
-
     siteName: "UK Take-Home Calculator",
-
   },
-
   twitter: {
-
     card: "summary_large_image",
-
     title: "UK Take-Home Pay Calculator 2024/25 – Salary After Tax in the UK",
-
     description: "Free UK take-home pay calculator for the 2024/25 tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.",
-
   },
-
   robots: {
-
     index: true,
-
     follow: true,
-
     googleBot: {
-
       index: true,
-
       follow: true,
-
       "max-video-preview": -1,
-
       "max-image-preview": "large",
-
       "max-snippet": -1,
-
     },
-
   },
-
 };
 
-
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-
-    <html lang="en" suppressHydrationWarning>
-
-      <body className="min-h-screen bg-slate-50 bg-gradient-to-b from-slate-50 via-slate-100 to-slate-50 text-slate-900">
-
+    <html lang="en" className="h-full">
+      <body className="min-h-full bg-brand-bg text-brand-text antialiased">
         <SchemaMarkup />
+        <div className="relative min-h-screen">
+          {/* Background gradient */}
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.20),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(34,197,94,0.18),_transparent_55%)]"
+          />
 
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Header />
 
-          {children}
-
-        </ThemeProvider>
-
-        {/* Analytics - Plausible (replace with your domain) */}
-        {/* Uncomment and add your Plausible domain when ready */}
-        {/* <Script
-
-          defer
-
-          data-domain="yourdomain.com"
-
-          src="https://plausible.io/js/script.js"
-
-        /> */}
-
-        {/* Alternative: Umami Analytics */}
-        {/* Uncomment and add your Umami script URL when ready */}
-        {/* <Script
-
-          async
-
-          defer
-
-          data-website-id="your-website-id"
-
-          src="https://analytics.umami.is/script.js"
-
-        /> */}
-
+          <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-10 pt-6 sm:pt-8">
+            {children}
+          </main>
+        </div>
       </body>
-
     </html>
-
   );
-
 }

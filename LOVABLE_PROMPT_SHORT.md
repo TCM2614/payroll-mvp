@@ -158,3 +158,4 @@ Please review the current implementation and suggest/implement design improvemen
 
 **Ready for Lovable! Copy domain logic exactly, convert components, then apply design upgrades.**
 
+

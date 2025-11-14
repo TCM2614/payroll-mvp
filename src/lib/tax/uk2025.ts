@@ -34,3 +34,4 @@ export const UK_TAX_2025 = {
   }
 };
 export type LoanKey = keyof typeof UK_TAX_2025["studentLoans"];
+

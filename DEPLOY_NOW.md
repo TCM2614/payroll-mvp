@@ -67,3 +67,4 @@ If you need webhook integration later, add in Vercel dashboard:
 - `MAILCHIMP_WEBHOOK_URL`
 - `OPENAI_API_KEY` (for GPT summaries)
 
+
