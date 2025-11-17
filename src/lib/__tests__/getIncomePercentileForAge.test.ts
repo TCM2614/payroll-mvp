@@ -11,6 +11,11 @@ describe("getIncomePercentileForAge", () => {
     expect(res).not.toBeNull();
     expect(res!.percentile).toBeGreaterThanOrEqual(0);
     expect(res!.percentile).toBeLessThan(10);
+    // Drill-down stats should be populated
+    expect(res!.medianIncomeForAgeGroup).toBeGreaterThan(0);
+    expect(res!.p10Income).toBeGreaterThan(0);
+    expect(res!.p90Income).toBeGreaterThan(res!.medianIncomeForAgeGroup);
+    expect(res!.ageGroupLabel).toMatch(/Ages \d+–\d+/);
   });
 
   it("returns high percentile for very high income", () => {

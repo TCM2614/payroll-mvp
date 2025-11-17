@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { getIncomePercentileForAge, type IncomePercentileResult } from "@/lib/getIncomePercentileForAge";
 import { trackEvent } from "@/lib/analytics";
+import { formatGBP } from "@/lib/format";
 
 type ComparisonMode = "gross" | "net";
 
@@ -31,30 +32,48 @@ export function WealthPercentileTab({
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>(defaultComparisonMode);
   const [result, setResult] = useState<IncomePercentileResult | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [lastIncome, setLastIncome] = useState<number | null>(
+    typeof initialSource === "number" && initialSource > 0 ? Math.round(initialSource) : null,
+  );
+
+  const parsedAge = useMemo(() => {
+    const age = parseInt(ageInput, 10);
+    return Number.isFinite(age) ? age : NaN;
+  }, [ageInput]);
+
+  const parsedIncome = useMemo(() => {
+    const numeric = parseFloat(incomeInput.replace(/,/g, ""));
+    return Number.isFinite(numeric) ? numeric : NaN;
+  }, [incomeInput]);
+
+  const isFormValid =
+    Number.isFinite(parsedAge) &&
+    parsedAge >= 18 &&
+    parsedAge <= 74 &&
+    Number.isFinite(parsedIncome) &&
+    parsedIncome > 0;
 
   const handleCompare = () => {
-    const age = parseInt(ageInput, 10);
-    const income = parseFloat(incomeInput.replace(/,/g, ""));
-
-    if (!Number.isFinite(age) || age <= 0 || !Number.isFinite(income) || income <= 0) {
+    if (!isFormValid) {
       setResult(null);
       setHasSubmitted(true);
       return;
     }
 
     const res = getIncomePercentileForAge({
-      age,
-      income,
+      age: parsedAge,
+      income: parsedIncome,
       countryCode: "UK",
     });
 
     setHasSubmitted(true);
     setResult(res);
+    setLastIncome(Math.round(parsedIncome));
 
     if (res) {
       trackEvent("wealth_compare_run", {
-        age,
-        annualIncome: income,
+        age: parsedAge,
+        annualIncome: parsedIncome,
         comparisonMode,
         percentile: res.percentile,
         band: res.bandLabel,
@@ -181,7 +200,8 @@ export function WealthPercentileTab({
         <button
           type="button"
           onClick={handleCompare}
-          className="inline-flex items-center justify-center rounded-xl bg-brilliant-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brilliant-500/30 transition hover:bg-brilliant-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brilliant-400/70"
+          disabled={!isFormValid}
+          className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-brilliant-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brilliant-500/30 transition hover:bg-brilliant-600 disabled:bg-sea-jet-700 disabled:text-navy-300 disabled:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brilliant-400/70"
         >
           Compare my income
         </button>
@@ -207,11 +227,17 @@ export function WealthPercentileTab({
               </span>{" "}
               band for the{" "}
               <span className="font-semibold text-brand-text">
-                {result.ageBand.ageMin}
-                &ndash;
-                {result.ageBand.ageMax}
-              </span>{" "}
-              age group.
+                {result.ageGroupLabel}
+              </span>
+              . For people in this age group, the median income is{" "}
+              <span className="font-semibold text-brand-text">
+                {formatGBP(result.medianIncomeForAgeGroup)}
+              </span>
+              , and the top 10% earn at least{" "}
+              <span className="font-semibold text-brand-text">
+                {formatGBP(result.p90Income)}
+              </span>
+              .
             </p>
           </header>
 
@@ -237,6 +263,32 @@ export function WealthPercentileTab({
               </span>{" "}
               means you earn more than {parsedPercentile}% of people in your age group.
             </p>
+          </div>
+
+          {/* Stats panel */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-xs sm:text-sm">
+            <div className="rounded-xl border border-brand-border/60 bg-brand-bg/60 px-3 py-2">
+              <p className="text-brand-textMuted">Your income</p>
+              <p className="mt-1 font-semibold text-brand-text">
+                {lastIncome !== null ? formatGBP(lastIncome) : "–"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-brand-border/60 bg-brand-bg/60 px-3 py-2">
+              <p className="text-brand-textMuted">Median ({result.ageGroupLabel})</p>
+              <p className="mt-1 font-semibold text-brand-text">
+                {formatGBP(result.medianIncomeForAgeGroup)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-brand-border/60 bg-brand-bg/60 px-3 py-2">
+              <p className="text-brand-textMuted">Top 10% threshold</p>
+              <p className="mt-1 font-semibold text-brand-text">
+                {formatGBP(result.p90Income)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-brand-border/60 bg-brand-bg/60 px-3 py-2">
+              <p className="text-brand-textMuted">Exact percentile</p>
+              <p className="mt-1 font-semibold text-brand-text">{parsedPercentile}th</p>
+            </div>
           </div>
 
           <p className="text-xxs text-brand-textMuted">
