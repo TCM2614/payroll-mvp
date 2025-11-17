@@ -1,9 +1,10 @@
-"use client";
+ "use client";
 
 import { useMemo, useState } from "react";
+import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Cell } from "recharts";
 import { getIncomePercentileForAge, type IncomePercentileResult } from "@/lib/getIncomePercentileForAge";
 import { trackEvent } from "@/lib/analytics";
-import { formatGBP } from "@/lib/format";
+import { formatGBP, formatGBPShort } from "@/lib/format";
 
 type ComparisonMode = "gross" | "net";
 
@@ -81,7 +82,8 @@ export function WealthPercentileTab({
     }
   };
 
-  const parsedPercentile = result ? Math.round(result.percentile) : null;
+  const percentileValue = result ? result.percentile : null;
+  const percentileDisplay = percentileValue != null ? percentileValue.toFixed(1) : null;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -214,11 +216,11 @@ export function WealthPercentileTab({
       </section>
 
       {/* Result card */}
-      {result && parsedPercentile !== null && (
-        <section className="rounded-3xl bg-brand-surface/80 border border-brand-border/60 shadow-soft-xl backdrop-blur-xl p-4 sm:p-6 space-y-4">
+      {result && percentileValue != null && (
+        <section className="rounded-3xl bg-brand-surface/80 border border-brand-border/60 shadow-soft-xl backdrop-blur-xl p-4 sm:p-6 space-y-6">
           <header className="space-y-1">
             <h3 className="text-lg sm:text-xl font-semibold text-brand-text">
-              You earn more than {parsedPercentile}% of people your age in the UK.
+              You earn more than {percentileDisplay}% of people your age in the UK.
             </h3>
             <p className="text-sm text-brand-textMuted">
               You are in the{" "}
@@ -248,46 +250,115 @@ export function WealthPercentileTab({
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={parsedPercentile}
+              aria-valuenow={percentileValue ?? undefined}
               aria-label="Income percentile compared with people your age"
             >
               <div
                 className="h-full rounded-full bg-brilliant-500 transition-all"
-                style={{ width: `${Math.min(100, Math.max(0, parsedPercentile))}%` }}
+                style={{
+                  width: `${Math.min(100, Math.max(0, percentileValue ?? 0))}%`,
+                }}
               />
             </div>
             <p className="text-xs text-brand-textMuted">
               Percentiles show how you compare with others. Being at the{" "}
               <span className="font-semibold text-brand-text">
-                {parsedPercentile}th percentile
+                {percentileDisplay}th percentile
               </span>{" "}
-              means you earn more than {parsedPercentile}% of people in your age group.
+              means you earn more than {percentileDisplay}% of people in your age group.
             </p>
           </div>
 
           {/* Stats panel */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-xs sm:text-sm">
             <div className="rounded-xl border border-brand-border/60 bg-brand-bg/60 px-3 py-2">
-              <p className="text-brand-textMuted">Your income</p>
-              <p className="mt-1 font-semibold text-brand-text">
+              <p className="text-xs sm:text-sm font-semibold text-brand-text">
+                Your income
+              </p>
+              <p className="mt-1 text-sm font-medium text-brand-text">
                 {lastIncome !== null ? formatGBP(lastIncome) : "–"}
               </p>
             </div>
             <div className="rounded-xl border border-brand-border/60 bg-brand-bg/60 px-3 py-2">
-              <p className="text-brand-textMuted">Median ({result.ageGroupLabel})</p>
-              <p className="mt-1 font-semibold text-brand-text">
+              <p className="text-xs sm:text-sm font-semibold text-brand-text">
+                Median ({result.ageGroupLabel})
+              </p>
+              <p className="mt-1 text-sm font-medium text-brand-text">
                 {formatGBP(result.medianIncomeForAgeGroup)}
               </p>
             </div>
             <div className="rounded-xl border border-brand-border/60 bg-brand-bg/60 px-3 py-2">
-              <p className="text-brand-textMuted">Top 10% threshold</p>
-              <p className="mt-1 font-semibold text-brand-text">
+              <p className="text-xs sm:text-sm font-semibold text-brand-text">
+                Top 10% threshold
+              </p>
+              <p className="mt-1 text-sm font-medium text-brand-text">
                 {formatGBP(result.p90Income)}
               </p>
             </div>
             <div className="rounded-xl border border-brand-border/60 bg-brand-bg/60 px-3 py-2">
-              <p className="text-brand-textMuted">Exact percentile</p>
-              <p className="mt-1 font-semibold text-brand-text">{parsedPercentile}th</p>
+              <p className="text-xs sm:text-sm font-semibold text-brand-text">
+                Exact percentile
+              </p>
+              <p className="mt-1 text-sm font-medium text-brand-text">
+                {percentileDisplay}th
+              </p>
+            </div>
+          </div>
+
+          {/* Bar chart: You vs Median vs Top 10% */}
+          <div className="mt-2 rounded-2xl border border-brand-border/60 bg-brand-bg/60 px-3 py-3 sm:px-4 sm:py-4">
+            <p className="mb-2 text-xs sm:text-sm font-semibold text-brand-text">
+              Income comparison ({result.ageGroupLabel})
+            </p>
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    {
+                      name: "You",
+                      value: lastIncome ?? 0,
+                      kind: "you",
+                    },
+                    {
+                      name: "Median",
+                      value: result.medianIncomeForAgeGroup,
+                      kind: "median",
+                    },
+                    {
+                      name: "Top 10%",
+                      value: result.p90Income,
+                      kind: "p90",
+                    },
+                  ]}
+                  margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <YAxis
+                    tickFormatter={(v) => formatGBPShort(Number(v))}
+                    axisLine={false}
+                    tickLine={false}
+                    width={70}
+                  />
+                  <Tooltip
+                    formatter={(v) => formatGBP(Number(v))}
+                    contentStyle={{
+                      borderRadius: 8,
+                      borderColor: "rgba(148, 163, 184, 0.4)",
+                    }}
+                  />
+                  <Bar dataKey="value" radius={4}>
+                    <Cell key="you" fill="#38bdf8" />{/* sky-400 for user */}
+                    <Cell key="median" fill="#64748b" />{/* slate-500 for median */}
+                    <Cell key="p90" fill="#22c55e" />{/* emerald-500 for top 10% */}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
