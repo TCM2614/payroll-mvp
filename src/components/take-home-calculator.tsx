@@ -252,13 +252,12 @@ export function TakeHomeCalculator() {
 
 
         <TabsContent value="wealth" className="pt-4">
-
           <WealthPercentileTab
+            key={`${wealthDefaultAnnualGross ?? 0}-${wealthDefaultNetAnnual ?? 0}`}
             defaultAnnualIncome={wealthDefaultAnnualGross}
             defaultNetAnnualIncome={wealthDefaultNetAnnual}
             defaultComparisonMode="gross"
           />
-
         </TabsContent>
 
       </Tabs>

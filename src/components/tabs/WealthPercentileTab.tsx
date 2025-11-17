@@ -1,6 +1,6 @@
-"use client";
+\"use client\";
 
-import { useEffect, useState } from "react";
+import { useState } from \"react\";
 import { getIncomePercentileForAge, type IncomePercentileResult } from "@/lib/getIncomePercentileForAge";
 import { trackEvent } from "@/lib/analytics";
 
@@ -19,22 +19,18 @@ export function WealthPercentileTab({
   defaultNetAnnualIncome,
   defaultComparisonMode = "gross",
 }: WealthPercentileTabProps) {
+  const initialSource =
+    defaultComparisonMode === "net" ? defaultNetAnnualIncome : defaultAnnualIncome;
+
   const [ageInput, setAgeInput] = useState<string>(defaultAge ? String(defaultAge) : "");
   const [incomeInput, setIncomeInput] = useState<string>(
-    defaultAnnualIncome ? String(Math.round(defaultAnnualIncome)) : "",
+    typeof initialSource === "number" && initialSource > 0
+      ? String(Math.round(initialSource))
+      : "",
   );
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>(defaultComparisonMode);
   const [result, setResult] = useState<IncomePercentileResult | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-
-  // Keep income in sync when the calculator updates the defaults or mode changes
-  useEffect(() => {
-    const source =
-      comparisonMode === "net" ? defaultNetAnnualIncome : defaultAnnualIncome;
-    if (typeof source === "number" && source > 0) {
-      setIncomeInput(String(Math.round(source)));
-    }
-  }, [defaultAnnualIncome, defaultNetAnnualIncome, comparisonMode]);
 
   const handleCompare = () => {
     const age = parseInt(ageInput, 10);
@@ -112,7 +108,12 @@ export function WealthPercentileTab({
             <div className="inline-flex rounded-full border border-brand-border/70 bg-brand-surface/80 px-1 py-1 text-xs sm:text-sm backdrop-blur">
               <button
                 type="button"
-                onClick={() => setComparisonMode("gross")}
+                onClick={() => {
+                  setComparisonMode("gross");
+                  if (typeof defaultAnnualIncome === "number" && defaultAnnualIncome > 0) {
+                    setIncomeInput(String(Math.round(defaultAnnualIncome)));
+                  }
+                }}
                 className={
                   "px-3 py-1.5 rounded-full transition-colors " +
                   (comparisonMode === "gross"
@@ -124,7 +125,12 @@ export function WealthPercentileTab({
               </button>
               <button
                 type="button"
-                onClick={() => setComparisonMode("net")}
+                onClick={() => {
+                  setComparisonMode("net");
+                  if (typeof defaultNetAnnualIncome === "number" && defaultNetAnnualIncome > 0) {
+                    setIncomeInput(String(Math.round(defaultNetAnnualIncome)));
+                  }
+                }}
                 className={
                   "px-3 py-1.5 rounded-full transition-colors " +
                   (comparisonMode === "net"
