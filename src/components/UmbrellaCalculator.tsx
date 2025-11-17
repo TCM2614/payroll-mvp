@@ -2,11 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { formatGBP } from "@/lib/format";
-import {
-  calculateContractorAnnual,
-  deriveGrossAnnualFromContractorInputs,
-  type ContractorInputs,
-} from "@/domain/tax/contracting";
+import { calculateContractorAnnual, type ContractorInputs } from "@/domain/tax/contracting";
 import { createUK2025Config, calculateAnnualTax } from "@/domain/tax/periodTax";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import type { StudentLoanSelection } from "@/lib/student-loans";
@@ -18,6 +14,14 @@ import {
   getSalaryBand,
 } from "@/lib/analytics";
 
+/**
+ * UmbrellaCalculator
+ *
+ * UI wrapper around the contractor engine for inside-IR35 umbrella engagements.
+ * Mirrors LimitedCompanyCalculator UX (rates, tax code, pension, student loans)
+ * but always fixes engagementType="umbrella" and ir35Status="inside", and
+ * wires multi-plan student loan selections into the annual tax engine.
+ */
 export function UmbrellaCalculator() {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
   const [dayRate, setDayRate] = useState<number | undefined>(500);
@@ -314,7 +318,8 @@ export function UmbrellaCalculator() {
         ) : null}
 
         <p className="text-xs text-navy-300">
-          These figures use PAYE-style rules for guidance and are not an official HMRC or full umbrella fee model.
+          These figures use PAYE-style rules for guidance only and are not an official HMRC
+          calculation or full umbrella fee model. This is an inside IR35 estimate.
         </p>
       </section>
     </div>

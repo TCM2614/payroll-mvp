@@ -6,3 +6,4 @@ The image will be used as a blurred background in the DashboardComingSoon compon
 
 Recommended dimensions: 1920x1080 or similar aspect ratio.
 
+

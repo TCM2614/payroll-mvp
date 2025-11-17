@@ -57,9 +57,15 @@ type CombinedJobsBreakdown = {
   weekly: number;
 };
 
+type PayeTabProps = {
+  onAnnualGrossChange?: (value: number) => void;
+  onNetAnnualChange?: (value: number) => void;
+  onShowWealthTab?: () => void;
+};
 
 
-export function PayeTab() {
+
+export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTab }: PayeTabProps) {
   const [primaryIncome, setPrimaryIncome] = useState("6000");
 
   const [primaryFrequency, setPrimaryFrequency] = useState<
@@ -227,6 +233,16 @@ export function PayeTab() {
       combined,
     };
   }, [studentLoanSelection, allJobs, pensionPct, sippPersonal, hoursPerWeek]);
+
+  // Expose combined gross/net up to the parent for use in other tabs (e.g. wealth percentile)
+  useEffect(() => {
+    if (calculationResult.combined.grossAnnual > 0) {
+      onAnnualGrossChange?.(calculationResult.combined.grossAnnual);
+    }
+    if (calculationResult.combined.netAnnual > 0) {
+      onNetAnnualChange?.(calculationResult.combined.netAnnual);
+    }
+  }, [calculationResult.combined.grossAnnual, calculationResult.combined.netAnnual, onAnnualGrossChange, onNetAnnualChange]);
 
   // Track calculator submission and calculator_run goal
   useEffect(() => {
@@ -807,6 +823,21 @@ export function PayeTab() {
                 {formatGBP(calculationResult.combined.weekly)}
               </span>
             </div>
+
+            {onShowWealthTab && calculationResult.combined.grossAnnual > 0 && (
+              <div className="pt-3 border-t border-brand-border/40 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xxs text-brand-textMuted">
+                  Curious how this compares to others in the UK on a similar salary?
+                </p>
+                <button
+                  type="button"
+                  onClick={onShowWealthTab}
+                  className="inline-flex items-center justify-center rounded-xl bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-soft-xl transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70"
+                >
+                  See how your pay compares
+                </button>
+              </div>
+            )}
           </dl>
 
           {/* Optional Hourly Context Section */}

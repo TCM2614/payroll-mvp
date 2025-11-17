@@ -10,7 +10,8 @@ You need to add these 3 environment variables to your Vercel project:
 
 1. **`RESEND_API_KEY`** (Required)
 2. **`RESEND_FROM_EMAIL`** (Required)
-3. **`BUSINESS_EMAIL`** (Optional, but recommended)
+3. **`NOTIFICATION_EMAIL`** (Optional, defaults to `notifications@siluuka.resend.app`)
+4. **`BUSINESS_EMAIL`** (Optional, but recommended)
 
 ## Step-by-Step Setup
 
@@ -114,6 +115,7 @@ If you don't have a custom domain yet:
 # Required Environment Variables in Vercel:
 RESEND_API_KEY=re_xxxxxxxxxxxxx
 RESEND_FROM_EMAIL=noreply@yourdomain.com
+NOTIFICATION_EMAIL=notifications@siluuka.resend.app
 BUSINESS_EMAIL=uktakehomecalculator.proton.me
 ```
 

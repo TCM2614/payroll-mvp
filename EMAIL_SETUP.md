@@ -171,3 +171,4 @@ To customize, edit `src/lib/email.ts` → `getWelcomeEmailTemplate()`.
 - [ ] Consider adding email unsubscribe functionality
 - [ ] Set up PostgreSQL migration path (optional)
 
+

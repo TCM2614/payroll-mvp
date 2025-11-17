@@ -22,6 +22,24 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Lint & Technical Debt
+
+This project currently **builds cleanly for production** (`npm run build`), but `npm run lint`
+still reports a set of known issues in legacy code (not in the latest Umbrella calculator work).
+
+These eslint issues are:
+
+- Use of `any` types in a few API / form handlers (e.g. signup, early-access, email signup)
+- Unescaped quotes in JSX in some marketing/dashboard components
+- React Hooks rule violations in a small number of tab components
+- A remaining `any` in `src/lib/analytics.ts`
+
+For now, these are treated as **non-blocking technical debt for deployment**. They will be
+addressed in a dedicated “Refactor & Lint Cleanup” sprint so that behaviour remains stable
+while the code is cleaned up.
+
+For more detail, see `docs/TECH_DEBT.md`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

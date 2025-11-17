@@ -22,6 +22,7 @@ export async function POST(req: Request) {
 
   const fromEmail = process.env.RESEND_FROM_EMAIL;
   const businessEmail = process.env.BUSINESS_EMAIL;
+  const notificationEmail = process.env.NOTIFICATION_EMAIL || "notifications@siluuka.resend.app";
 
   if (!fromEmail) {
     logWarn("Resend FROM email missing", { endpoint: "/api/early-access" });
@@ -34,19 +35,24 @@ export async function POST(req: Request) {
 
     logInfo("Early access signup request", { email, source: source || "unknown" });
 
-    // 1) Notify you
-    if (businessEmail) {
+    // 1) Notify you - send to notification email (primary) and business email (if different)
+    const notificationTemplate = getNotificationEmailTemplate({ signupEmail: email, source });
+    const notificationRecipients = [notificationEmail];
+    if (businessEmail && businessEmail !== notificationEmail) {
+      notificationRecipients.push(businessEmail);
+    }
+
+    for (const recipient of notificationRecipients) {
       try {
-        const notificationTemplate = getNotificationEmailTemplate({ signupEmail: email, source });
         await resend.emails.send({
           from: fromEmail,
-          to: businessEmail,
+          to: recipient,
           subject: notificationTemplate.subject,
           text: notificationTemplate.text,
         });
-        logInfo("Notification email sent", { to: businessEmail });
+        logInfo("Notification email sent", { to: recipient });
       } catch (emailError) {
-        logError("Failed to send notification email", emailError, { to: businessEmail });
+        logError("Failed to send notification email", emailError, { to: recipient });
         // Don't fail the request if notification fails
       }
     }

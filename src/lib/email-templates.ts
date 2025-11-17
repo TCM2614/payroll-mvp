@@ -122,3 +122,4 @@ export function getSimpleWelcomeEmailTemplate(): {
   return { subject, text };
 }
 
+

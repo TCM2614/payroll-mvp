@@ -235,4 +235,31 @@ describe("calculateContractorAnnual", () => {
   });
 });
 
+describe("umbrella + multi-plan student loans", () => {
+  it("should support multiple student loan plans via calculateAnnualTax", () => {
+    const config = createUK2025Config();
+
+    const singlePlan = calculateAnnualTax({
+      grossAnnualIncome: 80_000,
+      pensionEmployeeAnnual: 0,
+      studentLoanPlan: "plan2",
+      taxCode: "1257L",
+      config,
+    });
+
+    const multiPlan = calculateAnnualTax({
+      grossAnnualIncome: 80_000,
+      pensionEmployeeAnnual: 0,
+      studentLoanPlans: ["plan2", "postgrad"],
+      taxCode: "1257L",
+      config,
+    });
+
+    expect(singlePlan.annualStudentLoan).toBeGreaterThan(0);
+    expect(multiPlan.annualStudentLoan).toBeGreaterThan(singlePlan.annualStudentLoan);
+    expect(multiPlan.studentLoanBreakdown).toBeDefined();
+    expect(multiPlan.studentLoanBreakdown).toHaveLength(2);
+  });
+});
+
 

@@ -6,18 +6,19 @@ import { PayeTab } from "./tabs/PayeTab";
 import { UmbrellaTab } from "./tabs/UmbrellaTab";
 import { LimitedTab } from "./tabs/LimitedTab";
 import { PeriodicTaxTab } from "./tabs/PeriodicTaxTab";
+import { WealthPercentileTab } from "./tabs/WealthPercentileTab";
 
 
 
-type TabValue = "paye" | "umbrella" | "limited" | "periodic";
+type TabValue = "paye" | "umbrella" | "limited" | "periodic" | "wealth";
 
 
 
 export function TakeHomeCalculator() {
 
   const [activeTab, setActiveTab] = useState<TabValue>("paye");
-
-
+  const [wealthDefaultAnnualGross, setWealthDefaultAnnualGross] = useState<number | undefined>();
+  const [wealthDefaultNetAnnual, setWealthDefaultNetAnnual] = useState<number | undefined>();
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -67,11 +68,21 @@ export function TakeHomeCalculator() {
               <span>Periodic Tax Check</span>
             </span>
           </TabsTrigger>
+          <TabsTrigger
+            value="wealth"
+            className="w-full rounded-xl border border-brand-border/60 bg-brand-surface/80 px-4 py-3 text-left text-sm font-medium transition-colors text-brand-text hover:bg-brand-surface data-[state=active]:bg-brand-primary data-[state=active]:text-white data-[state=active]:border-brand-primary"
+            aria-pressed={activeTab === "wealth"}
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-base">📊</span>
+              <span>How rich are you?</span>
+            </span>
+          </TabsTrigger>
         </div>
 
         {/* Desktop: grid layout */}
         <div className="mb-4 sm:mb-6 rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/40 p-1 hidden md:block">
-          <TabsList className="hidden md:grid md:grid-cols-4 gap-1 bg-transparent p-0 h-auto">
+          <TabsList className="hidden md:grid md:grid-cols-5 gap-1 bg-transparent p-0 h-auto">
 
             <TabsTrigger 
 
@@ -175,6 +186,30 @@ export function TakeHomeCalculator() {
 
             </TabsTrigger>
 
+            <TabsTrigger 
+
+              value="wealth" 
+
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors bg-transparent text-navy-200 hover:text-navy-50 hover:bg-sea-jet-800/30 data-[state=active]:bg-brilliant-500 data-[state=active]:text-white data-[state=active]:hover:bg-brilliant-600 data-[state=active]:shadow-md data-[state=active]:shadow-brilliant-500/30"
+
+            >
+
+              <span className="text-base">📊</span>
+
+              <span className="flex flex-col leading-tight">
+
+                <span className="text-sm font-semibold">Percentile</span>
+
+                <span className="text-[10px] text-navy-300">
+
+                  Compare vs UK peers
+
+                </span>
+
+              </span>
+
+            </TabsTrigger>
+
           </TabsList>
         </div>
 
@@ -182,7 +217,11 @@ export function TakeHomeCalculator() {
 
         <TabsContent value="paye" className="pt-4 space-y-4">
 
-          <PayeTab />
+          <PayeTab
+            onAnnualGrossChange={setWealthDefaultAnnualGross}
+            onNetAnnualChange={setWealthDefaultNetAnnual}
+            onShowWealthTab={() => setActiveTab("wealth")}
+          />
 
         </TabsContent>
 
@@ -207,6 +246,18 @@ export function TakeHomeCalculator() {
         <TabsContent value="periodic" className="pt-4">
 
           <PeriodicTaxTab />
+
+        </TabsContent>
+
+
+
+        <TabsContent value="wealth" className="pt-4">
+
+          <WealthPercentileTab
+            defaultAnnualIncome={wealthDefaultAnnualGross}
+            defaultNetAnnualIncome={wealthDefaultNetAnnual}
+            defaultComparisonMode="gross"
+          />
 
         </TabsContent>
 

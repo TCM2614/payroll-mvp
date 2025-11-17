@@ -91,3 +91,4 @@ Created `src/lib/logger.ts` with:
 - Both routes send welcome emails but use different templates
 - All routes now have production-safe logging
 
+
