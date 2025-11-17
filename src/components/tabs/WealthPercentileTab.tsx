@@ -1,6 +1,6 @@
-\"use client\";
+"use client";
 
-import { useState } from \"react\";
+import { useState } from "react";
 import { getIncomePercentileForAge, type IncomePercentileResult } from "@/lib/getIncomePercentileForAge";
 import { trackEvent } from "@/lib/analytics";
 
