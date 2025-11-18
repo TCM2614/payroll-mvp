@@ -36,17 +36,24 @@ const INCOME_COMPARISON_COLORS = {
 } as const;
 
 const PERCENTILE_SEGMENTS = [
-  { key: "below", label: "Below typical", start: 0, end: 25, color: "#1f2937" }, // slate-800
-  { key: "typical", label: "Typical range", start: 25, end: 50, color: "#0f172a" }, // slate-900
-  { key: "above", label: "Above median", start: 50, end: 75, color: "#0369a1" }, // sky-700
-  { key: "high", label: "High income", start: 75, end: 85, color: "#0284c7" }, // sky-600
-  { key: "top", label: "Top 15%", start: 85, end: 100, color: "#22c55e" }, // emerald-500
+  // Broad bands
+  { key: "p0_25", label: "0–25%", start: 0, end: 25, color: "#1f2937" }, // slate-800
+  { key: "p25_50", label: "25–50%", start: 25, end: 50, color: "#0f172a" }, // slate-900
+  { key: "p50_75", label: "50–75%", start: 50, end: 75, color: "#0369a1" }, // sky-700
+  { key: "p75_85", label: "75–85%", start: 75, end: 85, color: "#0284c7" }, // sky-600
+  { key: "p85_95", label: "85–95%", start: 85, end: 95, color: "#0ea5e9" }, // sky-500
+  // Fine-grained top tail
+  { key: "top5", label: "Top 5%", start: 95, end: 96, color: "#22c55e" }, // emerald-500
+  { key: "top4", label: "Top 4%", start: 96, end: 97, color: "#16a34a" }, // green-600
+  { key: "top3", label: "Top 3%", start: 97, end: 98, color: "#15803d" }, // green-700
+  { key: "top2", label: "Top 2%", start: 98, end: 99, color: "#166534" }, // green-800
+  { key: "top1", label: "Top 1%", start: 99, end: 100, color: "#14532d" }, // green-900
 ] as const;
 
 type IncomeTooltipPayload = { name: string; value: number };
 
 function IncomeComparisonTooltip(
-  props: TooltipProps<number, string> & { payload?: unknown[] },
+  props: TooltipProps<any, any> & { payload?: unknown[] },
 ) {
   const { active, payload } = props;
   if (!active || !payload || payload.length === 0) return null;
@@ -68,21 +75,30 @@ type PercentileTooltipPayload = {
 };
 
 function PercentileBreakdownTooltip(
-  props: TooltipProps<number, string> & { payload?: unknown[] },
+  props: TooltipProps<any, any> & { payload?: unknown[] },
 ) {
   const { active, payload } = props;
   if (!active || !payload || payload.length === 0) return null;
-  const first = payload[0] as { payload?: PercentileTooltipPayload };
-  if (!first.payload) return null;
-  const raw = first.payload;
+  const first = payload[0] as { dataKey?: string };
+  const key = first.dataKey;
+  const seg = key ? PERCENTILE_SEGMENTS.find((s) => s.key === key) : undefined;
+  if (!seg) return null;
   return (
     <div className="rounded-lg border border-brand-border/60 bg-brand-bg/95 px-3 py-2 text-xs shadow-md">
-      <p className="font-semibold text-brand-text">{raw.label}</p>
+      <p className="font-semibold text-brand-text">{seg.label}</p>
       <p className="mt-1 font-medium text-brand-text">
-        Range {raw.start.toFixed(0)}–{raw.end.toFixed(0)}%
+        Range {seg.start.toFixed(0)}–{seg.end.toFixed(0)}%
       </p>
     </div>
   );
+}
+
+function formatPercentile(value: number): string {
+  const clamped = Math.min(100, Math.max(0, value));
+  if (clamped >= 99.95) {
+    return "100%";
+  }
+  return `${clamped.toFixed(1)}%`;
 }
 
 export function WealthPercentileTab({
@@ -153,7 +169,9 @@ export function WealthPercentileTab({
   };
 
   const percentileValue = result ? result.percentile : null;
-  const percentileDisplay = percentileValue != null ? percentileValue.toFixed(1) : null;
+  const clampedPercentile =
+    percentileValue != null ? Math.min(100, Math.max(0, percentileValue)) : null;
+  const percentileDisplay = clampedPercentile != null ? formatPercentile(clampedPercentile) : null;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -286,11 +304,11 @@ export function WealthPercentileTab({
       </section>
 
       {/* Result card */}
-      {result && percentileValue != null && (
+      {result && clampedPercentile != null && (
         <section className="rounded-3xl bg-brand-surface/80 border border-brand-border/60 shadow-soft-xl backdrop-blur-xl p-4 sm:p-6 space-y-6">
           <header className="space-y-1">
             <h3 className="text-lg sm:text-xl font-semibold text-brand-text">
-              You earn more than {percentileDisplay}% of people your age in the UK.
+              You earn more than {percentileDisplay} of people your age in the UK.
             </h3>
             <p className="text-sm text-brand-textMuted">
               You are in the{" "}
@@ -331,11 +349,11 @@ export function WealthPercentileTab({
               />
             </div>
             <p className="text-xs text-brand-textMuted">
-              Percentiles show how you compare with others. Being at the{" "}
+              Percentiles show how you compare with others. Being at{" "}
               <span className="font-semibold text-brand-text">
-                {percentileDisplay}th percentile
+                {percentileDisplay}
               </span>{" "}
-              means you earn more than {percentileDisplay}% of people in your age group.
+              means you earn more than {percentileDisplay} of people in your age group.
             </p>
           </div>
 
@@ -370,7 +388,7 @@ export function WealthPercentileTab({
                 Exact percentile
               </p>
               <p className="mt-1 text-sm font-medium text-brand-text">
-                {percentileDisplay}th
+                {percentileDisplay}
               </p>
             </div>
           </div>
@@ -439,17 +457,15 @@ export function WealthPercentileTab({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   layout="vertical"
-                  data={[{
-                    name: "Percentiles",
-                    below: 25,
-                    typical: 25,
-                    above: 25,
-                    high: 10,
-                    top: 15,
-                    label: "",
-                    start: 0,
-                    end: 100,
-                  }]}
+                  data={[
+                    PERCENTILE_SEGMENTS.reduce(
+                      (acc, seg) => ({
+                        ...acc,
+                        [seg.key]: seg.end - seg.start,
+                      }),
+                      { name: "Percentiles" } as Record<string, number | string>,
+                    ),
+                  ]}
                   margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
                 >
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" />
@@ -465,44 +481,27 @@ export function WealthPercentileTab({
                   <Tooltip
                     cursor={{ fill: "transparent" }}
                     content={<PercentileBreakdownTooltip />}
-                    formatter={(_, key) => {
-                      const seg = PERCENTILE_SEGMENTS.find((s) => s.key === key);
-                      if (!seg) return "";
-                      return [`${seg.start}–${seg.end}%`, seg.label];
-                    }}
                   />
                   <ReferenceLine
-                    x={Math.min(100, Math.max(0, percentileValue ?? 0))}
+                    x={Math.min(100, Math.max(0, clampedPercentile ?? 0))}
                     stroke={INCOME_COMPARISON_COLORS.you}
                     strokeWidth={2}
                   />
-                  <Bar
-                    dataKey="below"
-                    stackId="range"
-                    radius={[4, 0, 0, 4]}
-                    fill={PERCENTILE_SEGMENTS[0].color}
-                  />
-                  <Bar
-                    dataKey="typical"
-                    stackId="range"
-                    fill={PERCENTILE_SEGMENTS[1].color}
-                  />
-                  <Bar
-                    dataKey="above"
-                    stackId="range"
-                    fill={PERCENTILE_SEGMENTS[2].color}
-                  />
-                  <Bar
-                    dataKey="high"
-                    stackId="range"
-                    fill={PERCENTILE_SEGMENTS[3].color}
-                  />
-                  <Bar
-                    dataKey="top"
-                    stackId="range"
-                    radius={[0, 4, 4, 0]}
-                    fill={PERCENTILE_SEGMENTS[4].color}
-                  />
+                  {PERCENTILE_SEGMENTS.map((seg, index) => (
+                    <Bar
+                      key={seg.key}
+                      dataKey={seg.key}
+                      stackId="range"
+                      radius={
+                        index === 0
+                          ? [4, 0, 0, 4]
+                          : index === PERCENTILE_SEGMENTS.length - 1
+                          ? [0, 4, 4, 0]
+                          : 0
+                      }
+                      fill={seg.color}
+                    />
+                  ))}
                 </BarChart>
               </ResponsiveContainer>
             </div>
