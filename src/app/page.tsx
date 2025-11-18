@@ -53,9 +53,7 @@ export default function LandingPage() {
 
 
           <p className="mt-4 text-balance text-sm text-white/70 sm:text-base">
-
-            Calculate your UK take-home pay instantly. Our free PAYE calculator shows your salary after tax, National Insurance (NI), pension contributions, and student loan repayments. Compare PAYE employment, umbrella company, and limited company scenarios side-by-side to see which structure gives you the best net pay. All calculations use official HMRC rates for the 2024/25 tax year. See clear breakdowns of income tax, NI contributions, student loan deductions, and pension contributions. This calculator provides guidance only and is not affiliated with HMRC.
-
+            Instant UK take-home pay calculator. Accurate PAYE, Umbrella and Limited Company tax breakdowns with student loan, pension and salary sacrifice support — fully updated for the 2025/26 tax year.
           </p>
 
           <p className="mt-5 text-sm text-white/80">
