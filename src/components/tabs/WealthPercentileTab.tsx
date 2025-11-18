@@ -69,13 +69,14 @@ function IncomeComparisonTooltip(
   );
 }
 
-function PercentileBreakdownTooltip(
-  props: TooltipProps<any, any> & {
-    payload?: unknown[];
-    ageBand?: IncomePercentileResult["ageBand"];
-  },
-) {
-  const { active, payload, ageBand } = props;
+type PercentileTooltipProps = TooltipProps<number, string> & {
+  payload?: readonly unknown[];
+  ageBand?: IncomePercentileResult["ageBand"];
+  clampedPercentile?: number | null;
+};
+
+function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
+  const { active, payload, ageBand, clampedPercentile } = props;
   if (!active || !payload || payload.length === 0 || !ageBand) return null;
   const first = payload[0] as { dataKey?: string };
   const key = first.dataKey;
@@ -91,15 +92,25 @@ function PercentileBreakdownTooltip(
     incomeText = `From about ${formatGBP(minIncome)} per year`;
   }
 
+  const isUserBand =
+    clampedPercentile != null &&
+    clampedPercentile >= seg.start &&
+    clampedPercentile <= seg.end;
+
   return (
     <div className="rounded-lg border border-brand-border/60 bg-brand-bg/95 px-3 py-2 text-xs shadow-md">
       <p className="font-semibold text-brand-text">{seg.label}</p>
       <p className="mt-1 font-medium text-brand-text">
-        Range {seg.start.toFixed(0)}–{seg.end.toFixed(0)} percentile
+        Range {seg.start.toFixed(1)}–{seg.end.toFixed(1)} percentile
       </p>
       {incomeText && (
         <p className="mt-1 text-brand-textMuted">
           {incomeText}
+        </p>
+      )}
+      {isUserBand && clampedPercentile != null && (
+        <p className="mt-1 font-semibold text-brand-text">
+          You: {formatPercentile(clampedPercentile)} ({formatTopShare(clampedPercentile)})
         </p>
       )}
     </div>
@@ -112,6 +123,28 @@ function formatPercentile(value: number): string {
     return "100%";
   }
   return `${clamped.toFixed(2)}%`;
+}
+
+function formatTopShare(value: number): string {
+  const clamped = Math.min(100, Math.max(0, value));
+  const distanceFromTop = 100 - clamped;
+
+  // Very high percentiles: snap to simple labels
+  if (clamped >= 99.5) {
+    return "top 1%";
+  }
+  if (clamped >= 99) {
+    return "top 2%";
+  }
+
+  const topShare = Math.max(0.01, Number(distanceFromTop.toFixed(2)));
+
+  // Safety net: never say top 0%
+  if (topShare <= 0) {
+    return "top 1%";
+  }
+
+  return `top ${topShare.toFixed(2)}%`;
 }
 
 function estimateIncomeForPercentile(
@@ -395,7 +428,12 @@ export function WealthPercentileTab({
               <span className="font-semibold text-brand-text">
                 {percentileDisplay}
               </span>{" "}
-              means you earn more than {percentileDisplay} of people in your age group.
+              means you earn more than {percentileDisplay} of people in your age group. That
+              places you in the{" "}
+              <span className="font-semibold text-brand-text">
+                {formatTopShare(clampedPercentile)}
+              </span>{" "}
+              of earners for your age group.
             </p>
           </div>
 
@@ -520,10 +558,7 @@ export function WealthPercentileTab({
                     tickLine={false}
                   />
                   <YAxis type="category" dataKey="name" hide />
-                  <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    content={<PercentileBreakdownTooltip />}
-                  />
+                  <Tooltip cursor={{ fill: "transparent" }} content={undefined} />
                   <ReferenceLine
                     x={Math.min(100, Math.max(0, clampedPercentile ?? 0))}
                     stroke={INCOME_COMPARISON_COLORS.you}
