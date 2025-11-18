@@ -1,8 +1,22 @@
  "use client";
 
 import { useMemo, useState } from "react";
-import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Cell } from "recharts";
-import { getIncomePercentileForAge, type IncomePercentileResult } from "@/lib/getIncomePercentileForAge";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Cell,
+  ReferenceLine,
+} from "recharts";
+import type { TooltipProps } from "recharts";
+import {
+  getIncomePercentileForAge,
+  type IncomePercentileResult,
+} from "@/lib/getIncomePercentileForAge";
 import { trackEvent } from "@/lib/analytics";
 import { formatGBP, formatGBPShort } from "@/lib/format";
 
@@ -14,6 +28,62 @@ type WealthPercentileTabProps = {
   defaultNetAnnualIncome?: number;
   defaultComparisonMode?: ComparisonMode;
 };
+
+const INCOME_COMPARISON_COLORS = {
+  you: "#38bdf8", // sky-400
+  median: "#64748b", // slate-500
+  top: "#22c55e", // emerald-500
+} as const;
+
+const PERCENTILE_SEGMENTS = [
+  { key: "below", label: "Below typical", start: 0, end: 25, color: "#1f2937" }, // slate-800
+  { key: "typical", label: "Typical range", start: 25, end: 50, color: "#0f172a" }, // slate-900
+  { key: "above", label: "Above median", start: 50, end: 75, color: "#0369a1" }, // sky-700
+  { key: "high", label: "High income", start: 75, end: 85, color: "#0284c7" }, // sky-600
+  { key: "top", label: "Top 15%", start: 85, end: 100, color: "#22c55e" }, // emerald-500
+] as const;
+
+type IncomeTooltipPayload = { name: string; value: number };
+
+function IncomeComparisonTooltip(
+  props: TooltipProps<number, string> & { payload?: unknown[] },
+) {
+  const { active, payload } = props;
+  if (!active || !payload || payload.length === 0) return null;
+  const first = payload[0] as { payload?: IncomeTooltipPayload };
+  if (!first.payload) return null;
+  const p = first.payload;
+  return (
+    <div className="rounded-lg border border-brand-border/60 bg-brand-bg/95 px-3 py-2 text-xs shadow-md">
+      <p className="font-semibold text-brand-text">{p.name}</p>
+      <p className="mt-1 font-medium text-brand-text">{formatGBP(p.value)}</p>
+    </div>
+  );
+}
+
+type PercentileTooltipPayload = {
+  label: string;
+  start: number;
+  end: number;
+};
+
+function PercentileBreakdownTooltip(
+  props: TooltipProps<number, string> & { payload?: unknown[] },
+) {
+  const { active, payload } = props;
+  if (!active || !payload || payload.length === 0) return null;
+  const first = payload[0] as { payload?: PercentileTooltipPayload };
+  if (!first.payload) return null;
+  const raw = first.payload;
+  return (
+    <div className="rounded-lg border border-brand-border/60 bg-brand-bg/95 px-3 py-2 text-xs shadow-md">
+      <p className="font-semibold text-brand-text">{raw.label}</p>
+      <p className="mt-1 font-medium text-brand-text">
+        Range {raw.start.toFixed(0)}–{raw.end.toFixed(0)}%
+      </p>
+    </div>
+  );
+}
 
 export function WealthPercentileTab({
   defaultAge,
@@ -327,7 +397,7 @@ export function WealthPercentileTab({
                     {
                       name: "Top 10%",
                       value: result.p90Income,
-                      kind: "p90",
+                      kind: "top",
                     },
                   ]}
                   margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
@@ -345,20 +415,107 @@ export function WealthPercentileTab({
                     tickLine={false}
                     width={70}
                   />
-                  <Tooltip
-                    formatter={(v) => formatGBP(Number(v))}
-                    contentStyle={{
-                      borderRadius: 8,
-                      borderColor: "rgba(148, 163, 184, 0.4)",
-                    }}
-                  />
-                  <Bar dataKey="value" radius={4}>
-                    <Cell key="you" fill="#38bdf8" />{/* sky-400 for user */}
-                    <Cell key="median" fill="#64748b" />{/* slate-500 for median */}
-                    <Cell key="p90" fill="#22c55e" />{/* emerald-500 for top 10% */}
+                  <Tooltip content={<IncomeComparisonTooltip />} cursor={{ fill: "transparent" }} />
+                  <Bar
+                    dataKey="value"
+                    radius={4}
+                    activeBar={{ fillOpacity: 0.9 }}
+                  >
+                    <Cell key="you" fill={INCOME_COMPARISON_COLORS.you} />
+                    <Cell key="median" fill={INCOME_COMPARISON_COLORS.median} />
+                    <Cell key="top" fill={INCOME_COMPARISON_COLORS.top} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Percentile breakdown chart */}
+          <div className="mt-3 rounded-2xl border border-brand-border/60 bg-brand-bg/60 px-3 py-3 sm:px-4 sm:py-4">
+            <p className="mb-2 text-xs sm:text-sm font-semibold text-brand-text">
+              Where you sit in the distribution
+            </p>
+            <div className="h-40 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  layout="vertical"
+                  data={[{
+                    name: "Percentiles",
+                    below: 25,
+                    typical: 25,
+                    above: 25,
+                    high: 10,
+                    top: 15,
+                    label: "",
+                    start: 0,
+                    end: 100,
+                  }]}
+                  margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
+                >
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+                  <XAxis
+                    type="number"
+                    domain={[0, 100]}
+                    tickFormatter={(v) => `${v}%`}
+                    tick={{ fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis type="category" dataKey="name" hide />
+                  <Tooltip
+                    cursor={{ fill: "transparent" }}
+                    content={<PercentileBreakdownTooltip />}
+                    formatter={(_, key) => {
+                      const seg = PERCENTILE_SEGMENTS.find((s) => s.key === key);
+                      if (!seg) return "";
+                      return [`${seg.start}–${seg.end}%`, seg.label];
+                    }}
+                  />
+                  <ReferenceLine
+                    x={Math.min(100, Math.max(0, percentileValue ?? 0))}
+                    stroke={INCOME_COMPARISON_COLORS.you}
+                    strokeWidth={2}
+                  />
+                  <Bar
+                    dataKey="below"
+                    stackId="range"
+                    radius={[4, 0, 0, 4]}
+                    fill={PERCENTILE_SEGMENTS[0].color}
+                  />
+                  <Bar
+                    dataKey="typical"
+                    stackId="range"
+                    fill={PERCENTILE_SEGMENTS[1].color}
+                  />
+                  <Bar
+                    dataKey="above"
+                    stackId="range"
+                    fill={PERCENTILE_SEGMENTS[2].color}
+                  />
+                  <Bar
+                    dataKey="high"
+                    stackId="range"
+                    fill={PERCENTILE_SEGMENTS[3].color}
+                  />
+                  <Bar
+                    dataKey="top"
+                    stackId="range"
+                    radius={[0, 4, 4, 0]}
+                    fill={PERCENTILE_SEGMENTS[4].color}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2 text-[10px] sm:text-xs">
+              {PERCENTILE_SEGMENTS.map((seg) => (
+                <div key={seg.key} className="inline-flex items-center gap-1">
+                  <span
+                    className="inline-block h-2 w-2 rounded-full"
+                    style={{ backgroundColor: seg.color }}
+                  />
+                  <span className="font-medium text-brand-text">{seg.label}</span>
+                </div>
+              ))}
             </div>
           </div>
 
