@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import {
@@ -17,6 +17,7 @@ import {
   getIncomePercentileForAge,
   type IncomePercentileResult,
 } from "@/lib/getIncomePercentileForAge";
+import { incomePercentilesByAge } from "@/data/incomePercentilesByAge";
 import { trackEvent } from "@/lib/analytics";
 import { formatGBP, formatGBPShort } from "@/lib/format";
 
@@ -68,37 +69,78 @@ function IncomeComparisonTooltip(
   );
 }
 
-type PercentileTooltipPayload = {
-  label: string;
-  start: number;
-  end: number;
-};
-
 function PercentileBreakdownTooltip(
-  props: TooltipProps<any, any> & { payload?: unknown[] },
+  props: TooltipProps<any, any> & {
+    payload?: unknown[];
+    ageBand?: IncomePercentileResult["ageBand"];
+  },
 ) {
-  const { active, payload } = props;
-  if (!active || !payload || payload.length === 0) return null;
+  const { active, payload, ageBand } = props;
+  if (!active || !payload || payload.length === 0 || !ageBand) return null;
   const first = payload[0] as { dataKey?: string };
   const key = first.dataKey;
   const seg = key ? PERCENTILE_SEGMENTS.find((s) => s.key === key) : undefined;
   if (!seg) return null;
+
+  const minIncome = estimateIncomeForPercentile(ageBand, seg.start);
+  const maxIncome = estimateIncomeForPercentile(ageBand, seg.end);
+  let incomeText: string | null = null;
+  if (minIncome != null && maxIncome != null && maxIncome > minIncome) {
+    incomeText = `${formatGBP(minIncome)}–${formatGBP(maxIncome)} per year`;
+  } else if (minIncome != null) {
+    incomeText = `From about ${formatGBP(minIncome)} per year`;
+  }
+
   return (
     <div className="rounded-lg border border-brand-border/60 bg-brand-bg/95 px-3 py-2 text-xs shadow-md">
       <p className="font-semibold text-brand-text">{seg.label}</p>
       <p className="mt-1 font-medium text-brand-text">
-        Range {seg.start.toFixed(0)}–{seg.end.toFixed(0)}%
+        Range {seg.start.toFixed(0)}–{seg.end.toFixed(0)} percentile
       </p>
+      {incomeText && (
+        <p className="mt-1 text-brand-textMuted">
+          {incomeText}
+        </p>
+      )}
     </div>
   );
 }
 
 function formatPercentile(value: number): string {
   const clamped = Math.min(100, Math.max(0, value));
-  if (clamped >= 99.95) {
+  if (clamped >= 99.995) {
     return "100%";
   }
-  return `${clamped.toFixed(1)}%`;
+  return `${clamped.toFixed(2)}%`;
+}
+
+function estimateIncomeForPercentile(
+  ageBand: IncomePercentileResult["ageBand"],
+  percentile: number,
+): number | null {
+  const rows = incomePercentilesByAge.filter(
+    (row) => row.ageMin === ageBand.ageMin && row.ageMax === ageBand.ageMax,
+  );
+  if (rows.length === 0) return null;
+
+  const sorted = [...rows].sort((a, b) => a.percentile - b.percentile);
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+
+  if (percentile <= first.percentile) return first.income;
+  if (percentile >= last.percentile) return last.income;
+
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const a = sorted[i];
+    const b = sorted[i + 1];
+    if (percentile >= a.percentile && percentile <= b.percentile) {
+      if (b.percentile === a.percentile) return a.income;
+      const ratio = (percentile - a.percentile) / (b.percentile - a.percentile);
+      return a.income + ratio * (b.income - a.income);
+    }
+  }
+
+  return last.income;
 }
 
 export function WealthPercentileTab({
