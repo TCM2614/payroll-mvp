@@ -35,7 +35,7 @@ export function StickySummary({
               <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-200/80 sm:text-xs lg:text-[11px]">
                 {metric.label}
               </p>
-              <p className="text-xl font-bold leading-tight sm:text-2xl lg:text-3xl">
+              <p className="text-xl font-bold leading-tight text-white sm:text-2xl lg:text-3xl">
                 {metric.value}
               </p>
             </div>
