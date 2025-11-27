@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { TaxYearToggle } from "@/components/TaxYearToggle";
+import { TaxBreakdownChart } from "@/components/TaxBreakdownChart";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import { calcPAYECombined } from "@/lib/calculators/paye";
@@ -737,108 +738,221 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
             </div>
           </header>
 
-          <dl className="space-y-2 text-sm">
-            <div className="flex items-center justify-between gap-2">
-              <dt className="text-brand-textMuted">Gross pay (annual)</dt>
-              <dd className="text-right font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.grossAnnual)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <dt className="text-brand-textMuted">PAYE income tax</dt>
-              <dd className="text-right font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.annualPAYE)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <dt className="text-brand-textMuted">National Insurance</dt>
-              <dd className="text-right font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.annualNI)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <dt className="text-brand-textMuted">Workplace pension (employee)</dt>
-              <dd className="text-right font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.annualPensionEmployee)}
-              </dd>
-            </div>
-            {sippPersonal > 0 && (
-              <div className="flex items-center justify-between gap-2">
-                <dt className="text-brand-textMuted">SIPP contributions (personal)</dt>
-                <dd className="text-right font-medium text-brand-text">
-                  {formatGBP(sippPersonal)}
-                </dd>
+          {calculationResult.combined.grossAnnual > 0 ? (
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start">
+              <div className="h-64 lg:h-72">
+                <TaxBreakdownChart
+                  netPay={calculationResult.combined.netAnnual}
+                  incomeTax={calculationResult.combined.annualPAYE}
+                  nationalInsurance={calculationResult.combined.annualNI}
+                  pension={calculationResult.combined.annualPensionEmployee + sippPersonal}
+                  height={260}
+                />
               </div>
-            )}
-
-            {/* Student loan per-plan breakdown where available */}
-            {calculationResult.combined.studentLoanBreakdown.length > 0 && (
-              <>
-                <div className="pt-2 border-t border-brand-border/40">
-                  <p className="text-xxs font-semibold text-brand-textMuted uppercase tracking-wide">
-                    Student loan deductions (annual)
-                  </p>
-                </div>
-                {calculationResult.combined.studentLoanBreakdown.map(
-                  ({ plan, label, amount }) => (
-                    <div
-                      key={plan}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <dt className="text-brand-textMuted">
-                        Student loan ({label})
-                      </dt>
-                      <dd className="text-right font-medium text-brand-text">
-                        {formatGBP(amount)}
-                      </dd>
-                    </div>
-                  )
-                )}
-                <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
-                  <dt className="text-brand-text font-medium">
-                    Total student loans
-                  </dt>
-                  <dd className="text-right font-semibold text-brand-text">
-                    {formatGBP(calculationResult.combined.annualStudentLoan)}
+              <dl className="space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">Gross pay (annual)</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(calculationResult.combined.grossAnnual)}
                   </dd>
                 </div>
-              </>
-            )}
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">PAYE income tax</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(calculationResult.combined.annualPAYE)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">National Insurance</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(calculationResult.combined.annualNI)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">Workplace pension (employee)</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(calculationResult.combined.annualPensionEmployee)}
+                  </dd>
+                </div>
+                {sippPersonal > 0 && (
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="text-brand-textMuted">SIPP contributions (personal)</dt>
+                    <dd className="text-right font-medium text-brand-text">
+                      {formatGBP(sippPersonal)}
+                    </dd>
+                  </div>
+                )}
 
-            <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
-              <dt className="text-brand-text font-medium">Net take-home (annual)</dt>
-              <dd className="text-right font-semibold text-brand-accent">
-                {formatGBP(calculationResult.combined.netAnnual)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-2 text-xs text-brand-textMuted">
-              <span>Net monthly</span>
-              <span className="font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.monthly)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-2 text-xs text-brand-textMuted">
-              <span>Net weekly</span>
-              <span className="font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.weekly)}
-              </span>
-            </div>
+                {/* Student loan per-plan breakdown where available */}
+                {calculationResult.combined.studentLoanBreakdown.length > 0 && (
+                  <>
+                    <div className="pt-2 border-t border-brand-border/40">
+                      <p className="text-xxs font-semibold text-brand-textMuted uppercase tracking-wide">
+                        Student loan deductions (annual)
+                      </p>
+                    </div>
+                    {calculationResult.combined.studentLoanBreakdown.map(
+                      ({ plan, label, amount }) => (
+                        <div
+                          key={plan}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <dt className="text-brand-textMuted">
+                            Student loan ({label})
+                          </dt>
+                          <dd className="text-right font-medium text-brand-text">
+                            {formatGBP(amount)}
+                          </dd>
+                        </div>
+                      )
+                    )}
+                    <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
+                      <dt className="text-brand-text font-medium">
+                        Total student loans
+                      </dt>
+                      <dd className="text-right font-semibold text-brand-text">
+                        {formatGBP(calculationResult.combined.annualStudentLoan)}
+                      </dd>
+                    </div>
+                  </>
+                )}
 
-            {onShowWealthTab && calculationResult.combined.grossAnnual > 0 && (
-              <div className="pt-3 border-t border-brand-border/40 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xxs text-brand-textMuted">
-                  Curious how this compares to others in the UK on a similar salary?
-                </p>
-                <button
-                  type="button"
-                  onClick={onShowWealthTab}
-                  className="inline-flex items-center justify-center rounded-xl bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-soft-xl transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70"
-                >
-                  See how your pay compares
-                </button>
+                <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
+                  <dt className="text-brand-text font-medium">Net take-home (annual)</dt>
+                  <dd className="text-right font-semibold text-brand-accent">
+                    {formatGBP(calculationResult.combined.netAnnual)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-brand-textMuted">
+                  <span>Net monthly</span>
+                  <span className="font-medium text-brand-text">
+                    {formatGBP(calculationResult.combined.monthly)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-brand-textMuted">
+                  <span>Net weekly</span>
+                  <span className="font-medium text-brand-text">
+                    {formatGBP(calculationResult.combined.weekly)}
+                  </span>
+                </div>
+
+                {onShowWealthTab && calculationResult.combined.grossAnnual > 0 && (
+                  <div className="pt-3 border-t border-brand-border/40 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xxs text-brand-textMuted">
+                      Curious how this compares to others in the UK on a similar salary?
+                    </p>
+                    <button
+                      type="button"
+                      onClick={onShowWealthTab}
+                      className="inline-flex items-center justify-center rounded-xl bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-soft-xl transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70"
+                    >
+                      See how your pay compares
+                    </button>
+                  </div>
+                )}
+              </dl>
+            </div>
+          ) : (
+            <dl className="space-y-2 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-brand-textMuted">Gross pay (annual)</dt>
+                <dd className="text-right font-medium text-brand-text">
+                  {formatGBP(calculationResult.combined.grossAnnual)}
+                </dd>
               </div>
-            )}
-          </dl>
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-brand-textMuted">PAYE income tax</dt>
+                <dd className="text-right font-medium text-brand-text">
+                  {formatGBP(calculationResult.combined.annualPAYE)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-brand-textMuted">National Insurance</dt>
+                <dd className="text-right font-medium text-brand-text">
+                  {formatGBP(calculationResult.combined.annualNI)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-brand-textMuted">Workplace pension (employee)</dt>
+                <dd className="text-right font-medium text-brand-text">
+                  {formatGBP(calculationResult.combined.annualPensionEmployee)}
+                </dd>
+              </div>
+              {sippPersonal > 0 && (
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">SIPP contributions (personal)</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(sippPersonal)}
+                  </dd>
+                </div>
+              )}
+              {calculationResult.combined.studentLoanBreakdown.length > 0 && (
+                <>
+                  <div className="pt-2 border-t border-brand-border/40">
+                    <p className="text-xxs font-semibold text-brand-textMuted uppercase tracking-wide">
+                      Student loan deductions (annual)
+                    </p>
+                  </div>
+                  {calculationResult.combined.studentLoanBreakdown.map(
+                    ({ plan, label, amount }) => (
+                      <div
+                        key={plan}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <dt className="text-brand-textMuted">
+                          Student loan ({label})
+                        </dt>
+                        <dd className="text-right font-medium text-brand-text">
+                          {formatGBP(amount)}
+                        </dd>
+                      </div>
+                    )
+                  )}
+                  <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
+                    <dt className="text-brand-text font-medium">
+                      Total student loans
+                    </dt>
+                    <dd className="text-right font-semibold text-brand-text">
+                      {formatGBP(calculationResult.combined.annualStudentLoan)}
+                    </dd>
+                  </div>
+                </>
+              )}
+              <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
+                <dt className="text-brand-text font-medium">Net take-home (annual)</dt>
+                <dd className="text-right font-semibold text-brand-accent">
+                  {formatGBP(calculationResult.combined.netAnnual)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-2 text-xs text-brand-textMuted">
+                <span>Net monthly</span>
+                <span className="font-medium text-brand-text">
+                  {formatGBP(calculationResult.combined.monthly)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 text-xs text-brand-textMuted">
+                <span>Net weekly</span>
+                <span className="font-medium text-brand-text">
+                  {formatGBP(calculationResult.combined.weekly)}
+                </span>
+              </div>
+
+              {onShowWealthTab && calculationResult.combined.grossAnnual > 0 && (
+                <div className="pt-3 border-t border-brand-border/40 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xxs text-brand-textMuted">
+                    Curious how this compares to others in the UK on a similar salary?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onShowWealthTab}
+                    className="inline-flex items-center justify-center rounded-xl bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-soft-xl transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70"
+                  >
+                    See how your pay compares
+                  </button>
+                </div>
+              )}
+            </dl>
+          )}
 
           {/* Optional Hourly Context Section */}
           {(() => {
