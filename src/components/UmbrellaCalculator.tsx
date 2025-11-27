@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { formatGBP } from "@/lib/format";
 import { calculateContractorAnnual, type ContractorInputs } from "@/domain/tax/contracting";
 import { createUK2025Config, calculateAnnualTax } from "@/domain/tax/periodTax";
@@ -13,6 +13,7 @@ import {
   trackCalculatorRun,
   getSalaryBand,
 } from "@/lib/analytics";
+import { StickySummary } from "@/components/StickySummary";
 
 /**
  * UmbrellaCalculator
@@ -74,6 +75,14 @@ export function UmbrellaCalculator() {
     };
   }, [studentLoanSelection, monthlyRate, dayRate, daysPerWeek, hourlyRate, hoursPerDay, taxCode, pensionPct]);
 
+  const breakdownRef = useRef<HTMLDivElement | null>(null);
+  const annualNet = calculationResult.result.annual?.net ?? 0;
+  const hasResults = calculationResult.result.supported && annualNet > 0;
+
+  const handleScrollToBreakdown = () => {
+    breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // Track calculator submission and calculator_run goal
   useEffect(() => {
     if (calculationResult.result.grossAnnualIncome > 0) {
@@ -99,7 +108,7 @@ export function UmbrellaCalculator() {
   }, [calculationResult]);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pb-40 lg:pb-0" : ""}`}>
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
@@ -109,6 +118,18 @@ export function UmbrellaCalculator() {
           Calculate your take-home pay when contracting via an umbrella company (inside IR35).
         </p>
       </header>
+
+      {hasResults && (
+        <div className="flex justify-center">
+          <StickySummary
+            annualNet={annualNet}
+            monthlyNet={calculationResult.netMonthly}
+            weeklyNet={calculationResult.netWeekly}
+            onSeeBreakdown={handleScrollToBreakdown}
+            className="lg:max-w-3xl"
+          />
+        </div>
+      )}
 
       {/* Section 1: Configuration */}
       <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
@@ -214,7 +235,11 @@ export function UmbrellaCalculator() {
       </section>
 
       {/* Section 2: Results */}
-      <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+      <section
+        ref={breakdownRef}
+        id="umbrella-breakdown"
+        className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3 scroll-mt-28"
+      >
         <header className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-navy-100 sm:text-base">Take-home pay</h2>
         </header>

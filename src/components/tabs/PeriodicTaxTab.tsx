@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { nanoid } from "nanoid";
 import {
   calculatePeriodTax,
@@ -26,6 +26,7 @@ import {
   trackCalculatorRun,
   getSalaryBand,
 } from "@/lib/analytics";
+import { StickySummary } from "@/components/StickySummary";
 
 type PayFrequency = "monthly" | "weekly" | "four-weekly";
 
@@ -253,6 +254,31 @@ export function PeriodicTaxTab() {
         })
       : null;
 
+  const latestResult: PeriodTaxResult | null = (() => {
+    for (let i = results.length - 1; i >= 0; i--) {
+      const candidate = results[i];
+      if (candidate) {
+        return candidate;
+      }
+    }
+    return null;
+  })();
+
+  const currentPeriodNumber = periods[periods.length - 1]?.periodIndex ?? 0;
+  const latestActualNet = latestResult?.ytdActual.net ?? 0;
+  const projectedAnnualNet =
+    latestActualNet > 0 && currentPeriodNumber > 0
+      ? (latestActualNet / currentPeriodNumber) * totalPeriodsInYear
+      : 0;
+  const projectedMonthlyNet = projectedAnnualNet / 12 || 0;
+  const projectedWeeklyNet = projectedAnnualNet / 52 || 0;
+  const hasSummaryResults = projectedAnnualNet > 0;
+
+  const breakdownRef = useRef<HTMLDivElement | null>(null);
+  const handleScrollToBreakdown = () => {
+    breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const addPeriod = () => {
     const nextIndex = periods.length + 1;
     const lastPeriod = periods[periods.length - 1];
@@ -300,7 +326,7 @@ export function PeriodicTaxTab() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className={`space-y-4 sm:space-y-6 ${hasSummaryResults ? "pb-40 lg:pb-0" : ""}`}>
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
@@ -310,6 +336,18 @@ export function PeriodicTaxTab() {
           Analyse your PAYE tax on a period-by-period basis. Enter your actual pay for each period and we&apos;ll compare what you&apos;ve paid so far against what you&apos;d usually expect for this point in the 2024/25 tax year.
         </p>
       </header>
+
+      {hasSummaryResults && (
+        <div className="flex justify-center">
+          <StickySummary
+            annualNet={projectedAnnualNet}
+            monthlyNet={projectedMonthlyNet}
+            weeklyNet={projectedWeeklyNet}
+            onSeeBreakdown={handleScrollToBreakdown}
+            className="lg:max-w-4xl"
+          />
+        </div>
+      )}
 
       {/* Section 1: Configuration */}
       <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 shadow-navy-900/50 space-y-3">
@@ -811,7 +849,11 @@ export function PeriodicTaxTab() {
 
               {/* Section 3: YTD Summary */}
               {results.length > 0 && (
-                <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-2 md:sticky md:top-2 md:z-10">
+                <section
+                  ref={breakdownRef}
+                  id="periodic-breakdown"
+                  className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-2 md:sticky md:top-2 md:z-10 scroll-mt-28"
+                >
           <header className="flex items-center justify-between gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-navy-100">
               Year-to-date PAYE position
