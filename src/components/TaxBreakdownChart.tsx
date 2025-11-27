@@ -8,8 +8,8 @@ import {
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  TooltipProps,
 } from "recharts";
+import type { TooltipContentProps } from "recharts";
 import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 import { formatGBP } from "@/lib/format";
@@ -51,7 +51,7 @@ export function TaxBreakdownChart({
     [breakdown]
   );
 
-  const renderTooltip = (props: TooltipProps<ValueType, NameType>) => {
+  const renderTooltip = (props: TooltipContentProps<ValueType, NameType>) => {
     const { active, payload } = props;
     if (!active || !payload?.length) return null;
 
