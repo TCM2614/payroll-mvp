@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { TaxYearToggle } from "@/components/TaxYearToggle";
 import { TaxBreakdownChart } from "@/components/TaxBreakdownChart";
+import { StickySummary } from "@/components/StickySummary";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import { calcPAYECombined } from "@/lib/calculators/paye";
@@ -235,6 +236,13 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
     };
   }, [studentLoanSelection, allJobs, pensionPct, sippPersonal, hoursPerWeek]);
 
+  const breakdownRef = useRef<HTMLDivElement | null>(null);
+  const hasResults = calculationResult.combined.netAnnual > 0;
+
+  const handleScrollToBreakdown = () => {
+    breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // Expose combined gross/net up to the parent for use in other tabs (e.g. wealth percentile)
   useEffect(() => {
     if (calculationResult.combined.grossAnnual > 0) {
@@ -321,7 +329,8 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
 
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.6fr)] lg:gap-8">
+      <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pb-40 lg:pb-0" : ""}`}>
 
       {/* Header */}
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -628,7 +637,11 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
       </section>
 
       {/* Section 4: Results */}
-      <section className="space-y-4">
+      <section
+        ref={breakdownRef}
+        id="takehome-breakdown"
+        className="space-y-4 scroll-mt-28"
+      >
         <header className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-brand-text sm:text-base">
             Take-home pay breakdown
@@ -1026,6 +1039,16 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
 
     </div>
 
+    {hasResults && (
+      <aside aria-label="Quick pay summary" className="lg:pl-4">
+        <StickySummary
+          annualNet={calculationResult.combined.netAnnual}
+          monthlyNet={calculationResult.combined.monthly}
+          weeklyNet={calculationResult.combined.weekly}
+          onSeeBreakdown={handleScrollToBreakdown}
+        />
+      </aside>
+    )}
+  </div>
   );
-
 }
