@@ -1160,7 +1160,7 @@ export function PeriodicTaxTab() {
 
         {/* Section 4: Period Range Aggregation */}
         {results.length > 0 && (
-                <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+          <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
           <header className="flex items-center justify-between gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-navy-50">
               Totals for selected pay periods
@@ -1270,6 +1270,149 @@ export function PeriodicTaxTab() {
           )}
         </section>
         )}
+        </div>
+
+        {results.length > 0 && (
+          <aside
+            ref={breakdownRef}
+            id="periodic-breakdown"
+            className="mt-6 space-y-4 lg:mt-0 lg:pl-4 lg:sticky lg:top-4"
+          >
+            <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-6 shadow-xl shadow-navy-900/40 space-y-3">
+              <header className="flex items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-sm sm:text-base font-semibold text-navy-50">
+                    Year-to-date PAYE position
+                  </h2>
+                  <p className="text-xs text-navy-200">
+                    Period {periods[periods.length - 1]?.periodIndex || 0} of{" "}
+                    {payFrequency === "monthly"
+                      ? 12
+                      : payFrequency === "weekly"
+                      ? 52
+                      : 13}
+                  </p>
+                </div>
+              </header>
+
+              {latestResult ? (
+                <>
+                  <div className="grid gap-3">
+                    <div className="space-y-1.5 rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
+                      <h3 className="text-xs font-medium text-navy-100 uppercase tracking-wide">
+                        Actual year-to-date
+                      </h3>
+                      <dl className="space-y-1 text-sm text-navy-200">
+                        <div className="flex justify-between">
+                          <dt>Gross income</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdActual.gross)}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt>PAYE tax</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdActual.paye)}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt>National Insurance</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdActual.ni)}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt>Student loan</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdActual.studentLoan)}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between border-t border-sea-jet-700/30 pt-2">
+                          <dt className="text-navy-100">Net income</dt>
+                          <dd className="font-semibold text-emerald-400">
+                            {formatGBP(latestResult.ytdActual.net)}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <div className="space-y-1.5 rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
+                      <h3 className="text-xs font-medium text-navy-100 uppercase tracking-wide">
+                        Expected year-to-date
+                      </h3>
+                      <dl className="space-y-1 text-sm text-navy-200">
+                        <div className="flex justify-between">
+                          <dt>Gross income</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdExpected.gross)}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt>PAYE tax</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdExpected.paye)}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt>National Insurance</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdExpected.ni)}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt>Student loan</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdExpected.studentLoan)}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between border-t border-sea-jet-700/30 pt-2">
+                          <dt className="text-navy-100">Net income</dt>
+                          <dd className="font-semibold text-emerald-400">
+                            {formatGBP(latestResult.ytdExpected.net)}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-200">Cumulative variance</span>
+                      <span
+                        className={`text-lg font-semibold ${
+                          latestResult.variance.direction === "over"
+                            ? "text-emerald-400"
+                            : latestResult.variance.direction === "under"
+                            ? "text-rose-400"
+                            : "text-slate-200"
+                        }`}
+                      >
+                        {latestResult.variance.direction === "over"
+                          ? "+"
+                          : latestResult.variance.direction === "under"
+                          ? "-"
+                          : ""}
+                        {formatGBP(Math.abs(latestResult.variance.amount))}
+                      </span>
+                    </div>
+                    <p className="text-xs text-navy-200">
+                      {latestResult.variance.direction === "over"
+                        ? "Estimated overpayment so far"
+                        : latestResult.variance.direction === "under"
+                        ? "Estimated underpayment so far"
+                        : "Your PAYE looks broadly in line with expectations so far."}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-navy-200">
+                  Enter valid periods to see your cumulative totals.
+                </p>
+              )}
+            </section>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
