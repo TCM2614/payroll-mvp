@@ -102,7 +102,7 @@ export function LimitedCompanyCalculator() {
   }, [calculationResult]);
 
   return (
-    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pb-40 lg:pb-0" : ""}`}>
+    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pt-32 lg:pt-0" : ""}`}>
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">

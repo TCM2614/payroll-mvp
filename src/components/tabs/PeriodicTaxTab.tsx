@@ -326,7 +326,7 @@ export function PeriodicTaxTab() {
   };
 
   return (
-    <div className={`space-y-4 sm:space-y-6 ${hasSummaryResults ? "pb-40 lg:pb-0" : ""}`}>
+    <div className={`space-y-4 sm:space-y-6 ${hasSummaryResults ? "pt-32 lg:pt-0" : ""}`}>
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
@@ -348,9 +348,6 @@ export function PeriodicTaxTab() {
           />
         </div>
       )}
-
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.45fr)] lg:gap-6 lg:items-start">
-        <div className="space-y-4 sm:space-y-6">
 
       {/* Section 1: Configuration */}
       <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 shadow-navy-900/50 space-y-3">
@@ -411,7 +408,11 @@ export function PeriodicTaxTab() {
       </section>
 
       {/* Section 2: Periods Input */}
-      <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+      <section
+        ref={breakdownRef}
+        id="periodic-breakdown"
+        className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3 scroll-mt-28"
+      >
         <header className="flex items-center justify-between gap-2">
           <h2 className="text-sm sm:text-base font-semibold text-navy-100">Pay Periods</h2>
           <button
@@ -850,181 +851,7 @@ export function PeriodicTaxTab() {
         })}
       </section>
 
-              {/* Section 3: YTD Summary */}
-              {results.length > 0 && (
-                <section
-                  ref={breakdownRef}
-                  id="periodic-breakdown"
-                  className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-2 md:sticky md:top-2 md:z-10 scroll-mt-28"
-                >
-          <header className="flex items-center justify-between gap-2">
-            <h2 className="text-sm sm:text-base font-semibold text-navy-100">
-              Year-to-date PAYE position
-            </h2>
-          </header>
-            <p className="text-sm text-navy-200">
-            Period {periods[periods.length - 1]?.periodIndex || 0} of{" "}
-            {payFrequency === "monthly"
-              ? 12
-              : payFrequency === "weekly"
-              ? 52
-              : 13}
-          </p>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <h3 className="text-xs font-medium text-navy-100">Actual YTD</h3>
-              <div className="space-y-1.5 text-sm text-navy-200">
-                <div className="flex justify-between">
-                  <span className="text-navy-200">Gross Income:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(results[results.length - 1]?.ytdActual.gross || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">PAYE Tax:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(results[results.length - 1]?.ytdActual.paye || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">National Insurance:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(results[results.length - 1]?.ytdActual.ni || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">Student Loan:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdActual.studentLoan || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-sea-jet-700/30">
-                  <span className="text-navy-200">Net Income:</span>
-                  <span className="font-semibold text-emerald-400">
-                    {formatGBP(results[results.length - 1]?.ytdActual.net || 0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xs font-medium text-navy-100">
-                Expected YTD (Projected)
-              </h3>
-              <div className="space-y-1.5 text-sm text-navy-200">
-                <div className="flex justify-between">
-                  <span className="text-navy-200">Gross Income:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.gross || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">PAYE Tax:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.paye || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">National Insurance:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.ni || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">Student Loan:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.studentLoan || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-sea-jet-700/30">
-                  <span className="text-navy-200">Net Income:</span>
-                  <span className="font-semibold text-emerald-400">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.net || 0
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Variance Summary - Prominent display */}
-          {results[results.length - 1] && (
-            <div className="mt-3 pt-3 border-t border-slate-200">
-              <h3 className="text-xs font-medium text-navy-200 mb-2">
-                Cumulative PAYE over/under payment
-              </h3>
-              <div className="rounded-lg border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-700">Variance Amount:</span>
-                  <span
-                    className={`text-lg font-semibold ${
-                      results[results.length - 1].variance.direction === "over"
-                        ? "text-emerald-700"
-                        : results[results.length - 1].variance.direction ===
-                          "under"
-                        ? "text-rose-700"
-                        : "text-slate-800"
-                    }`}
-                    aria-label={`Tax variance: ${getVarianceText(results[results.length - 1].variance.direction)}`}
-                  >
-                    {results[results.length - 1].variance.direction === "over"
-                      ? "+"
-                      : results[results.length - 1].variance.direction ===
-                        "under"
-                      ? "-"
-                      : ""}
-                    {formatGBP(
-                      Math.abs(results[results.length - 1].variance.amount)
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-700">Status:</span>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded ${
-                      results[results.length - 1].variance.direction === "over"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : results[results.length - 1].variance.direction ===
-                          "under"
-                        ? "bg-rose-100 text-rose-700"
-                        : "bg-slate-100 text-slate-800"
-                    }`}
-                    aria-label={`Tax status: ${getVarianceText(results[results.length - 1].variance.direction)}`}
-                  >
-                    {results[results.length - 1].variance.direction === "over"
-                      ? "Estimated overpayment so far"
-                      : results[results.length - 1].variance.direction === "under"
-                      ? "Estimated underpayment so far"
-                      : "Your PAYE looks broadly in line with expectations so far"}
-                  </span>
-                </div>
-                {results[results.length - 1].variance.toleranceBreached && (
-                  <p className="text-sm text-slate-700 mt-2">
-                    We compare your actual PAYE so far with what we&apos;d expect based on your income pattern. A large difference can indicate potential over- or under-taxation.
-                  </p>
-                )}
-                <p className="text-[11px] text-navy-300 mt-2">
-                  These figures are estimates based on the 2024/25 UK PAYE rules and your inputs. They&apos;re for guidance only and not an official HMRC calculation.
-                </p>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
-        {/* Section 3.5: Actual Tax Paid Analysis */}
+              {/* Section 3.5: Actual Tax Paid Analysis */}
         {actualTaxAnalysis && actualTaxAnalysis.items.length > 0 && (
                 <section className="rounded-2xl border border-slate-200 bg-sea-jet-900/40 p-4 sm:p-5 space-y-3 md:sticky md:top-2 md:z-10">
           <header className="flex items-center justify-between gap-2">
@@ -1160,7 +987,7 @@ export function PeriodicTaxTab() {
 
         {/* Section 4: Period Range Aggregation */}
         {results.length > 0 && (
-          <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+                <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
           <header className="flex items-center justify-between gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-navy-50">
               Totals for selected pay periods
@@ -1270,149 +1097,6 @@ export function PeriodicTaxTab() {
           )}
         </section>
         )}
-        </div>
-
-        {results.length > 0 && (
-          <aside
-            ref={breakdownRef}
-            id="periodic-breakdown"
-            className="mt-6 space-y-4 lg:mt-0 lg:pl-4 lg:sticky lg:top-4"
-          >
-            <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-6 shadow-xl shadow-navy-900/40 space-y-3">
-              <header className="flex items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-sm sm:text-base font-semibold text-navy-50">
-                    Year-to-date PAYE position
-                  </h2>
-                  <p className="text-xs text-navy-200">
-                    Period {periods[periods.length - 1]?.periodIndex || 0} of{" "}
-                    {payFrequency === "monthly"
-                      ? 12
-                      : payFrequency === "weekly"
-                      ? 52
-                      : 13}
-                  </p>
-                </div>
-              </header>
-
-              {latestResult ? (
-                <>
-                  <div className="grid gap-3">
-                    <div className="space-y-1.5 rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
-                      <h3 className="text-xs font-medium text-navy-100 uppercase tracking-wide">
-                        Actual year-to-date
-                      </h3>
-                      <dl className="space-y-1 text-sm text-navy-200">
-                        <div className="flex justify-between">
-                          <dt>Gross income</dt>
-                          <dd className="font-semibold text-navy-50">
-                            {formatGBP(latestResult.ytdActual.gross)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>PAYE tax</dt>
-                          <dd className="font-semibold text-navy-50">
-                            {formatGBP(latestResult.ytdActual.paye)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>National Insurance</dt>
-                          <dd className="font-semibold text-navy-50">
-                            {formatGBP(latestResult.ytdActual.ni)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>Student loan</dt>
-                          <dd className="font-semibold text-navy-50">
-                            {formatGBP(latestResult.ytdActual.studentLoan)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between border-t border-sea-jet-700/30 pt-2">
-                          <dt className="text-navy-100">Net income</dt>
-                          <dd className="font-semibold text-emerald-400">
-                            {formatGBP(latestResult.ytdActual.net)}
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
-
-                    <div className="space-y-1.5 rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
-                      <h3 className="text-xs font-medium text-navy-100 uppercase tracking-wide">
-                        Expected year-to-date
-                      </h3>
-                      <dl className="space-y-1 text-sm text-navy-200">
-                        <div className="flex justify-between">
-                          <dt>Gross income</dt>
-                          <dd className="font-semibold text-navy-50">
-                            {formatGBP(latestResult.ytdExpected.gross)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>PAYE tax</dt>
-                          <dd className="font-semibold text-navy-50">
-                            {formatGBP(latestResult.ytdExpected.paye)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>National Insurance</dt>
-                          <dd className="font-semibold text-navy-50">
-                            {formatGBP(latestResult.ytdExpected.ni)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>Student loan</dt>
-                          <dd className="font-semibold text-navy-50">
-                            {formatGBP(latestResult.ytdExpected.studentLoan)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between border-t border-sea-jet-700/30 pt-2">
-                          <dt className="text-navy-100">Net income</dt>
-                          <dd className="font-semibold text-emerald-400">
-                            {formatGBP(latestResult.ytdExpected.net)}
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-200">Cumulative variance</span>
-                      <span
-                        className={`text-lg font-semibold ${
-                          latestResult.variance.direction === "over"
-                            ? "text-emerald-400"
-                            : latestResult.variance.direction === "under"
-                            ? "text-rose-400"
-                            : "text-slate-200"
-                        }`}
-                      >
-                        {latestResult.variance.direction === "over"
-                          ? "+"
-                          : latestResult.variance.direction === "under"
-                          ? "-"
-                          : ""}
-                        {formatGBP(Math.abs(latestResult.variance.amount))}
-                      </span>
-                    </div>
-                    <p className="text-xs text-navy-200">
-                      {latestResult.variance.direction === "over"
-                        ? "Estimated overpayment so far"
-                        : latestResult.variance.direction === "under"
-                        ? "Estimated underpayment so far"
-                        : "Your PAYE looks broadly in line with expectations so far."}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-navy-200">
-                  Enter valid periods to see your cumulative totals.
-                </p>
-              )}
-            </section>
-          </aside>
-        )}
-      </div>
     </div>
   );
 }

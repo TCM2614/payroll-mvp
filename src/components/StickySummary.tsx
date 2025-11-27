@@ -26,7 +26,7 @@ export function StickySummary({
   return (
     <div
       aria-live="polite"
-      className={`fixed bottom-4 left-1/2 z-50 w-[min(560px,calc(100%-1.5rem))] -translate-x-1/2 rounded-3xl border border-white/10 bg-gradient-to-r from-indigo-950 via-emerald-900 to-emerald-800 px-5 py-4 text-white shadow-[0_12px_35px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:static lg:bottom-auto lg:left-auto lg:right-auto lg:w-full lg:translate-x-0 lg:border-emerald-400/20 lg:px-8 lg:py-6 lg:shadow-lg ${className ?? ""}`}
+      className={`fixed top-4 left-1/2 z-50 w-[min(560px,calc(100%-1.5rem))] -translate-x-1/2 rounded-3xl border border-white/10 bg-gradient-to-r from-indigo-950 via-emerald-900 to-emerald-800 px-5 py-4 text-white shadow-[0_12px_35px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:static lg:top-auto lg:left-auto lg:right-auto lg:w-full lg:translate-x-0 lg:border-emerald-400/20 lg:px-8 lg:py-6 lg:shadow-lg ${className ?? ""}`}
     >
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-3 text-left">
