@@ -20,6 +20,8 @@ import {
 import { incomePercentilesByAge } from "@/data/incomePercentilesByAge";
 import { trackEvent } from "@/lib/analytics";
 import { formatGBP, formatGBPShort } from "@/lib/format";
+import { WealthDistributionChart } from "@/components/WealthDistributionChart";
+import { LifestyleComparison } from "@/components/LifestyleComparison";
 
 type ComparisonMode = "gross" | "net";
 
@@ -405,6 +407,11 @@ export function WealthPercentileTab({
               .
             </p>
           </header>
+
+          <div className="space-y-4">
+            <WealthDistributionChart currentSalary={lastIncome ?? undefined} />
+            <LifestyleComparison salary={lastIncome ?? undefined} />
+          </div>
 
           {/* Progress bar */}
           <div className="space-y-2">

@@ -12,7 +12,7 @@ export const wealthPercentiles: WealthPercentilePoint[] = [
   { percentile: 20, income: 17000 },
   { percentile: 30, income: 21000 },
   { percentile: 40, income: 26000 },
-  { percentile: 50, income: 31000 },
+  { percentile: 50, income: 35000 },
   { percentile: 60, income: 36000 },
   { percentile: 70, income: 42000 },
   { percentile: 80, income: 52000 },
@@ -29,23 +29,17 @@ const sortedPercentiles = [...wealthPercentiles].sort(
   (a, b) => a.percentile - b.percentile,
 );
 
-const medianIncome =
-  getIncomeForPercentile(50, sortedPercentiles) ?? sortedPercentiles[4]?.income ?? 0;
-
-function getIncomeForPercentile(
-  percentile: number,
-  data: WealthPercentilePoint[],
-): number | null {
-  if (data.length === 0) return null;
-  const first = data[0];
-  const last = data[data.length - 1];
+function interpolateIncomeForPercentile(percentile: number): number | null {
+  if (sortedPercentiles.length === 0) return null;
+  const first = sortedPercentiles[0];
+  const last = sortedPercentiles[sortedPercentiles.length - 1];
 
   if (percentile <= first.percentile) return first.income;
   if (percentile >= last.percentile) return last.income;
 
-  for (let i = 0; i < data.length - 1; i++) {
-    const current = data[i];
-    const next = data[i + 1];
+  for (let i = 0; i < sortedPercentiles.length - 1; i++) {
+    const current = sortedPercentiles[i];
+    const next = sortedPercentiles[i + 1];
     if (
       percentile >= current.percentile &&
       percentile <= next.percentile &&
@@ -60,20 +54,17 @@ function getIncomeForPercentile(
   return last.income;
 }
 
-function estimatePercentileForIncome(
-  income: number,
-  data: WealthPercentilePoint[],
-): number {
-  if (data.length === 0) return 0;
-  const first = data[0];
-  const last = data[data.length - 1];
+function interpolatePercentileForIncome(income: number): number {
+  if (sortedPercentiles.length === 0) return 0;
+  const first = sortedPercentiles[0];
+  const last = sortedPercentiles[sortedPercentiles.length - 1];
 
   if (income <= first.income) return first.percentile;
   if (income >= last.income) return last.percentile;
 
-  for (let i = 0; i < data.length - 1; i++) {
-    const current = data[i];
-    const next = data[i + 1];
+  for (let i = 0; i < sortedPercentiles.length - 1; i++) {
+    const current = sortedPercentiles[i];
+    const next = sortedPercentiles[i + 1];
     if (income >= current.income && income <= next.income) {
       if (next.income === current.income) {
         return next.percentile;
@@ -85,6 +76,18 @@ function estimatePercentileForIncome(
 
   return last.percentile;
 }
+
+export function getIncomeForPercentile(percentile: number): number | null {
+  return interpolateIncomeForPercentile(percentile);
+}
+
+export function getPercentileForIncome(income: number): number {
+  return interpolatePercentileForIncome(income);
+}
+
+export const UK_MEDIAN_INCOME =
+  getIncomeForPercentile(50) ?? sortedPercentiles[4]?.income ?? 0;
+export const UK_AVERAGE_SALARY = 35000;
 
 export type WealthComparison = {
   percentile: number | null;
@@ -104,13 +107,11 @@ export function useWealthPercentile(
       };
     }
 
-    const percentile = Number(
-      estimatePercentileForIncome(salary, sortedPercentiles).toFixed(1),
-    );
+    const percentile = Number(getPercentileForIncome(salary).toFixed(1));
 
     const aboveMedianPercent =
-      medianIncome > 0
-        ? Number((((salary - medianIncome) / medianIncome) * 100).toFixed(1))
+      UK_MEDIAN_INCOME > 0
+        ? Number((((salary - UK_MEDIAN_INCOME) / UK_MEDIAN_INCOME) * 100).toFixed(1))
         : null;
 
     const comparisonText =
