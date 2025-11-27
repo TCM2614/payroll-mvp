@@ -349,6 +349,9 @@ export function PeriodicTaxTab() {
         </div>
       )}
 
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.45fr)] lg:gap-6 lg:items-start">
+        <div className="space-y-4 sm:space-y-6">
+
       {/* Section 1: Configuration */}
       <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 shadow-navy-900/50 space-y-3">
         <header className="flex items-center justify-between gap-2">
@@ -1021,8 +1024,8 @@ export function PeriodicTaxTab() {
         </section>
       )}
 
-              {/* Section 3.5: Actual Tax Paid Analysis */}
-              {actualTaxAnalysis && actualTaxAnalysis.items.length > 0 && (
+        {/* Section 3.5: Actual Tax Paid Analysis */}
+        {actualTaxAnalysis && actualTaxAnalysis.items.length > 0 && (
                 <section className="rounded-2xl border border-slate-200 bg-sea-jet-900/40 p-4 sm:p-5 space-y-3 md:sticky md:top-2 md:z-10">
           <header className="flex items-center justify-between gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-navy-50">
@@ -1155,8 +1158,8 @@ export function PeriodicTaxTab() {
         </section>
       )}
 
-              {/* Section 4: Period Range Aggregation */}
-              {results.length > 0 && (
+        {/* Section 4: Period Range Aggregation */}
+        {results.length > 0 && (
                 <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
           <header className="flex items-center justify-between gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-navy-50">
@@ -1266,7 +1269,7 @@ export function PeriodicTaxTab() {
             </div>
           )}
         </section>
-      )}
+        )}
     </div>
   );
 }
