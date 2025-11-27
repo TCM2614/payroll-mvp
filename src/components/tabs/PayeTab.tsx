@@ -329,8 +329,7 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
 
 
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.6fr)] lg:gap-8">
-      <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pb-40 lg:pb-0" : ""}`}>
+    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pb-40 lg:pb-0" : ""}`}>
 
       {/* Header */}
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -344,6 +343,18 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
         </div>
         <TaxYearToggle value={taxYear} onChange={setTaxYear} />
       </header>
+
+      {hasResults && (
+        <div className="flex justify-center">
+          <StickySummary
+            annualNet={calculationResult.combined.netAnnual}
+            monthlyNet={calculationResult.combined.monthly}
+            weeklyNet={calculationResult.combined.weekly}
+            onSeeBreakdown={handleScrollToBreakdown}
+            className="lg:mt-2 lg:max-w-4xl"
+          />
+        </div>
+      )}
 
       {/* Section 1: Primary job inputs */}
       <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
@@ -1038,17 +1049,5 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
       </section>
 
     </div>
-
-    {hasResults && (
-      <aside aria-label="Quick pay summary" className="lg:pl-4">
-        <StickySummary
-          annualNet={calculationResult.combined.netAnnual}
-          monthlyNet={calculationResult.combined.monthly}
-          weeklyNet={calculationResult.combined.weekly}
-          onSeeBreakdown={handleScrollToBreakdown}
-        />
-      </aside>
-    )}
-  </div>
   );
 }
