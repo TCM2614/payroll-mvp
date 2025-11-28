@@ -439,7 +439,7 @@ export function PeriodicTaxTab({ onSummaryChange }: PeriodicTaxTabProps) {
           <button
             type="button"
             onClick={addPeriod}
-            className="rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
+            className="btn-primary px-6 py-3 text-sm"
             aria-label="Add another pay period"
           >
             + Add Period

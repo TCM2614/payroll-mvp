@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -23,6 +23,7 @@ import { formatGBPShort } from "@/lib/format";
 
 type WealthDistributionChartProps = {
   currentSalary?: number | null;
+  ageGroupLabel?: string;
 };
 
 type DistributionDatum = {
@@ -34,6 +35,7 @@ type DistributionDatum = {
 const DEFAULT_MAX_PERCENTILE = 99;
 const GAUSSIAN_CENTER = 55;
 const GAUSSIAN_SPREAD = 14;
+const AGE_LABEL_FALLBACK = "all working age adults";
 
 function gaussian(percentile: number): number {
   const exponent = -0.5 * Math.pow((percentile - GAUSSIAN_CENTER) / GAUSSIAN_SPREAD, 2);
@@ -43,7 +45,7 @@ function gaussian(percentile: number): number {
 function formatTopShare(percentile: number | null): string | null {
   if (percentile == null) return null;
   const topShare = Math.max(0, 100 - percentile);
-  if (topShare < 0.1) return "Top 0.1%";
+  if (topShare <= 0.1) return "Top 0.1%";
   return `Top ${topShare.toFixed(1)}%`;
 }
 
@@ -65,8 +67,20 @@ function DistributionTooltip(props: any) {
 
 export function WealthDistributionChart({
   currentSalary,
+  ageGroupLabel,
 }: WealthDistributionChartProps) {
-  const { percentile } = useWealthPercentile(currentSalary);
+  const [debouncedSalary, setDebouncedSalary] = useState<number>(
+    typeof currentSalary === "number" ? currentSalary : 0,
+  );
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSalary(typeof currentSalary === "number" ? currentSalary : 0);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [currentSalary]);
+
+  const { percentile, comparisonText } = useWealthPercentile(debouncedSalary);
 
   const chartData: DistributionDatum[] = useMemo(() => {
     if (!wealthPercentiles.length) return [];
@@ -86,13 +100,20 @@ export function WealthDistributionChart({
     }).sort((a, b) => a.income - b.income);
   }, []);
 
-  const headline = percentile != null ? (
-    <span className="font-semibold text-slate-900">
-      {formatTopShare(percentile)}
-    </span>
+  const topShareDisplay = formatTopShare(percentile);
+  const comparisonLabel = ageGroupLabel?.trim() || AGE_LABEL_FALLBACK;
+  const headline = topShareDisplay ? (
+    <span className="font-semibold text-slate-50">{topShareDisplay}</span>
   ) : (
-    <span className="text-slate-500">Enter your income to see where you rank</span>
+    <span className="text-slate-400">Enter your income to see where you rank</span>
   );
+  const comparisonLine =
+    comparisonText ??
+    (topShareDisplay
+      ? ageGroupLabel
+        ? `Compared to ${comparisonLabel}`
+        : `Across ${AGE_LABEL_FALLBACK}`
+      : undefined);
 
   const xDomain: [number, number] = useMemo(() => {
     const incomes = chartData.map((d) => d.income);
@@ -101,9 +122,12 @@ export function WealthDistributionChart({
   }, [chartData]);
 
   return (
-    <div className="w-full rounded-xl bg-white p-4 shadow-sm">
-      <div className="mb-2 text-sm text-slate-600">
-        You are in the {headline} of UK earners.
+    <div className="w-full rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-inner shadow-black/30">
+      <div className="mb-3 text-sm text-slate-200 space-y-0.5">
+        <span>You are in the {headline} of UK earners.</span>
+        {comparisonLine && (
+          <p className="text-xs text-slate-400">{comparisonLine}</p>
+        )}
       </div>
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -113,17 +137,17 @@ export function WealthDistributionChart({
           >
             <defs>
               <linearGradient id="wealthCurveGradient" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#eef2ff" stopOpacity={0.95} />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.4} />
+                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="#312e81" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+            <CartesianGrid stroke="rgba(148,163,184,0.2)" vertical={false} />
             <XAxis
               type="number"
               dataKey="income"
               domain={xDomain}
               tickFormatter={(value) => formatGBPShort(Number(value))}
-              tick={{ fontSize: 11, fill: "#475569" }}
+              tick={{ fontSize: 12, fill: "#94a3b8" }}
               axisLine={false}
               tickLine={false}
             />
@@ -131,31 +155,34 @@ export function WealthDistributionChart({
               dataKey="density"
               domain={[0, 1]}
               tickFormatter={(value) => `${Math.round(Number(value) * 100)}%`}
-              tick={{ fontSize: 11, fill: "#475569" }}
+              tick={{ fontSize: 12, fill: "#94a3b8" }}
               axisLine={false}
               tickLine={false}
               width={50}
             />
-            <Tooltip content={<DistributionTooltip />} cursor={{ stroke: "#c7d2fe" }} />
+            <Tooltip
+              content={<DistributionTooltip />}
+              cursor={{ stroke: "rgba(16,185,129,0.3)" }}
+            />
             <Area
               type="monotone"
               dataKey="density"
-              stroke="#4338ca"
-              strokeWidth={2}
+              stroke="#818cf8"
+              strokeWidth={2.5}
               fillOpacity={1}
               fill="url(#wealthCurveGradient)"
               isAnimationActive
             />
-            {currentSalary && currentSalary > 0 && (
+            {debouncedSalary > 0 && (
               <ReferenceLine
-                x={currentSalary}
-                stroke="#4f46e5"
+                x={debouncedSalary}
+                stroke="#34d399"
                 strokeWidth={2}
-                strokeDasharray="4 2"
+                strokeDasharray="4 4"
                 label={{
                   position: "top",
                   value: "You",
-                  fill: "#312e81",
+                  fill: "#34d399",
                   fontSize: 12,
                 }}
               />

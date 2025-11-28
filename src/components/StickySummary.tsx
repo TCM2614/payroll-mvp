@@ -51,14 +51,14 @@ export function StickySummary({
           <button
             type="button"
             onClick={() => onSeeBreakdown?.()}
-            className="w-full rounded-2xl bg-white px-4 py-3 text-center text-sm font-semibold text-emerald-900 shadow-lg transition hover:translate-y-[1px] hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 lg:text-base"
+            className="btn-primary w-full text-sm lg:text-base"
           >
             See Full Breakdown
           </button>
           <button
             type="button"
             onClick={handleMortgageProof}
-            className="w-full rounded-2xl border border-white/40 bg-transparent px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 lg:text-base"
+            className="btn-secondary w-full text-sm lg:text-base"
           >
             Get Mortgage Proof
           </button>

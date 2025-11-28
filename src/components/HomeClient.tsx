@@ -115,14 +115,14 @@ export default function HomeClient() {
                   });
                 }
               }}
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
+              className="btn-primary px-6 py-2.5"
             >
               Calculate Take-Home Pay
             </Link>
             <button
               type="button"
               onClick={() => setFeedbackOpen(true)}
-              className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/90 shadow-md shadow-black/40 transition hover:border-emerald-400 hover:bg-white/10"
+              className="btn-secondary px-5 py-2.5"
             >
               Give Feedback
             </button>

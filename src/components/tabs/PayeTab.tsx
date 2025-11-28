@@ -615,7 +615,7 @@ export function PayeTab({
           <button
             type="button"
             onClick={addJob}
-            className="rounded-xl bg-brilliant-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brilliant-500/30 transition hover:bg-brilliant-600"
+            className="btn-primary px-6 py-3 text-sm"
           >
             + Add job
           </button>
