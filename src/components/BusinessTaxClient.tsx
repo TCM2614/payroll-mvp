@@ -81,6 +81,7 @@ export default function BusinessTaxClient() {
       return [
         {
           name: 'Sole Trader',
+          mode: 'sole' as const,
           incomeTax: soleResult.incomeTax,
           ni: soleResult.class4NI,
           net: soleResult.netProfit,
@@ -91,6 +92,7 @@ export default function BusinessTaxClient() {
     return [
       {
         name: 'Limited Company',
+        mode: 'limited' as const,
         corpTax: corpResult.corporationTax,
         dividendTax: limitedView.dividendTax,
         net: limitedView.netResult,
