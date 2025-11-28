@@ -106,7 +106,7 @@ export default function HomeClient() {
 
         {/* Calculator */}
         <section className="mt-12 w-full max-w-5xl">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-soft-xl backdrop-blur">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-6">
             <header className="text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
                 Main calculator
@@ -126,15 +126,15 @@ export default function HomeClient() {
 
         {/* Wealth insights */}
         <section className="mt-12 w-full max-w-5xl">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 text-white shadow-soft-xl backdrop-blur">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-6 text-white">
             <header className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
-              Wealth percentile
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.5em] text-emerald-500">
+                Wealth percentile
               </p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">
+              <h2 className="mb-2 text-3xl font-bold text-white">
                 Where you sit versus other UK earners
               </h2>
-              <p className="mt-2 text-sm text-white/70">
+              <p className="text-sm text-slate-400">
                 Based on current salary assumptions from the calculator. Updates automatically whenever you re-run a scenario.
               </p>
             </header>

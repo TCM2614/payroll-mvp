@@ -27,7 +27,7 @@ export default function MortgageAffordability({ annualSalary }: MortgageAffordab
         </p>
       </div>
 
-      <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-soft-xl">
+      <div className="mt-8 bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-8">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">House price potential</p>
           <h3 className="mt-3 text-2xl font-semibold text-white">Estimated borrowing power</h3>

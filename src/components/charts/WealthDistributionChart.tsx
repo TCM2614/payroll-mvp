@@ -50,7 +50,7 @@ export default function WealthDistributionChart({ salary }: WealthDistributionCh
   };
 
   return (
-    <div className="h-[300px] w-full">
+    <div className="h-[300px] w-full rounded-2xl border border-slate-700 bg-slate-800/50 p-6 shadow-inner shadow-black/30">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
           <defs>
@@ -59,16 +59,16 @@ export default function WealthDistributionChart({ salary }: WealthDistributionCh
               <stop offset="95%" stopColor="#312e81" stopOpacity={0.05} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#312e81" opacity={0.4} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#312e81" opacity={0.4} vertical={false} />
           <XAxis
             dataKey="salary"
             type="number"
             tickFormatter={(value) => SHORT_FORMATTER.format(value)}
-            tick={{ fill: '#cbd5f5', fontSize: 12 }}
+            tick={{ fill: '#94a3b8', fontSize: 12 }}
             stroke="#312e81"
             domain={[12000, 250000]}
           />
-          <YAxis hide domain={[0, 'auto']} />
+          <YAxis hide domain={[0, 'auto']} tick={{ fill: '#94a3b8', fontSize: 12 }} />
           <Tooltip content={<CustomTooltip />} />
           <ReferenceLine
             x={UK_AVG_SALARY}
@@ -77,8 +77,10 @@ export default function WealthDistributionChart({ salary }: WealthDistributionCh
             label={{
               value: 'UK Avg £35k',
               position: 'top',
-              fill: '#ede9fe',
-              fontSize: 11,
+              fill: '#ffffff',
+              fontSize: 12,
+              fontWeight: 'bold',
+              dy: -10,
             }}
           />
           <ReferenceLine
@@ -88,8 +90,10 @@ export default function WealthDistributionChart({ salary }: WealthDistributionCh
             label={{
               value: `You · ${GBP_FORMATTER.format(clampedSalary)}`,
               position: 'top',
-              fill: '#d1fae5',
-              fontSize: 11,
+              fill: '#34d399',
+              fontSize: 12,
+              fontWeight: 'bold',
+              dy: -10,
             }}
           />
           <Area

@@ -74,7 +74,7 @@ export default function CapitalGainsClient() {
   return (
     <AppShell>
       <div className="space-y-10 text-white">
-        <header className="rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-soft-xl">
+        <header className="bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
             Capital Gains Tax · 2024/25
           </p>
@@ -87,7 +87,7 @@ export default function CapitalGainsClient() {
         </header>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="space-y-6 bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-6">
             <h2 className="text-lg font-semibold">Inputs</h2>
 
             <div>
@@ -179,7 +179,7 @@ export default function CapitalGainsClient() {
             </div>
           </div>
 
-          <div className="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="space-y-6 bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-6">
             <h2 className="text-lg font-semibold">Results</h2>
             <dl className="grid gap-4 text-sm sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm">

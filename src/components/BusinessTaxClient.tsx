@@ -123,7 +123,7 @@ export default function BusinessTaxClient() {
   return (
     <AppShell>
       <div className="space-y-10 text-white">
-        <header className="rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-soft-xl">
+        <header className="bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
             Business tax planning · 2024/25
           </p>
@@ -135,7 +135,7 @@ export default function BusinessTaxClient() {
           </p>
         </header>
 
-        <section className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+        <section className="bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold">Mode</h2>
             <div className="flex w-full gap-1 rounded-lg bg-slate-700 p-1 text-sm sm:w-auto">
@@ -198,7 +198,7 @@ export default function BusinessTaxClient() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <div className="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="space-y-6 bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-6">
             <h2 className="text-lg font-semibold">Breakdown</h2>
             {mode === 'sole' ? (
               <dl className="grid gap-4 text-sm sm:grid-cols-2">
@@ -276,7 +276,7 @@ export default function BusinessTaxClient() {
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-700 bg-slate-800 p-6 shadow-inner shadow-black/30">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-lg shadow-black/20 p-6">
             <h2 className="text-lg font-semibold">Tax vs net income</h2>
             <BusinessChart data={chartData} />
           </div>
