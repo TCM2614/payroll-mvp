@@ -1,5 +1,28 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Cell,
+  ReferenceLine,
+} from "recharts";
+import type { TooltipProps } from "recharts";
+import {
+  getIncomePercentileForAge,
+  type IncomePercentileResult,
+} from "@/lib/getIncomePercentileForAge";
+import { incomePercentilesByAge } from "@/data/incomePercentilesByAge";
+import { trackEvent } from "@/lib/analytics";
+import { formatGBP, formatGBPShort } from "@/lib/format";
+
 function CustomDistributionTooltip(
-  props: TooltipProps<any, any>,
+  props: TooltipProps<number, string> & { payload?: readonly any[] },
 ) {
   const { active, payload } = props;
   if (!active || !payload || payload.length === 0) return null;
@@ -30,28 +53,6 @@ function CustomDistributionTooltip(
     </div>
   );
 }
-"use client";
-
-import { useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Cell,
-  ReferenceLine,
-} from "recharts";
-import type { TooltipProps } from "recharts";
-import {
-  getIncomePercentileForAge,
-  type IncomePercentileResult,
-} from "@/lib/getIncomePercentileForAge";
-import { incomePercentilesByAge } from "@/data/incomePercentilesByAge";
-import { trackEvent } from "@/lib/analytics";
-import { formatGBP, formatGBPShort } from "@/lib/format";
 import { WealthDistributionChart } from "@/components/WealthDistributionChart";
 import { LifestyleComparison } from "@/components/LifestyleComparison";
 
