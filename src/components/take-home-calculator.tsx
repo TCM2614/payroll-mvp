@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PayeTab } from "./tabs/PayeTab";
 import { UmbrellaTab } from "./tabs/UmbrellaTab";
@@ -12,13 +12,25 @@ import { WealthPercentileTab } from "./tabs/WealthPercentileTab";
 
 type TabValue = "paye" | "umbrella" | "limited" | "periodic" | "wealth";
 
+type TakeHomeCalculatorProps = {
+  onCombinedResultsChange?: (payload: { grossAnnual?: number; netAnnual?: number }) => void;
+};
 
 
-export function TakeHomeCalculator() {
+export function TakeHomeCalculator({ onCombinedResultsChange }: TakeHomeCalculatorProps = {}) {
 
   const [activeTab, setActiveTab] = useState<TabValue>("paye");
   const [wealthDefaultAnnualGross, setWealthDefaultAnnualGross] = useState<number | undefined>();
   const [wealthDefaultNetAnnual, setWealthDefaultNetAnnual] = useState<number | undefined>();
+
+  useEffect(() => {
+    if (onCombinedResultsChange) {
+      onCombinedResultsChange({
+        grossAnnual: wealthDefaultAnnualGross,
+        netAnnual: wealthDefaultNetAnnual,
+      });
+    }
+  }, [onCombinedResultsChange, wealthDefaultAnnualGross, wealthDefaultNetAnnual]);
 
   return (
     <div className="space-y-4 sm:space-y-6">

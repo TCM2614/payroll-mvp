@@ -14,7 +14,7 @@ import {
   type CapitalGainsResult,
 } from '@/utils/tax-calculations';
 
-const DonutChart = dynamic(() => import('@/components/charts/WealthDistributionChart'), {
+const DonutChart = dynamic(() => import('@/components/charts/TaxBreakdownChart'), {
   ssr: false,
   loading: () => (
     <div className="h-[300px] w-full animate-pulse rounded-xl border border-slate-700 bg-slate-800/50" />

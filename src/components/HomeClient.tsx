@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
@@ -11,8 +11,9 @@ import CookieBanner from '@/components/landing/CookieBanner';
 import { EarlyAccessForm } from '@/components/EarlyAccessForm';
 import { TakeHomeCalculator } from '@/components/take-home-calculator';
 import { StickySummary } from '@/components/StickySummary';
+import { LifestyleComparison } from '@/components/LifestyleComparison';
 
-const WealthDistributionChart = dynamic(() => import('@/components/charts/WealthDistributionChart'), {
+const WealthCurveChart = dynamic(() => import('@/components/charts/WealthDistributionChart'), {
   ssr: false,
   loading: () => (
     <div className="h-[300px] w-full animate-pulse rounded-xl border border-slate-700 bg-slate-800/50" />
@@ -23,6 +24,7 @@ export default function HomeClient() {
   console.log('HomeClient Rendering');
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [insightsGross, setInsightsGross] = useState<number | undefined>(undefined);
 
   const summarySnapshot = useMemo(
     () => ({
@@ -34,6 +36,17 @@ export default function HomeClient() {
     }),
     [],
   );
+
+  const handleCombinedResults = useCallback(
+    ({ grossAnnual }: { grossAnnual?: number; netAnnual?: number }) => {
+      if (typeof grossAnnual === 'number' && grossAnnual > 0) {
+        setInsightsGross(grossAnnual);
+      }
+    },
+    [],
+  );
+
+  const effectiveGrossForInsights = insightsGross ?? summarySnapshot.grossAnnual;
 
   return (
     <AppShell>
@@ -105,34 +118,32 @@ export default function HomeClient() {
               </p>
             </header>
             <div className="mt-6">
-              <TakeHomeCalculator />
+              <TakeHomeCalculator onCombinedResultsChange={handleCombinedResults} />
             </div>
           </div>
         </section>
 
-        {/* Wealth Distribution */}
-        <section className="mt-12 grid w-full max-w-5xl gap-6 lg:grid-cols-[1fr_1.1fr]">
-          <div className="rounded-xl border border-slate-700 bg-slate-800 p-6 text-white shadow-inner shadow-black/30">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
-              Wealth distribution
-            </p>
-            <h3 className="mt-3 text-2xl font-semibold">See where your money goes</h3>
-            <p className="mt-3 text-sm text-white/70">
-            Visualise the split between take-home pay, Income Tax, National Insurance and pension contributions. Updated instantly with default benchmark data while we finish wiring the live calculator feed.
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-white/80">
-              <li>• Net take-home: {summarySnapshot.netAnnual.toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })}</li>
-              <li>• Tax + NI: £{(summarySnapshot.taxAnnual + summarySnapshot.niAnnual).toLocaleString('en-GB')}</li>
-              <li>• Pension: £{summarySnapshot.pensionAnnual.toLocaleString('en-GB')}</li>
-            </ul>
-          </div>
-          <div className="rounded-xl border border-slate-700 bg-slate-800 p-6 text-white shadow-inner shadow-black/30">
-            <WealthDistributionChart
-              netIncome={summarySnapshot.netAnnual}
-              taxPaid={summarySnapshot.taxAnnual}
-              niPaid={summarySnapshot.niAnnual}
-              pensionContrib={summarySnapshot.pensionAnnual}
-            />
+        {/* Wealth insights */}
+        <section className="mt-12 w-full max-w-5xl">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 text-white shadow-soft-xl backdrop-blur">
+            <header className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
+              Wealth percentile
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">
+                Where you sit versus other UK earners
+              </h2>
+              <p className="mt-2 text-sm text-white/70">
+                Based on current salary assumptions from the calculator. Updates automatically whenever you re-run a scenario.
+              </p>
+            </header>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+              <div className="rounded-2xl border border-slate-700 bg-slate-800/80 p-4">
+                <WealthCurveChart salary={effectiveGrossForInsights} />
+              </div>
+              <LifestyleComparison salary={effectiveGrossForInsights} />
+            </div>
           </div>
         </section>
 

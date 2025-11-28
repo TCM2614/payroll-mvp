@@ -44,7 +44,7 @@ export function StickySummary({
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none',
       ].join(' ')}
     >
-      <div className="mx-auto flex max-w-4xl flex-col gap-3 rounded-3xl border-t border-emerald-500/50 bg-gradient-to-r from-slate-900 via-emerald-950 to-emerald-900 px-5 py-5 text-white shadow-[0_-5px_30px_rgba(16,185,129,0.3)] ring-1 ring-emerald-500/20 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto flex max-w-4xl flex-col gap-3 rounded-3xl border-t border-emerald-500/50 bg-gradient-to-r from-slate-900 to-emerald-900 px-5 py-5 text-white shadow-[0_-5px_20px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/20 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">
             {title ?? 'Latest snapshot'}
@@ -75,7 +75,7 @@ export function StickySummary({
           <span className="text-xs text-white/70">Results update live as you calculate</span>
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-full border border-emerald-400/60 px-4 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/10"
+            className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-emerald-900 shadow-sm transition hover:bg-white/90"
             onClick={() => {
               if (typeof window !== 'undefined') {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
