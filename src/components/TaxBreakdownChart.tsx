@@ -61,9 +61,14 @@ export function TaxBreakdownChart({
 
     return (
       <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
-        <div className="font-medium" style={{ color: entry.payload?.color ?? entry.color }}>{entry.name}</div>
-        <div>{formatGBP(rawValue)}</div>
-        <div className="text-slate-500">{percentage.toFixed(1)}%</div>
+        <div
+          className="font-semibold text-slate-900"
+          style={{ color: entry.payload?.color ?? entry.color }}
+        >
+          {entry.name}
+        </div>
+        <div className="font-bold text-slate-900">{formatGBP(rawValue)}</div>
+        <div className="font-bold text-slate-900">{percentage.toFixed(1)}%</div>
       </div>
     );
   };
