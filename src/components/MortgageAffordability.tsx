@@ -43,7 +43,7 @@ export default function MortgageAffordability({ annualSalary }: MortgageAffordab
             <p className="mt-3 text-2xl font-semibold text-white">{formatGBP(annualSalary)}</p>
           </div>
           <div className="rounded-xl bg-slate-800/50 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">With 10% deposit (budget)</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Potential house price (incl. 10% deposit)</p>
             <p className="mt-3 text-2xl font-semibold text-white">{formatGBP(totalBudget)}</p>
           </div>
         </div>

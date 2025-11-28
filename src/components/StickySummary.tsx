@@ -71,19 +71,32 @@ export function StickySummary({
             </dd>
           </div>
         </dl>
-        <div className="flex flex-col items-start gap-2 sm:items-end">
+        <div className="flex flex-col items-start gap-3 sm:items-end">
           <span className="text-xs text-white/70">Results update live as you calculate</span>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-emerald-900 shadow-sm transition hover:bg-white/90"
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }
-            }}
-          >
-            Back to calculator
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-emerald-900 shadow-sm transition hover:bg-white/90"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+            >
+              Back to calculator
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-full border border-emerald-300/70 bg-emerald-600/90 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-emerald-500/30 transition hover:bg-emerald-500"
+              onClick={() => {
+                if (typeof document !== 'undefined') {
+                  document.getElementById('mortgage-section')?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              View borrowing power
+            </button>
+          </div>
         </div>
       </div>
     </div>
