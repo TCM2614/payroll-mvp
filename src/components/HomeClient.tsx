@@ -16,12 +16,18 @@ import { MortgageAffordability } from "@/components/MortgageAffordability";
 import type { CalculatorSummary } from "@/types/calculator";
 
 const WealthDistributionChart = dynamic(
-  () => import("@/components/WealthDistributionChart"),
+  () =>
+    import("@/components/WealthDistributionChart").then(
+      (mod) => mod.WealthDistributionChart,
+    ),
   { ssr: false },
 );
 
 const LifestyleComparison = dynamic(
-  () => import("@/components/LifestyleComparison"),
+  () =>
+    import("@/components/LifestyleComparison").then(
+      (mod) => mod.LifestyleComparison,
+    ),
   { ssr: false },
 );
 
