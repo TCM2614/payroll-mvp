@@ -16,7 +16,6 @@ import type { TooltipProps } from "recharts";
 import {
   wealthPercentiles,
   getIncomeForPercentile,
-  UK_MEDIAN_INCOME,
   UK_AVERAGE_SALARY,
   useWealthPercentile,
 } from "@/utils/wealthData";
@@ -95,6 +94,12 @@ export function WealthDistributionChart({
     <span className="text-slate-500">Enter your income to see where you rank</span>
   );
 
+  const xDomain: [number, number] = useMemo(() => {
+    const incomes = chartData.map((d) => d.income);
+    if (incomes.length === 0) return [0, 200000];
+    return [Math.min(...incomes), Math.max(...incomes)];
+  }, [chartData]);
+
   return (
     <div className="flex h-64 w-full flex-col rounded-xl bg-white p-4 shadow-sm">
       <div className="mb-2 text-sm text-slate-600">
@@ -108,13 +113,15 @@ export function WealthDistributionChart({
           >
             <defs>
               <linearGradient id="wealthCurveGradient" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.1} />
+                <stop offset="0%" stopColor="#eef2ff" stopOpacity={0.95} />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.4} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
             <XAxis
+              type="number"
               dataKey="income"
+              domain={xDomain}
               tickFormatter={(value) => formatGBPShort(Number(value))}
               tick={{ fontSize: 11, fill: "#475569" }}
               axisLine={false}
@@ -142,25 +149,25 @@ export function WealthDistributionChart({
             {currentSalary && currentSalary > 0 && (
               <ReferenceLine
                 x={currentSalary}
-                stroke="#4338ca"
+                stroke="#4f46e5"
                 strokeWidth={2}
                 strokeDasharray="4 2"
                 label={{
                   position: "top",
                   value: "You",
-                  fill: "#4338ca",
+                  fill: "#312e81",
                   fontSize: 12,
                 }}
               />
             )}
             <ReferenceLine
-              x={UK_AVERAGE_SALARY || UK_MEDIAN_INCOME}
+              x={UK_AVERAGE_SALARY}
               stroke="#94a3b8"
               strokeWidth={2}
               strokeDasharray="6 4"
               label={{
                 position: "top",
-                value: "Average",
+                value: "UK Avg",
                 fill: "#475569",
                 fontSize: 12,
               }}

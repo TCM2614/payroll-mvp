@@ -410,7 +410,7 @@ export function WealthPercentileTab({
 
           <div className="space-y-4">
             <WealthDistributionChart currentSalary={lastIncome ?? undefined} />
-            <LifestyleComparison salary={lastIncome ?? undefined} />
+            <LifestyleComparison currentSalary={lastIncome ?? undefined} />
           </div>
 
           {/* Progress bar */}
