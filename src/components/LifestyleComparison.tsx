@@ -57,7 +57,7 @@ export function LifestyleComparison({ currentSalary }: LifestyleComparisonProps)
       value:
         gapToTopFive === 0
           ? "Already Top 5%"
-          : `${formatGBP(gapToTopFive)} more`,
+          : `${formatGBP(Math.round(gapToTopFive / 1000) * 1000)} more`,
       description:
         "To reach the Top 5% income bracket (≈" +
         `${formatGBP(topFiveSalary)})`,
@@ -66,25 +66,25 @@ export function LifestyleComparison({ currentSalary }: LifestyleComparisonProps)
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <>
       {cards.map((card) => {
         const Icon = card.icon;
         return (
           <div
             key={card.title}
-            className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+            className="flex flex-col gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-inner"
           >
-            <div className="flex items-center gap-2 text-slate-500">
-              <Icon className="h-5 w-5 text-indigo-500" strokeWidth={1.75} />
-              <span className="text-sm font-semibold text-slate-600">
+            <div className="flex items-center gap-2 text-slate-300">
+              <Icon className="h-5 w-5 text-emerald-400" strokeWidth={1.75} />
+              <span className="text-sm font-semibold text-slate-200">
                 {card.title}
               </span>
             </div>
-            <p className="text-2xl font-semibold text-slate-900">{card.value}</p>
-            <p className="text-sm text-slate-500">{card.description}</p>
+            <p className="text-2xl font-bold tracking-tight text-white">{card.value}</p>
+            <p className="text-sm text-slate-400">{card.description}</p>
           </div>
         );
       })}
-    </div>
+    </>
   );
 }

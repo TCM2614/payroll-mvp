@@ -33,20 +33,16 @@ export function WealthInsights({
 }: WealthInsightsProps) {
   return (
     <div
-      className={`grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] ${className ?? ""}`}
+      className={`rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-[0_20px_45px_rgba(2,6,23,0.6)] ${className ?? ""}`}
     >
       <div
-        className={`rounded-3xl border border-slate-800 bg-slate-900/60 p-4 shadow-inner shadow-black/30 lg:p-6 ${
+        className={`rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-inner shadow-black/30 ${
           cardClassName ?? ""
         }`}
       >
         <WealthDistributionChart currentSalary={salary} ageGroupLabel={ageGroupLabel} />
       </div>
-      <div
-        className={`rounded-3xl border border-slate-800 bg-slate-900/60 p-4 shadow-inner shadow-black/20 lg:p-6 ${
-          cardClassName ?? ""
-        }`}
-      >
+      <div className="mt-8 grid gap-4 md:grid-cols-3">
         <LifestyleComparison currentSalary={salary} />
       </div>
     </div>
