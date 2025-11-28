@@ -15,7 +15,7 @@ import { StickySummary } from '@/components/StickySummary';
 const WealthDistributionChart = dynamic(() => import('@/components/charts/WealthDistributionChart'), {
   ssr: false,
   loading: () => (
-    <div className="h-64 w-full animate-pulse rounded-3xl border border-slate-800 bg-slate-900/60" />
+    <div className="h-[300px] w-full animate-pulse rounded-xl border border-slate-700 bg-slate-800/50" />
   ),
 });
 

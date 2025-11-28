@@ -9,6 +9,8 @@ type StickySummaryProps = {
   taxAnnual: number;
   niAnnual?: number;
   pensionAnnual?: number;
+  title?: string;
+  netLabel?: string;
 };
 
 const DEFAULT_TRANSITION_THRESHOLD = 320;
@@ -19,6 +21,8 @@ export function StickySummary({
   taxAnnual,
   niAnnual,
   pensionAnnual,
+  title,
+  netLabel,
 }: StickySummaryProps) {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -42,8 +46,12 @@ export function StickySummary({
     >
       <div className="mx-auto flex max-w-4xl flex-col gap-3 rounded-3xl border border-slate-700/70 bg-slate-900/90 px-5 py-4 text-white shadow-2xl shadow-black/40 ring-1 ring-black/30 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">Latest snapshot</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-400">{formatGBP(netAnnual)} take-home</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">
+            {title ?? 'Latest snapshot'}
+          </p>
+          <p className="mt-1 text-2xl font-semibold text-emerald-400">
+            {formatGBP(netAnnual)} {netLabel ?? 'take-home'}
+          </p>
         </div>
         <dl className="grid flex-1 gap-3 text-sm sm:grid-cols-3">
           <div>
