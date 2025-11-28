@@ -6,6 +6,7 @@ import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { TaxYearToggle } from "@/components/TaxYearToggle";
 import { TaxBreakdownChart } from "@/components/TaxBreakdownChart";
 import { StickySummary } from "@/components/StickySummary";
+import { WealthInsights } from "@/components/WealthInsights";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import { calcPAYECombined } from "@/lib/calculators/paye";
@@ -1074,6 +1075,26 @@ export function PayeTab({
           </p>
         </div>
       </section>
+
+      {calculationResult.combined.grossAnnual > 0 && (
+        <section className="space-y-3 rounded-3xl border border-brand-border/40 bg-brand-surface/70 p-4 shadow-soft-xl backdrop-blur-lg sm:p-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-textMuted">
+              Wealth percentile
+            </p>
+            <h3 className="text-lg font-semibold text-brand-text">
+              Where you sit versus other UK earners
+            </h3>
+            <p className="text-sm text-brand-textMuted">
+              Based on your current inputs, here’s how your income compares with ONS percentiles.
+            </p>
+          </div>
+          <WealthInsights
+            salary={calculationResult.combined.grossAnnual}
+            cardClassName="border-brand-border/30"
+          />
+        </section>
+      )}
 
     </div>
   );

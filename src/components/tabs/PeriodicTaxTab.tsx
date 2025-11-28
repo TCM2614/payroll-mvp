@@ -27,6 +27,7 @@ import {
   getSalaryBand,
 } from "@/lib/analytics";
 import { StickySummary } from "@/components/StickySummary";
+import { WealthInsights } from "@/components/WealthInsights";
 import type { CalculatorSummary } from "@/types/calculator";
 
 type PayFrequency = "monthly" | "weekly" | "four-weekly";
@@ -1117,6 +1118,28 @@ export function PeriodicTaxTab({ onSummaryChange }: PeriodicTaxTabProps) {
           )}
         </section>
         )}
+
+      {hasSummaryResults && projectedAnnualNet > 0 && (
+        <section className="space-y-3 rounded-3xl border border-sea-jet-700/40 bg-sea-jet-900/70 p-4 shadow-inner sm:p-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-navy-300">
+              Wealth percentile
+            </p>
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-navy-50">
+              Projected take-home vs UK peers
+            </h3>
+            <p className="text-xs text-navy-200">
+              We extrapolate your year-to-date PAYE data to show how your income lines up with the national curve.
+            </p>
+          </div>
+          <WealthInsights
+            salary={projectedAnnualNet}
+            cardClassName="border-sea-jet-700/30"
+          />
+        </section>
+      )}
     </div>
   );
 }

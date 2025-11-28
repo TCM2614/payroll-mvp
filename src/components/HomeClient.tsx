@@ -11,34 +11,25 @@ import CookieBanner from "@/components/landing/CookieBanner";
 import { EarlyAccessForm } from "@/components/EarlyAccessForm";
 import { TakeHomeCalculator } from "@/components/take-home-calculator";
 import { StickySummary } from "@/components/StickySummary";
-import dynamic from "next/dynamic";
+import { WealthInsights } from "@/components/WealthInsights";
 import { MortgageAffordability } from "@/components/MortgageAffordability";
 import type { CalculatorSummary } from "@/types/calculator";
-
-const WealthDistributionChart = dynamic(
-  () =>
-    import("@/components/WealthDistributionChart").then(
-      (mod) => mod.WealthDistributionChart,
-    ),
-  { ssr: false },
-);
-
-const LifestyleComparison = dynamic(
-  () =>
-    import("@/components/LifestyleComparison").then(
-      (mod) => mod.LifestyleComparison,
-    ),
-  { ssr: false },
-);
 
 export default function HomeClient() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [latestSummary, setLatestSummary] = useState<CalculatorSummary | null>(null);
+  const [latestGross, setLatestGross] = useState<number | null>(null);
+  const [latestNet, setLatestNet] = useState<number | null>(null);
 
   const visualSalary = useMemo(() => {
-    const candidate = latestSummary?.annualGross ?? latestSummary?.annualNet ?? 0;
+    const candidate =
+      latestGross ??
+      latestSummary?.annualGross ??
+      latestSummary?.annualNet ??
+      latestNet ??
+      0;
     return candidate > 0 ? candidate : 45000;
-  }, [latestSummary]);
+  }, [latestGross, latestSummary, latestNet]);
 
   const softwareSchema = useMemo(
     () => ({
@@ -61,6 +52,18 @@ export default function HomeClient() {
 
   const handleSummaryChange = useCallback((summary: CalculatorSummary) => {
     setLatestSummary(summary);
+  }, []);
+
+  const handleGrossChange = useCallback((value?: number) => {
+    if (typeof value === "number" && value > 0) {
+      setLatestGross(value);
+    }
+  }, []);
+
+  const handleNetChange = useCallback((value?: number) => {
+    if (typeof value === "number" && value > 0) {
+      setLatestNet(value);
+    }
   }, []);
 
   const scrollToVisuals = () => {
@@ -168,7 +171,11 @@ export default function HomeClient() {
               losing your inputs.
             </p>
           </div>
-          <TakeHomeCalculator onSummaryChange={handleSummaryChange} />
+          <TakeHomeCalculator
+            onSummaryChange={handleSummaryChange}
+            onGrossChange={handleGrossChange}
+            onNetChange={handleNetChange}
+          />
           {latestSummary && latestSummary.annualNet > 0 && (
             <div className="flex justify-center pt-32 lg:pt-0">
               <StickySummary
@@ -184,13 +191,22 @@ export default function HomeClient() {
 
         <section
           id="wealth-visuals"
-          className="grid gap-6 lg:grid-cols-2 lg:items-stretch"
+          className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-inner shadow-white/5"
           aria-label="Relative wealth visualisations"
         >
-          <WealthDistributionChart currentSalary={visualSalary} />
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur lg:p-6">
-            <LifestyleComparison currentSalary={visualSalary} />
+          <div className="space-y-2 text-center lg:text-left">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200/80">
+              Step 2 · See where you stand
+            </p>
+            <h2 className="text-2xl font-semibold text-white">
+              Top earner comparison based on your latest inputs
+            </h2>
+            <p className="text-sm text-white/80">
+              We benchmark your income against UK-wide ONS data so you can understand how close you are to
+              the next earning tier.
+            </p>
           </div>
+          <WealthInsights salary={visualSalary} />
         </section>
 
         <section>

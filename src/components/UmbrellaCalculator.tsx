@@ -15,6 +15,7 @@ import {
 } from "@/lib/analytics";
 import { StickySummary } from "@/components/StickySummary";
 import { TaxBreakdownChart } from "@/components/TaxBreakdownChart";
+import { WealthInsights } from "@/components/WealthInsights";
 import type { CalculatorSummary } from "@/types/calculator";
 
 /**
@@ -27,9 +28,13 @@ import type { CalculatorSummary } from "@/types/calculator";
  */
 type UmbrellaCalculatorProps = {
   onSummaryChange?: (summary: CalculatorSummary) => void;
+  onGrossChange?: (value: number) => void;
 };
 
-export function UmbrellaCalculator({ onSummaryChange }: UmbrellaCalculatorProps) {
+export function UmbrellaCalculator({
+  onSummaryChange,
+  onGrossChange,
+}: UmbrellaCalculatorProps) {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
   const [dayRate, setDayRate] = useState<number | undefined>(500);
   const [daysPerWeek, setDaysPerWeek] = useState(5);
@@ -97,6 +102,9 @@ export function UmbrellaCalculator({ onSummaryChange }: UmbrellaCalculatorProps)
       weeklyNet: calculationResult.netWeekly,
       annualGross: calculationResult.result.grossAnnualIncome,
     });
+    if (calculationResult.result.grossAnnualIncome) {
+      onGrossChange?.(calculationResult.result.grossAnnualIncome);
+    }
   }, [
     hasResults,
     annualNet,
@@ -104,6 +112,7 @@ export function UmbrellaCalculator({ onSummaryChange }: UmbrellaCalculatorProps)
     calculationResult.netWeekly,
     calculationResult.result.grossAnnualIncome,
     onSummaryChange,
+    onGrossChange,
   ]);
 
   // Track calculator submission and calculator_run goal
@@ -381,6 +390,26 @@ export function UmbrellaCalculator({ onSummaryChange }: UmbrellaCalculatorProps)
           calculation or full umbrella fee model. This is an inside IR35 estimate.
         </p>
       </section>
+
+      {calculationResult.result.grossAnnualIncome > 0 && (
+        <section className="space-y-3 rounded-3xl border border-sea-jet-700/40 bg-sea-jet-900/70 p-4 shadow-inner sm:p-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-navy-300">
+              Wealth percentile
+            </p>
+            <h3 className="text-base font-semibold text-navy-50">
+              Compare your umbrella income to UK earners
+            </h3>
+            <p className="text-xs text-navy-200">
+              Uses the same ONS distribution as the home page insights to keep the story consistent.
+            </p>
+          </div>
+          <WealthInsights
+            salary={calculationResult.result.grossAnnualIncome}
+            cardClassName="border-sea-jet-700/30"
+          />
+        </section>
+      )}
     </div>
   );
 }

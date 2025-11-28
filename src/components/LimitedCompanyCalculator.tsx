@@ -18,14 +18,17 @@ import {
   getSalaryBand,
 } from "@/lib/analytics";
 import { StickySummary } from "@/components/StickySummary";
+import { WealthInsights } from "@/components/WealthInsights";
 import type { CalculatorSummary } from "@/types/calculator";
 
 type LimitedCompanyCalculatorProps = {
   onSummaryChange?: (summary: CalculatorSummary) => void;
+  onGrossChange?: (value: number) => void;
 };
 
 export function LimitedCompanyCalculator({
   onSummaryChange,
+  onGrossChange,
 }: LimitedCompanyCalculatorProps) {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
   const [dayRate, setDayRate] = useState<number | undefined>(500);
@@ -92,6 +95,9 @@ export function LimitedCompanyCalculator({
       weeklyNet: calculationResult.netWeekly,
       annualGross: calculationResult.result.grossAnnualIncome,
     });
+    if (calculationResult.result.grossAnnualIncome) {
+      onGrossChange?.(calculationResult.result.grossAnnualIncome);
+    }
   }, [
     hasResults,
     annualNet,
@@ -99,6 +105,7 @@ export function LimitedCompanyCalculator({
     calculationResult.netWeekly,
     calculationResult.result.grossAnnualIncome,
     onSummaryChange,
+    onGrossChange,
   ]);
 
   // Track calculator submission and calculator_run goal
@@ -383,6 +390,26 @@ export function LimitedCompanyCalculator({
           These figures use PAYE-style rules for guidance only and are not an official HMRC calculation. This is an inside IR35 estimate.
         </p>
       </section>
+
+      {calculationResult.result.grossAnnualIncome > 0 && (
+        <section className="space-y-3 rounded-3xl border border-sea-jet-700/40 bg-sea-jet-900/70 p-4 shadow-inner sm:p-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-navy-300">
+              Wealth percentile
+            </p>
+            <h3 className="text-base font-semibold text-navy-50">
+              Your limited company earnings vs UK peers
+            </h3>
+            <p className="text-xs text-navy-200">
+              Compare the numbers you just calculated with the overall UK income distribution.
+            </p>
+          </div>
+          <WealthInsights
+            salary={calculationResult.result.grossAnnualIncome}
+            cardClassName="border-sea-jet-700/30"
+          />
+        </section>
+      )}
     </div>
   );
 }
