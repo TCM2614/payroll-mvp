@@ -28,15 +28,16 @@ export function estimatePercentileFromIncome(income: number): number {
   return Math.min(99.9, last.percentile + overshoot * 0.5 * (100 - last.percentile));
 }
 
-export function buildWealthCurveData(step = 5) {
-  const points: { percentile: number; density: number }[] = [];
-  for (let p = 0; p <= 100; p += step) {
+export function buildSalaryCurveData(step = 2) {
+  const points: { salary: number; density: number }[] = [];
+  for (let percentile = 0; percentile <= 100; percentile += step) {
+    const salary = getIncomeForPercentile(percentile);
     const mean = 60;
     const sigma = 18;
-    const density = Math.exp(-0.5 * Math.pow((p - mean) / sigma, 2));
-    points.push({ percentile: p, density });
+    const density = Math.exp(-0.5 * Math.pow((percentile - mean) / sigma, 2));
+    points.push({ salary, density });
   }
-  return points;
+  return points.sort((a, b) => a.salary - b.salary);
 }
 
 export function getIncomeForPercentile(targetPercentile: number): number {

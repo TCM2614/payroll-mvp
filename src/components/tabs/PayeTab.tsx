@@ -597,7 +597,7 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
           <button
             type="button"
             onClick={addJob}
-            className="rounded-xl bg-brilliant-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brilliant-500/30 transition hover:bg-brilliant-600"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
           >
             + Add job
           </button>
