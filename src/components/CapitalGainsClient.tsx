@@ -63,13 +63,11 @@ export default function CapitalGainsClient() {
     [result],
   );
 
-  const chartProps = useMemo(
-    () => ({
-      netIncome: result.netGain,
-      taxPaid: result.totalTax,
-      niPaid: 0,
-      pensionContrib: 0,
-    }),
+  const chartData = useMemo(
+    () => [
+      { name: 'Net Profit', value: result.netGain, color: '#10b981' },
+      { name: 'Tax Due', value: result.totalTax, color: '#ef4444' },
+    ],
     [result],
   );
 
@@ -230,7 +228,7 @@ export default function CapitalGainsClient() {
             </dl>
 
             <div className="rounded-xl border border-slate-700 bg-slate-800 p-6 shadow-inner shadow-black/30">
-              <DonutChart {...chartProps} />
+              <DonutChart data={chartData} />
             </div>
           </div>
         </section>
