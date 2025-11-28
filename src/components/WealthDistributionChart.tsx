@@ -47,7 +47,7 @@ function formatTopShare(percentile: number | null): string | null {
   return `Top ${topShare.toFixed(1)}%`;
 }
 
-function DistributionTooltip(props: TooltipProps<number, string>) {
+function DistributionTooltip(props: any) {
   const { active, payload } = props;
   if (!active || !payload || payload.length === 0) return null;
   const entry = payload[0]?.payload as DistributionDatum | undefined;
