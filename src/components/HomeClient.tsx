@@ -11,10 +11,19 @@ import CookieBanner from "@/components/landing/CookieBanner";
 import { EarlyAccessForm } from "@/components/EarlyAccessForm";
 import { TakeHomeCalculator } from "@/components/take-home-calculator";
 import { StickySummary } from "@/components/StickySummary";
-import { WealthDistributionChart } from "@/components/WealthDistributionChart";
-import { LifestyleComparison } from "@/components/LifestyleComparison";
+import dynamic from "next/dynamic";
 import { MortgageAffordability } from "@/components/MortgageAffordability";
 import type { CalculatorSummary } from "@/types/calculator";
+
+const WealthDistributionChart = dynamic(
+  () => import("@/components/WealthDistributionChart"),
+  { ssr: false },
+);
+
+const LifestyleComparison = dynamic(
+  () => import("@/components/LifestyleComparison"),
+  { ssr: false },
+);
 
 export default function HomeClient() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
