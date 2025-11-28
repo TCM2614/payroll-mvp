@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 
 import AppShell from "@/components/layout/AppShell";
 import EmailSignupSection from "@/components/landing/EmailSignupSection";
@@ -14,12 +14,14 @@ import { StickySummary } from "@/components/StickySummary";
 import { WealthInsights } from "@/components/WealthInsights";
 import { MortgageAffordability } from "@/components/MortgageAffordability";
 import type { CalculatorSummary } from "@/types/calculator";
+import { sendEvent } from "@/utils/analytics";
 
 export default function HomeClient() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [latestSummary, setLatestSummary] = useState<CalculatorSummary | null>(null);
   const [latestGross, setLatestGross] = useState<number | null>(null);
   const [latestNet, setLatestNet] = useState<number | null>(null);
+  const [hasLoggedWealthView, setHasLoggedWealthView] = useState(false);
 
   const visualSalary = useMemo(() => {
     const candidate =
@@ -66,10 +68,25 @@ export default function HomeClient() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!hasLoggedWealthView && latestSummary && visualSalary > 0) {
+      sendEvent("view_wealth_chart", { salary: visualSalary });
+      setHasLoggedWealthView(true);
+    }
+  }, [hasLoggedWealthView, latestSummary, visualSalary]);
+
   const scrollToVisuals = () => {
     const target = document.getElementById("wealth-visuals");
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  const handleCalculatorCta = useCallback(() => {
+    sendEvent("calculate_salary");
+  }, []);
+
+  const handleMortgageCta = useCallback(() => {
+    sendEvent("click_mortgage_insight");
+  }, []);
 
   return (
     <AppShell>
@@ -109,6 +126,7 @@ export default function HomeClient() {
             <Link
               href="/calc"
               onClick={() => {
+                handleCalculatorCta();
                 if (typeof window !== "undefined" && (window as any).plausible) {
                   (window as any).plausible("cta_click", {
                     props: { cta: "calculate_take_home_pay", location: "landing_hero" },
@@ -182,6 +200,7 @@ export default function HomeClient() {
                 monthlyNet={latestSummary.monthlyNet}
                 weeklyNet={latestSummary.weeklyNet}
                 onSeeBreakdown={scrollToVisuals}
+                onMortgageClick={handleMortgageCta}
                 className="lg:max-w-4xl"
               />
             </div>

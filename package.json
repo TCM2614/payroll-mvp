@@ -10,6 +10,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@next/third-parties": "^16.0.5",
     "lucide-react": "^0.553.0",
     "nanoid": "^5.1.6",
     "next": "16.0.2",

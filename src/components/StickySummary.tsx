@@ -9,6 +9,7 @@ type StickySummaryProps = {
   monthlyNet: number;
   weeklyNet: number;
   onSeeBreakdown?: () => void;
+  onMortgageClick?: () => void;
   className?: string;
 };
 
@@ -17,6 +18,7 @@ export function StickySummary({
   monthlyNet,
   weeklyNet,
   onSeeBreakdown,
+  onMortgageClick,
   className,
 }: StickySummaryProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -53,6 +55,7 @@ export function StickySummary({
   ];
 
   const handleMortgageProof = () => {
+    onMortgageClick?.();
     if (typeof window !== "undefined") {
       document
         .getElementById("mortgage-section")
