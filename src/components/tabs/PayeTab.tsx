@@ -10,6 +10,7 @@ import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import { calcPAYECombined } from "@/lib/calculators/paye";
 import { formatGBP } from "@/lib/format";
+import type { CalculatorSummary } from "@/types/calculator";
 import { LoanKey } from "@/lib/tax/uk2025";
 import type { TaxYearLabel } from "@/lib/taxYear";
 import {
@@ -62,12 +63,18 @@ type CombinedJobsBreakdown = {
 type PayeTabProps = {
   onAnnualGrossChange?: (value: number) => void;
   onNetAnnualChange?: (value: number) => void;
+  onSummaryChange?: (summary: CalculatorSummary) => void;
   onShowWealthTab?: () => void;
 };
 
 
 
-export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTab }: PayeTabProps) {
+export function PayeTab({
+  onAnnualGrossChange,
+  onNetAnnualChange,
+  onSummaryChange,
+  onShowWealthTab,
+}: PayeTabProps) {
   const [primaryIncome, setPrimaryIncome] = useState("6000");
 
   const [primaryFrequency, setPrimaryFrequency] = useState<
@@ -252,6 +259,23 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
       onNetAnnualChange?.(calculationResult.combined.netAnnual);
     }
   }, [calculationResult.combined.grossAnnual, calculationResult.combined.netAnnual, onAnnualGrossChange, onNetAnnualChange]);
+
+  useEffect(() => {
+    if (!hasResults) return;
+    onSummaryChange?.({
+      annualNet: calculationResult.combined.netAnnual,
+      monthlyNet: calculationResult.combined.monthly,
+      weeklyNet: calculationResult.combined.weekly,
+      annualGross: calculationResult.combined.grossAnnual,
+    });
+  }, [
+    hasResults,
+    calculationResult.combined.netAnnual,
+    calculationResult.combined.monthly,
+    calculationResult.combined.weekly,
+    calculationResult.combined.grossAnnual,
+    onSummaryChange,
+  ]);
 
   // Track calculator submission and calculator_run goal
   useEffect(() => {

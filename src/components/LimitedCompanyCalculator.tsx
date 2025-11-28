@@ -18,8 +18,15 @@ import {
   getSalaryBand,
 } from "@/lib/analytics";
 import { StickySummary } from "@/components/StickySummary";
+import type { CalculatorSummary } from "@/types/calculator";
 
-export function LimitedCompanyCalculator() {
+type LimitedCompanyCalculatorProps = {
+  onSummaryChange?: (summary: CalculatorSummary) => void;
+};
+
+export function LimitedCompanyCalculator({
+  onSummaryChange,
+}: LimitedCompanyCalculatorProps) {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
   const [dayRate, setDayRate] = useState<number | undefined>(500);
   const [daysPerWeek, setDaysPerWeek] = useState(5);
@@ -76,6 +83,23 @@ export function LimitedCompanyCalculator() {
   const handleScrollToBreakdown = () => {
     breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    if (!hasResults) return;
+    onSummaryChange?.({
+      annualNet,
+      monthlyNet: calculationResult.netMonthly,
+      weeklyNet: calculationResult.netWeekly,
+      annualGross: calculationResult.result.grossAnnualIncome,
+    });
+  }, [
+    hasResults,
+    annualNet,
+    calculationResult.netMonthly,
+    calculationResult.netWeekly,
+    calculationResult.result.grossAnnualIncome,
+    onSummaryChange,
+  ]);
 
   // Track calculator submission and calculator_run goal
   useEffect(() => {

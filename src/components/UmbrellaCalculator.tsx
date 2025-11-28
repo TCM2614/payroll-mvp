@@ -15,6 +15,7 @@ import {
 } from "@/lib/analytics";
 import { StickySummary } from "@/components/StickySummary";
 import { TaxBreakdownChart } from "@/components/TaxBreakdownChart";
+import type { CalculatorSummary } from "@/types/calculator";
 
 /**
  * UmbrellaCalculator
@@ -24,7 +25,11 @@ import { TaxBreakdownChart } from "@/components/TaxBreakdownChart";
  * but always fixes engagementType="umbrella" and ir35Status="inside", and
  * wires multi-plan student loan selections into the annual tax engine.
  */
-export function UmbrellaCalculator() {
+type UmbrellaCalculatorProps = {
+  onSummaryChange?: (summary: CalculatorSummary) => void;
+};
+
+export function UmbrellaCalculator({ onSummaryChange }: UmbrellaCalculatorProps) {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
   const [dayRate, setDayRate] = useState<number | undefined>(500);
   const [daysPerWeek, setDaysPerWeek] = useState(5);
@@ -83,6 +88,23 @@ export function UmbrellaCalculator() {
   const handleScrollToBreakdown = () => {
     breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    if (!hasResults) return;
+    onSummaryChange?.({
+      annualNet,
+      monthlyNet: calculationResult.netMonthly,
+      weeklyNet: calculationResult.netWeekly,
+      annualGross: calculationResult.result.grossAnnualIncome,
+    });
+  }, [
+    hasResults,
+    annualNet,
+    calculationResult.netMonthly,
+    calculationResult.netWeekly,
+    calculationResult.result.grossAnnualIncome,
+    onSummaryChange,
+  ]);
 
   // Track calculator submission and calculator_run goal
   useEffect(() => {

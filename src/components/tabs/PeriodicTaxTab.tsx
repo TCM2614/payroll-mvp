@@ -27,6 +27,7 @@ import {
   getSalaryBand,
 } from "@/lib/analytics";
 import { StickySummary } from "@/components/StickySummary";
+import type { CalculatorSummary } from "@/types/calculator";
 
 type PayFrequency = "monthly" | "weekly" | "four-weekly";
 
@@ -73,7 +74,11 @@ function getWarningSeverityText(severity: string): string {
   }
 }
 
-export function PeriodicTaxTab() {
+type PeriodicTaxTabProps = {
+  onSummaryChange?: (summary: CalculatorSummary) => void;
+};
+
+export function PeriodicTaxTab({ onSummaryChange }: PeriodicTaxTabProps) {
   const config = createUK2025Config();
 
   // Input state
@@ -278,6 +283,21 @@ export function PeriodicTaxTab() {
   const handleScrollToBreakdown = () => {
     breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    if (!hasSummaryResults) return;
+    onSummaryChange?.({
+      annualNet: projectedAnnualNet,
+      monthlyNet: projectedMonthlyNet,
+      weeklyNet: projectedWeeklyNet,
+    });
+  }, [
+    hasSummaryResults,
+    projectedAnnualNet,
+    projectedMonthlyNet,
+    projectedWeeklyNet,
+    onSummaryChange,
+  ]);
 
   const addPeriod = () => {
     const nextIndex = periods.length + 1;

@@ -7,15 +7,17 @@ import { UmbrellaTab } from "./tabs/UmbrellaTab";
 import { LimitedTab } from "./tabs/LimitedTab";
 import { PeriodicTaxTab } from "./tabs/PeriodicTaxTab";
 import { WealthPercentileTab } from "./tabs/WealthPercentileTab";
+import type { CalculatorSummary } from "@/types/calculator";
 
 
 
 type TabValue = "paye" | "umbrella" | "limited" | "periodic" | "wealth";
 
+type TakeHomeCalculatorProps = {
+  onSummaryChange?: (summary: CalculatorSummary) => void;
+};
 
-
-export function TakeHomeCalculator() {
-
+export function TakeHomeCalculator({ onSummaryChange }: TakeHomeCalculatorProps = {}) {
   const [activeTab, setActiveTab] = useState<TabValue>("paye");
   const [wealthDefaultAnnualGross, setWealthDefaultAnnualGross] = useState<number | undefined>();
   const [wealthDefaultNetAnnual, setWealthDefaultNetAnnual] = useState<number | undefined>();
@@ -216,37 +218,30 @@ export function TakeHomeCalculator() {
 
 
         <TabsContent value="paye" className="pt-4 space-y-4">
-
           <PayeTab
             onAnnualGrossChange={setWealthDefaultAnnualGross}
             onNetAnnualChange={setWealthDefaultNetAnnual}
+            onSummaryChange={onSummaryChange}
             onShowWealthTab={() => setActiveTab("wealth")}
           />
-
         </TabsContent>
 
 
 
         <TabsContent value="umbrella" className="pt-4">
-
-          <UmbrellaTab />
-
+          <UmbrellaTab onSummaryChange={onSummaryChange} />
         </TabsContent>
 
 
 
         <TabsContent value="limited" className="pt-4">
-
-          <LimitedTab />
-
+          <LimitedTab onSummaryChange={onSummaryChange} />
         </TabsContent>
 
 
 
         <TabsContent value="periodic" className="pt-4">
-
-          <PeriodicTaxTab />
-
+          <PeriodicTaxTab onSummaryChange={onSummaryChange} />
         </TabsContent>
 
 
