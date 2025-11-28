@@ -188,7 +188,7 @@ export default function HomeClient() {
           )}
         </section>
 
-        <section className="space-y-4">
+        <section id="mortgage-section" className="space-y-4">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-white tracking-tight">
               Home buying power

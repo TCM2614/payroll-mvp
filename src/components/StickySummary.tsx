@@ -25,7 +25,9 @@ export function StickySummary({
 
   const handleMortgageProof = () => {
     if (typeof window !== "undefined") {
-      window.alert("Mortgage proof letter is coming soon.");
+      document
+        .getElementById("mortgage-section")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -58,9 +60,9 @@ export function StickySummary({
           <button
             type="button"
             onClick={handleMortgageProof}
-            className="btn-secondary w-full text-sm lg:text-base"
+            className="btn-primary w-full text-sm lg:text-base"
           >
-            Get Mortgage Proof
+            Explore Mortgage Insights
           </button>
         </div>
       </div>
