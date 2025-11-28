@@ -1,3 +1,35 @@
+function CustomDistributionTooltip(
+  props: TooltipProps<any, any>,
+) {
+  const { active, payload } = props;
+  if (!active || !payload || payload.length === 0) return null;
+
+  const entries = payload
+    .filter((item) => typeof item.value === "number" && Number(item.value) > 0)
+    .map((item) => ({
+      label: SEGMENT_NAME_MAP[item.dataKey as string] ?? item.dataKey,
+      color: item.color || "#94a3b8",
+    }));
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-xl">
+      <p className="text-xs font-semibold text-slate-400">Percentile band</p>
+      <ul className="mt-2 space-y-1">
+        {entries.map((entry) => (
+          <li key={entry.label} className="flex items-center gap-2">
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-slate-100 text-sm">{entry.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 "use client";
 
 import { useMemo, useState } from "react";
@@ -50,6 +82,19 @@ const PERCENTILE_SEGMENTS = [
   { key: "top2", label: "Top 2%", start: 98, end: 99, color: "#7c3aed" },
   { key: "top1", label: "Top 1%", start: 99, end: 100, color: "#8b5cf6" },
 ] as const;
+
+const SEGMENT_NAME_MAP: Record<string, string> = {
+  p0_25: "Lowest 25%",
+  p25_50: "25% - 50%",
+  p50_75: "50% - 75%",
+  p75_85: "75% - 85%",
+  p85_95: "85% - 95%",
+  top5: "Top 5%",
+  top4: "Top 4%",
+  top3: "Top 3%",
+  top2: "Top 2%",
+  top1: "Top 1%",
+};
 
 type IncomeTooltipPayload = { name: string; value: number };
 
@@ -562,7 +607,10 @@ export function WealthPercentileTab({
                     tickLine={false}
                   />
                   <YAxis type="category" dataKey="name" hide />
-                  <Tooltip cursor={{ fill: "transparent" }} content={undefined} />
+                  <Tooltip
+                    cursor={{ fill: "transparent" }}
+                    content={<CustomDistributionTooltip />}
+                  />
                   <ReferenceLine
                     x={Math.min(100, Math.max(0, clampedPercentile ?? 0))}
                     stroke={INCOME_COMPARISON_COLORS.you}
