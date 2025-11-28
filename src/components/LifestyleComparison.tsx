@@ -51,7 +51,7 @@ export function LifestyleComparison({ salary }: LifestyleComparisonProps) {
             <Icon className="h-4 w-4 text-emerald-300" />
             <span>{title}</span>
           </div>
-          <p className="mt-4 text-3xl font-bold text-emerald-400">{value}</p>
+          <p className="mt-4 text-3xl font-bold text-emerald-400 truncate">{value}</p>
           <p className="mt-2 text-sm text-slate-300">{support}</p>
         </div>
       ))}

@@ -138,11 +138,13 @@ export default function HomeClient() {
               </p>
             </header>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-              <div className="rounded-2xl border border-slate-700 bg-slate-800/80 p-4">
+            <div className="mt-6 flex flex-col space-y-8">
+              <div className="w-full rounded-2xl border border-slate-700 bg-slate-800/80 p-4">
                 <WealthCurveChart salary={effectiveGrossForInsights} />
               </div>
-              <LifestyleComparison salary={effectiveGrossForInsights} />
+              <div className="w-full">
+                <LifestyleComparison salary={effectiveGrossForInsights} />
+              </div>
             </div>
           </div>
         </section>
