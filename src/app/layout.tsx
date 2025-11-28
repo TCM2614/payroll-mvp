@@ -2,6 +2,7 @@ import './globals.css';
 
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 import { Header } from '@/components/Header';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -90,6 +91,9 @@ export default function RootLayout({
           <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-10 pt-6 sm:pt-8">
             {children}
           </main>
+          {process.env.NEXT_PUBLIC_GA_ID && (
+            <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+          )}
 
           <SiteFooter />
         </div>

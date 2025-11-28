@@ -138,7 +138,7 @@ export default function HomeClient() {
               </p>
             </header>
 
-            <div className="mt-6 flex flex-col space-y-8">
+            <div className="mt-6 flex w-full flex-col gap-8">
               <div className="w-full rounded-2xl border border-slate-700 bg-slate-800/80 p-4">
                 <WealthCurveChart salary={effectiveGrossForInsights} />
               </div>
