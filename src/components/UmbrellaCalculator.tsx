@@ -80,6 +80,10 @@ export function UmbrellaCalculator() {
   const annualNet = calculationResult.result.annual?.net ?? 0;
   const hasResults = calculationResult.result.supported && annualNet > 0;
 
+  const handleScrollToBreakdown = () => {
+    breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // Track calculator submission and calculator_run goal
   useEffect(() => {
     if (calculationResult.result.grossAnnualIncome > 0) {
@@ -105,7 +109,7 @@ export function UmbrellaCalculator() {
   }, [calculationResult]);
 
   return (
-    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pb-40 lg:pb-0" : ""}`}>
+    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pt-32 lg:pt-0" : ""}`}>
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
@@ -121,6 +125,8 @@ export function UmbrellaCalculator() {
           <StickySummary
             annualNet={annualNet}
             monthlyNet={calculationResult.netMonthly}
+            weeklyNet={calculationResult.netWeekly}
+            onSeeBreakdown={handleScrollToBreakdown}
             className="lg:max-w-3xl"
           />
         </div>
