@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 
 import AppShell from "@/components/layout/AppShell";
 import EmailSignupSection from "@/components/landing/EmailSignupSection";
@@ -59,9 +59,9 @@ export default function HomeClient() {
     [],
   );
 
-  const handleSummaryChange = (summary: CalculatorSummary) => {
+  const handleSummaryChange = useCallback((summary: CalculatorSummary) => {
     setLatestSummary(summary);
-  };
+  }, []);
 
   const scrollToVisuals = () => {
     const target = document.getElementById("wealth-visuals");
