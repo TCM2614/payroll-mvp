@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { formatGBP } from "@/lib/format";
 import {
   calculateContractorAnnual,
@@ -17,6 +18,16 @@ import {
   trackCalculatorRun,
   getSalaryBand,
 } from "@/lib/analytics";
+
+const TaxBreakdownChart = dynamic(
+  () => import("@/components/charts/TaxBreakdownChart"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[300px] w-full animate-pulse rounded-2xl border border-sea-jet-700/40 bg-sea-jet-900/40" />
+    ),
+  },
+);
 
 export function LimitedCompanyCalculator() {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
@@ -91,6 +102,21 @@ export function LimitedCompanyCalculator() {
       trackResultsView();
     }
   }, [calculationResult]);
+
+  const breakdownData = useMemo(() => {
+    if (!calculationResult.result.annual) return [];
+    const annual = calculationResult.result.annual;
+    const segments = [
+      { name: "Net take-home", value: annual.net, color: "#10b981" },
+      { name: "Income tax", value: annual.paye, color: "#f97316" },
+      { name: "National Insurance", value: annual.ni, color: "#facc15" },
+      { name: "Pension", value: annual.pensionEmployee, color: "#6366f1" },
+    ];
+    if (annual.studentLoan > 0) {
+      segments.push({ name: "Student loans", value: annual.studentLoan, color: "#f472b6" });
+    }
+    return segments;
+  }, [calculationResult.result]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -240,93 +266,106 @@ export function LimitedCompanyCalculator() {
             </p>
           </div>
         ) : calculationResult.result.annual ? (
-          <div className="space-y-3">
-            <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
-              <p className="text-xs text-navy-300">Gross annual income</p>
-              <p className="mt-1 text-lg font-semibold text-navy-50">
-                {formatGBP(calculationResult.result.grossAnnualIncome)}
-              </p>
-            </div>
+          <div className="space-y-4">
+            {(() => {
+              const annual = calculationResult.result.annual;
+              return (
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+                  <div className="rounded-2xl border border-sea-jet-700/40 bg-sea-jet-900/40 p-4">
+                    <TaxBreakdownChart
+                      data={breakdownData}
+                      centerLabel="Net take-home"
+                      centerValue={formatGBP(annual.net)}
+                    />
+                  </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Monthly:</span>
-                <span className="ml-1 font-semibold text-ethereal-300">
-                  {formatGBP(calculationResult.netMonthly)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Weekly:</span>
-                <span className="ml-1 font-semibold text-ethereal-300">
-                  {formatGBP(calculationResult.netWeekly)}
-                </span>
-              </div>
-            </div>
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
+                      <p className="text-xs text-navy-300">Gross annual income</p>
+                      <p className="mt-1 text-lg font-semibold text-navy-50">
+                        {formatGBP(calculationResult.result.grossAnnualIncome)}
+                      </p>
+                    </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">PAYE:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.paye)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">NI:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.ni)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Pension:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.pensionEmployee)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Student loan:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.studentLoan)}
-                </span>
-              </div>
-            </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                        <span className="text-navy-300">Monthly:</span>
+                        <span className="ml-1 font-semibold text-ethereal-300">
+                          {formatGBP(calculationResult.netMonthly)}
+                        </span>
+                      </div>
+                      <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                        <span className="text-navy-300">Weekly:</span>
+                        <span className="ml-1 font-semibold text-ethereal-300">
+                          {formatGBP(calculationResult.netWeekly)}
+                        </span>
+                      </div>
+                    </div>
 
-            {/* Student loan breakdown */}
-            {calculationResult.result.annual.studentLoanBreakdown &&
-              calculationResult.result.annual.studentLoanBreakdown.length > 0 && (
-                <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
-                  <h3 className="text-xs font-semibold text-navy-100 uppercase tracking-wide">
-                    Student loan deductions
-                  </h3>
-                  <div className="space-y-1">
-                    {calculationResult.result.annual.studentLoanBreakdown.map(
-                      ({ plan, label, amount }) => (
-                        <div
-                          key={plan}
-                          className="flex items-center justify-between text-xs"
-                        >
-                          <span className="text-navy-300">Student loan ({label}):</span>
-                          <span className="font-semibold text-navy-50">
-                            {formatGBP(amount / 12)}/month
-                          </span>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                        <span className="text-navy-300">PAYE:</span>
+                        <span className="ml-1 font-semibold text-navy-50">
+                          {formatGBP(annual.paye)}
+                        </span>
+                      </div>
+                      <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                        <span className="text-navy-300">NI:</span>
+                        <span className="ml-1 font-semibold text-navy-50">
+                          {formatGBP(annual.ni)}
+                        </span>
+                      </div>
+                      <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                        <span className="text-navy-300">Pension:</span>
+                        <span className="ml-1 font-semibold text-navy-50">
+                          {formatGBP(annual.pensionEmployee)}
+                        </span>
+                      </div>
+                      <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                        <span className="text-navy-300">Student loan:</span>
+                        <span className="ml-1 font-semibold text-navy-50">
+                          {formatGBP(annual.studentLoan)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {annual.studentLoanBreakdown && annual.studentLoanBreakdown.length > 0 && (
+                      <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
+                        <h3 className="text-xs font-semibold text-navy-100 uppercase tracking-wide">
+                          Student loan deductions
+                        </h3>
+                        <div className="space-y-1">
+                          {annual.studentLoanBreakdown.map(({ plan, label, amount }) => (
+                            <div
+                              key={plan}
+                              className="flex items-center justify-between text-xs"
+                            >
+                              <span className="text-navy-300">Student loan ({label}):</span>
+                              <span className="font-semibold text-navy-50">
+                                {formatGBP(amount / 12)}/month
+                              </span>
+                            </div>
+                          ))}
+                          <div className="flex items-center justify-between text-xs pt-1 border-t border-sea-jet-700/30">
+                            <span className="font-medium text-navy-100">Total student loans:</span>
+                            <span className="font-semibold text-navy-50">
+                              {formatGBP(annual.studentLoan / 12)}/month
+                            </span>
+                          </div>
                         </div>
-                      )
+                      </div>
                     )}
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-sea-jet-700/30">
-                      <span className="font-medium text-navy-100">Total student loans:</span>
-                      <span className="font-semibold text-navy-50">
-                        {formatGBP(calculationResult.result.annual.studentLoan / 12)}/month
-                      </span>
+
+                    <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
+                      <p className="text-xs text-navy-300">Net annual income</p>
+                      <p className="mt-1 text-xl font-semibold text-ethereal-300">
+                        {formatGBP(annual.net)}
+                      </p>
                     </div>
                   </div>
                 </div>
-              )}
-
-            <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
-              <p className="text-xs text-navy-300">Net annual income</p>
-              <p className="mt-1 text-xl font-semibold text-ethereal-300">
-                {formatGBP(calculationResult.result.annual.net)}
-              </p>
-            </div>
+              );
+            })()}
           </div>
         ) : null}
 

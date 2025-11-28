@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calculator, LineChart, Info, Menu, X } from 'lucide-react';
+import { Calculator, LineChart, Info, Menu, X, Coins, Briefcase } from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Calculator },
   { href: '/calc', label: 'Calculator', icon: Calculator },
+  { href: '/capital-gains-tax', label: 'CGT', icon: Coins },
+  { href: '/business-tax', label: 'Business', icon: Briefcase },
   { href: '/dashboard', label: 'Dashboard (Coming Soon)', icon: LineChart },
   { href: '/about', label: 'About', icon: Info },
   { href: '/privacy', label: 'Privacy', icon: Info },
@@ -47,7 +49,7 @@ export function Header() {
                 className={[
                   'flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70',
                   isActive
-                    ? 'bg-brand-primary text-white shadow-soft-xl'
+                    ? 'bg-brand-primary text-emerald-400 shadow-soft-xl'
                     : 'text-brand-textMuted hover:text-brand-text hover:bg-brand-border/40',
                 ].join(' ')}
               >
@@ -94,7 +96,7 @@ export function Header() {
                   className={[
                     'flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-brand-primary/20 text-brand-text'
+                      ? 'bg-brand-primary/20 text-emerald-400'
                       : 'text-brand-textMuted hover:bg-brand-surface/60 hover:text-brand-text',
                   ].join(' ')}
                 >
