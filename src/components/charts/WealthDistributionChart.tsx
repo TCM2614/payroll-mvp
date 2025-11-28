@@ -64,11 +64,11 @@ export default function WealthDistributionChart({ salary }: WealthDistributionCh
             dataKey="salary"
             type="number"
             tickFormatter={(value) => SHORT_FORMATTER.format(value)}
-            tick={{ fill: '#94a3b8', fontSize: 12 }}
+            tick={{ fill: '#cbd5e1', fontSize: 12 }}
             stroke="#312e81"
             domain={[12000, 250000]}
           />
-          <YAxis hide domain={[0, 'auto']} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+          <YAxis hide domain={[0, 'auto']} tick={{ fill: '#cbd5e1', fontSize: 12 }} />
           <Tooltip content={<CustomTooltip />} />
           <ReferenceLine
             x={UK_AVG_SALARY}
@@ -77,7 +77,7 @@ export default function WealthDistributionChart({ salary }: WealthDistributionCh
             label={{
               value: 'UK Avg £35k',
               position: 'top',
-              fill: '#ffffff',
+              fill: '#c4b5fd',
               fontSize: 12,
               fontWeight: 'bold',
               dy: -10,
