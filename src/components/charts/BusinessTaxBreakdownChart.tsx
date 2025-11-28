@@ -50,7 +50,7 @@ export default function BusinessTaxBreakdownChart({ data }: Props) {
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
           <Legend wrapperStyle={{ color: '#e2e8f0' }} />
 
           {mode === 'sole' ? (
