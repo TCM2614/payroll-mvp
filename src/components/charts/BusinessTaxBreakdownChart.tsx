@@ -18,14 +18,14 @@ type Props = {
 
 export default function BusinessTaxBreakdownChart({ data }: Props) {
   return (
-    <div className="h-72 w-full">
+    <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 12, right: 16, left: 0, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-          <XAxis dataKey="name" tick={{ fill: '#cbd5f5' }} tickLine={false} axisLine={false} />
+          <XAxis dataKey="name" tick={{ fill: '#cbd5f5', fontSize: 12 }} tickLine={false} axisLine={false} />
           <YAxis
             tickFormatter={(value) => formatGBPShort(Number(value))}
-            tick={{ fill: '#cbd5f5' }}
+            tick={{ fill: '#cbd5f5', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />

@@ -261,7 +261,7 @@ export default function BusinessTaxClient() {
             )}
           </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="rounded-xl border border-slate-700 bg-slate-800 p-6 shadow-inner shadow-black/30">
             <h2 className="text-lg font-semibold">Tax vs net income</h2>
             <BusinessChart data={chartData} />
           </div>

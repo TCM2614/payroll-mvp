@@ -112,7 +112,7 @@ export default function HomeClient() {
 
         {/* Wealth Distribution */}
         <section className="mt-12 grid w-full max-w-5xl gap-6 lg:grid-cols-[1fr_1.1fr]">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 text-white shadow-soft-xl">
+          <div className="rounded-xl border border-slate-700 bg-slate-800 p-6 text-white shadow-inner shadow-black/30">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
               Wealth distribution
             </p>
@@ -126,7 +126,7 @@ export default function HomeClient() {
               <li>• Pension: £{summarySnapshot.pensionAnnual.toLocaleString('en-GB')}</li>
             </ul>
           </div>
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 text-white shadow-soft-xl">
+          <div className="rounded-xl border border-slate-700 bg-slate-800 p-6 text-white shadow-inner shadow-black/30">
             <WealthDistributionChart
               netIncome={summarySnapshot.netAnnual}
               taxPaid={summarySnapshot.taxAnnual}

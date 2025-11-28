@@ -1,6 +1,6 @@
 'use client';
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, Label } from 'recharts';
 import { formatGBP } from '@/lib/format';
 
 type WealthDistributionChartProps = {
@@ -11,8 +11,6 @@ type WealthDistributionChartProps = {
 };
 
 const SEGMENT_COLORS = ['#10b981', '#f97316', '#facc15', '#6366f1'];
-
-const renderLabel = ({ name, value }: any) => `${name}: ${formatGBP(value)}`;
 
 export default function WealthDistributionChart({
   netIncome,
@@ -29,14 +27,30 @@ export default function WealthDistributionChart({
 
   if (data.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-3xl border border-slate-800 bg-slate-900/70 text-sm text-slate-300">
+      <div className="flex h-[300px] items-center justify-center rounded-xl border border-slate-800 bg-slate-800 text-sm text-slate-300">
         Add salary details to see the wealth distribution chart.
       </div>
     );
   }
 
+  const centerLabelValue = formatGBP(Math.max(netIncome, 0));
+  const renderCenterLabel = ({ cx, cy }: any) => {
+    if (cx == null || cy == null) return null;
+
+    return (
+      <g>
+        <text x={cx} y={cy - 8} textAnchor="middle" fill="#cbd5f5" fontSize={12}>
+          Net
+        </text>
+        <text x={cx} y={cy + 10} textAnchor="middle" fill="#f8fafc" fontSize={18} fontWeight={600}>
+          {centerLabelValue}
+        </text>
+      </g>
+    );
+  };
+
   return (
-    <div className="h-64 w-full">
+    <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -45,15 +59,14 @@ export default function WealthDistributionChart({
             nameKey="name"
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={90}
+            innerRadius={70}
+            outerRadius={105}
             paddingAngle={3}
-            labelLine={false}
-            label={renderLabel}
           >
             {data.map((entry, index) => (
               <Cell key={`slice-${entry.name}`} fill={SEGMENT_COLORS[index % SEGMENT_COLORS.length]} />
             ))}
+            <Label position="center" content={renderCenterLabel} />
           </Pie>
           <Tooltip
             formatter={(value: number, name: string) => [formatGBP(value), name]}
