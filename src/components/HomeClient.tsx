@@ -146,7 +146,7 @@ export default function HomeClient() {
             </button>
           </div>
           <p className="mt-3 text-[11px] text-white/50">
-            No spam. No sales. Just accurate, transparent UK payroll numbers.
+            Trusted by UK contractors for HMRC-aligned, transparent payroll insights.
           </p>
         </section>
 

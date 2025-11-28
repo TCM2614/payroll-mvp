@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/react";
 
 import { Header } from "@/components/Header";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -95,6 +96,7 @@ export default function RootLayout({
 
           <SiteFooter />
         </div>
+        <Analytics />
       </body>
     </html>
   );
