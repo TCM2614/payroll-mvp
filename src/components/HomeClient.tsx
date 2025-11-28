@@ -198,7 +198,7 @@ export default function HomeClient() {
               See where you stand nationally
             </h2>
             <p className="text-sm text-white/70">
-              Benchmark your income against UK-wide distributions the moment new results appear.
+              Benchmark your income against UK distributions the moment new results appear.
             </p>
           </div>
           <WealthInsights salary={visualSalary} />

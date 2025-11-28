@@ -52,15 +52,29 @@ function formatTopShare(percentile: number | null): string | null {
 function DistributionTooltip(props: any) {
   const { active, payload } = props;
   if (!active || !payload || payload.length === 0) return null;
-  const entry = payload[0]?.payload as DistributionDatum | undefined;
-  if (!entry) return null;
 
-  const topShare = formatTopShare(entry.percentile);
+  const entries = payload
+    .map((item: any) => item?.payload as DistributionDatum | undefined)
+    .filter(
+      (entry: DistributionDatum | undefined): entry is DistributionDatum =>
+        Boolean(entry),
+    );
+
+  if (!entries.length) return null;
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-md">
-      <p className="font-semibold text-slate-900">{formatGBPShort(entry.income)}</p>
-      {topShare && <p className="mt-1 text-slate-500">{topShare} of earners</p>}
+      {entries.map((entry: DistributionDatum, index: number) => {
+        const topShare = formatTopShare(entry.percentile);
+        return (
+          <div key={`distribution-tooltip-${index}`} className="space-y-1">
+            <p className="font-semibold text-slate-900">
+              {formatGBPShort(entry.income)}
+            </p>
+            {topShare && <p className="text-slate-500">{topShare} of earners</p>}
+          </div>
+        );
+      })}
     </div>
   );
 }
