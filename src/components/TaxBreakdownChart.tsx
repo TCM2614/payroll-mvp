@@ -69,7 +69,7 @@ export function TaxBreakdownChart({
   };
 
   return (
-    <div style={{ width: "100%", height }}>
+    <div className="w-full h-[300px]" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Tooltip content={renderTooltip} />
