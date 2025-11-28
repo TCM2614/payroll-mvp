@@ -12,7 +12,7 @@ type WealthDistributionChartProps = {
 
 const SEGMENT_COLORS = ['#10b981', '#f97316', '#facc15', '#6366f1'];
 
-const renderLabel = ({ name, value }: { name: string; value: number }) => `${name}: ${formatGBP(value)}`;
+const renderLabel = ({ name, value }: any) => `${name}: ${formatGBP(value)}`;
 
 export default function WealthDistributionChart({
   netIncome,
