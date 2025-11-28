@@ -12,6 +12,7 @@ import { EarlyAccessForm } from '@/components/EarlyAccessForm';
 import { TakeHomeCalculator } from '@/components/take-home-calculator';
 import { StickySummary } from '@/components/StickySummary';
 import { LifestyleComparison } from '@/components/LifestyleComparison';
+import MortgageAffordability from '@/components/MortgageAffordability';
 
 const WealthCurveChart = dynamic(() => import('@/components/charts/WealthDistributionChart'), {
   ssr: false,
@@ -148,6 +149,8 @@ export default function HomeClient() {
             </div>
           </div>
         </section>
+
+        <MortgageAffordability annualSalary={effectiveGrossForInsights} />
 
         {/* Email signup */}
         <div className="mt-12 w-full max-w-4xl">
