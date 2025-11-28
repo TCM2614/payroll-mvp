@@ -101,11 +101,11 @@ export function WealthDistributionChart({
   }, [chartData]);
 
   return (
-    <div className="flex h-64 w-full flex-col rounded-xl bg-white p-4 shadow-sm">
+    <div className="w-full rounded-xl bg-white p-4 shadow-sm">
       <div className="mb-2 text-sm text-slate-600">
         You are in the {headline} of UK earners.
       </div>
-      <div className="flex-1">
+      <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}
