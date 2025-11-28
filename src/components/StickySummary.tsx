@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { formatGBP } from "@/lib/format";
 
 type StickySummaryProps = {
@@ -17,6 +19,33 @@ export function StickySummary({
   onSeeBreakdown,
   className,
 }: StickySummaryProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    let ticking = false;
+
+    const updateVisibility = () => {
+      const shouldShow = window.scrollY > 400;
+      setIsVisible((prev) => (prev === shouldShow ? prev : shouldShow));
+      ticking = false;
+    };
+
+    const handleScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        if (typeof window !== "undefined" && "requestAnimationFrame" in window) {
+          window.requestAnimationFrame(updateVisibility);
+        } else {
+          updateVisibility();
+        }
+      }
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const metrics = [
     { label: "Annual Net Pay", value: formatGBP(annualNet) },
     { label: "Monthly Net Pay", value: formatGBP(monthlyNet) },
@@ -31,10 +60,12 @@ export function StickySummary({
     }
   };
 
+  if (!isVisible) return null;
+
   return (
     <div
       aria-live="polite"
-      className={`fixed top-4 left-1/2 z-50 w-[min(560px,calc(100%-1.5rem))] -translate-x-1/2 rounded-3xl border border-white/10 bg-gradient-to-r from-indigo-950 via-emerald-900 to-emerald-800 px-5 py-4 text-white shadow-[0_12px_35px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:static lg:top-auto lg:left-auto lg:right-auto lg:w-full lg:translate-x-0 lg:border-emerald-400/20 lg:px-8 lg:py-6 lg:shadow-lg ${className ?? ""}`}
+      className={`fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-3xl rounded-t-3xl border border-white/10 bg-gradient-to-r from-indigo-950 via-emerald-900 to-emerald-800 px-5 py-4 text-white shadow-[0_12px_35px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-300 ease-out lg:inset-x-8 lg:bottom-auto lg:top-4 lg:rounded-3xl ${className ?? ""}`}
     >
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-3 text-left">
