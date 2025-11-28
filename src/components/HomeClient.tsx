@@ -162,10 +162,9 @@ export default function HomeClient() {
 
         <section id="calculator" className="space-y-6">
           <div className="space-y-2 text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-200/80">
-              Step 1 · Run the calculator
-            </p>
-            <h2 className="text-2xl font-semibold text-white">Choose your income scenario</h2>
+            <h2 className="text-2xl font-semibold text-white tracking-tight">
+              Choose your income scenario
+            </h2>
             <p className="text-sm text-white/70">
               Switch between Standard PAYE, Umbrella, Limited Company or Periodic PAYE checks without
               losing your inputs.
@@ -189,27 +188,15 @@ export default function HomeClient() {
           )}
         </section>
 
-        <section
-          id="wealth-visuals"
-          className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-inner shadow-white/5"
-          aria-label="Relative wealth visualisations"
-        >
-          <div className="space-y-2 text-center lg:text-left">
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200/80">
-              Step 2 · See where you stand
-            </p>
-            <h2 className="text-2xl font-semibold text-white">
-              Top earner comparison based on your latest inputs
+        <section className="space-y-4">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-white tracking-tight">
+              Home buying power
             </h2>
-            <p className="text-sm text-white/80">
-              We benchmark your income against UK-wide ONS data so you can understand how close you are to
-              the next earning tier.
+            <p className="text-sm text-white/70">
+              Estimate your mortgage potential instantly using your latest salary projection.
             </p>
           </div>
-          <WealthInsights salary={visualSalary} />
-        </section>
-
-        <section>
           <MortgageAffordability salary={visualSalary} />
         </section>
 
