@@ -188,6 +188,22 @@ export default function HomeClient() {
           )}
         </section>
 
+        <section
+          id="wealth-visuals"
+          className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-inner shadow-white/5"
+          aria-label="Relative wealth visualisations"
+        >
+          <div className="space-y-2 text-center">
+            <h2 className="text-2xl font-semibold text-white tracking-tight">
+              See where you stand nationally
+            </h2>
+            <p className="text-sm text-white/70">
+              Benchmark your income against UK-wide distributions the moment new results appear.
+            </p>
+          </div>
+          <WealthInsights salary={visualSalary} />
+        </section>
+
         <section id="mortgage-section" className="space-y-4">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-white tracking-tight">
