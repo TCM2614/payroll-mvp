@@ -271,13 +271,9 @@ export function PeriodicTaxTab() {
       ? (latestActualNet / currentPeriodNumber) * totalPeriodsInYear
       : 0;
   const projectedMonthlyNet = projectedAnnualNet / 12 || 0;
-  const projectedWeeklyNet = projectedAnnualNet / 52 || 0;
   const hasSummaryResults = projectedAnnualNet > 0;
 
   const breakdownRef = useRef<HTMLDivElement | null>(null);
-  const handleScrollToBreakdown = () => {
-    breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   const addPeriod = () => {
     const nextIndex = periods.length + 1;
@@ -326,7 +322,7 @@ export function PeriodicTaxTab() {
   };
 
   return (
-    <div className={`space-y-4 sm:space-y-6 ${hasSummaryResults ? "pt-32 lg:pt-0" : ""}`}>
+    <div className={`space-y-4 sm:space-y-6 ${hasSummaryResults ? "pb-40 lg:pb-0" : ""}`}>
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
@@ -342,8 +338,6 @@ export function PeriodicTaxTab() {
           <StickySummary
             annualNet={projectedAnnualNet}
             monthlyNet={projectedMonthlyNet}
-            weeklyNet={projectedWeeklyNet}
-            onSeeBreakdown={handleScrollToBreakdown}
             className="lg:max-w-4xl"
           />
         </div>

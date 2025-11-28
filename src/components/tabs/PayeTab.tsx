@@ -329,7 +329,7 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
 
 
   return (
-    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pt-32 lg:pt-0" : ""}`}>
+    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pb-40 lg:pb-0" : ""}`}>
 
       {/* Header */}
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -349,8 +349,6 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
           <StickySummary
             annualNet={calculationResult.combined.netAnnual}
             monthlyNet={calculationResult.combined.monthly}
-            weeklyNet={calculationResult.combined.weekly}
-            onSeeBreakdown={handleScrollToBreakdown}
             className="lg:mt-2 lg:max-w-4xl"
           />
         </div>
