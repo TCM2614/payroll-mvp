@@ -65,6 +65,7 @@ type PayeTabProps = {
   onNetAnnualChange?: (value: number) => void;
   onSummaryChange?: (summary: CalculatorSummary) => void;
   onShowWealthTab?: () => void;
+  onGrossValueChange?: (value: number) => void;
 };
 
 
@@ -74,6 +75,7 @@ export function PayeTab({
   onNetAnnualChange,
   onSummaryChange,
   onShowWealthTab,
+  onGrossValueChange,
 }: PayeTabProps) {
   const [primaryIncome, setPrimaryIncome] = useState("6000");
 
@@ -254,6 +256,7 @@ export function PayeTab({
   useEffect(() => {
     if (calculationResult.combined.grossAnnual > 0) {
       onAnnualGrossChange?.(calculationResult.combined.grossAnnual);
+      onGrossValueChange?.(calculationResult.combined.grossAnnual);
     }
     if (calculationResult.combined.netAnnual > 0) {
       onNetAnnualChange?.(calculationResult.combined.netAnnual);

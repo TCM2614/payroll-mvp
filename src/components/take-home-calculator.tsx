@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PayeTab } from "./tabs/PayeTab";
 import { UmbrellaTab } from "./tabs/UmbrellaTab";
@@ -15,12 +15,33 @@ type TabValue = "paye" | "umbrella" | "limited" | "periodic" | "wealth";
 
 type TakeHomeCalculatorProps = {
   onSummaryChange?: (summary: CalculatorSummary) => void;
+  onGrossChange?: (value: number) => void;
+  onNetChange?: (value: number) => void;
 };
 
-export function TakeHomeCalculator({ onSummaryChange }: TakeHomeCalculatorProps = {}) {
+export function TakeHomeCalculator({
+  onSummaryChange,
+  onGrossChange,
+  onNetChange,
+}: TakeHomeCalculatorProps = {}) {
   const [activeTab, setActiveTab] = useState<TabValue>("paye");
   const [wealthDefaultAnnualGross, setWealthDefaultAnnualGross] = useState<number | undefined>();
   const [wealthDefaultNetAnnual, setWealthDefaultNetAnnual] = useState<number | undefined>();
+  const [latestSummary, setLatestSummary] = useState<CalculatorSummary | null>(null);
+  const [latestGross, setLatestGross] = useState<number | undefined>();
+
+  useEffect(() => {
+    if (latestSummary) {
+      onSummaryChange?.(latestSummary);
+      onNetChange?.(latestSummary.annualNet);
+    }
+  }, [latestSummary, onSummaryChange, onNetChange]);
+
+  useEffect(() => {
+    if (typeof latestGross === "number") {
+      onGrossChange?.(latestGross);
+    }
+  }, [latestGross, onGrossChange]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -221,27 +242,28 @@ export function TakeHomeCalculator({ onSummaryChange }: TakeHomeCalculatorProps 
           <PayeTab
             onAnnualGrossChange={setWealthDefaultAnnualGross}
             onNetAnnualChange={setWealthDefaultNetAnnual}
-            onSummaryChange={onSummaryChange}
+            onSummaryChange={setLatestSummary}
             onShowWealthTab={() => setActiveTab("wealth")}
+            onGrossValueChange={setLatestGross}
           />
         </TabsContent>
 
 
 
         <TabsContent value="umbrella" className="pt-4">
-          <UmbrellaTab onSummaryChange={onSummaryChange} />
+          <UmbrellaTab onSummaryChange={setLatestSummary} onGrossChange={setLatestGross} />
         </TabsContent>
 
 
 
         <TabsContent value="limited" className="pt-4">
-          <LimitedTab onSummaryChange={onSummaryChange} />
+          <LimitedTab onSummaryChange={setLatestSummary} onGrossChange={setLatestGross} />
         </TabsContent>
 
 
 
         <TabsContent value="periodic" className="pt-4">
-          <PeriodicTaxTab onSummaryChange={onSummaryChange} />
+          <PeriodicTaxTab onSummaryChange={setLatestSummary} />
         </TabsContent>
 
 
