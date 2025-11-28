@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { nanoid } from "nanoid";
 import {
   calculatePeriodTax,
@@ -26,6 +26,9 @@ import {
   trackCalculatorRun,
   getSalaryBand,
 } from "@/lib/analytics";
+import { StickySummary } from "@/components/StickySummary";
+import { WealthInsights } from "@/components/WealthInsights";
+import type { CalculatorSummary } from "@/types/calculator";
 
 type PayFrequency = "monthly" | "weekly" | "four-weekly";
 
@@ -72,7 +75,11 @@ function getWarningSeverityText(severity: string): string {
   }
 }
 
-export function PeriodicTaxTab() {
+type PeriodicTaxTabProps = {
+  onSummaryChange?: (summary: CalculatorSummary) => void;
+};
+
+export function PeriodicTaxTab({ onSummaryChange }: PeriodicTaxTabProps) {
   const config = createUK2025Config();
 
   // Input state
@@ -253,6 +260,46 @@ export function PeriodicTaxTab() {
         })
       : null;
 
+  const latestResult: PeriodTaxResult | null = (() => {
+    for (let i = results.length - 1; i >= 0; i--) {
+      const candidate = results[i];
+      if (candidate) {
+        return candidate;
+      }
+    }
+    return null;
+  })();
+
+  const currentPeriodNumber = periods[periods.length - 1]?.periodIndex ?? 0;
+  const latestActualNet = latestResult?.ytdActual.net ?? 0;
+  const projectedAnnualNet =
+    latestActualNet > 0 && currentPeriodNumber > 0
+      ? (latestActualNet / currentPeriodNumber) * totalPeriodsInYear
+      : 0;
+  const projectedMonthlyNet = projectedAnnualNet / 12 || 0;
+  const projectedWeeklyNet = projectedAnnualNet / 52 || 0;
+  const hasSummaryResults = projectedAnnualNet > 0;
+
+  const breakdownRef = useRef<HTMLDivElement | null>(null);
+  const handleScrollToBreakdown = () => {
+    breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  useEffect(() => {
+    if (!hasSummaryResults) return;
+    onSummaryChange?.({
+      annualNet: projectedAnnualNet,
+      monthlyNet: projectedMonthlyNet,
+      weeklyNet: projectedWeeklyNet,
+    });
+  }, [
+    hasSummaryResults,
+    projectedAnnualNet,
+    projectedMonthlyNet,
+    projectedWeeklyNet,
+    onSummaryChange,
+  ]);
+
   const addPeriod = () => {
     const nextIndex = periods.length + 1;
     const lastPeriod = periods[periods.length - 1];
@@ -300,7 +347,7 @@ export function PeriodicTaxTab() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className={`space-y-4 sm:space-y-6 ${hasSummaryResults ? "pt-32 lg:pt-0" : ""}`}>
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
@@ -310,6 +357,18 @@ export function PeriodicTaxTab() {
           Analyse your PAYE tax on a period-by-period basis. Enter your actual pay for each period and we&apos;ll compare what you&apos;ve paid so far against what you&apos;d usually expect for this point in the 2024/25 tax year.
         </p>
       </header>
+
+      {hasSummaryResults && (
+        <div className="flex justify-center">
+          <StickySummary
+            annualNet={projectedAnnualNet}
+            monthlyNet={projectedMonthlyNet}
+            weeklyNet={projectedWeeklyNet}
+            onSeeBreakdown={handleScrollToBreakdown}
+            className="lg:max-w-4xl"
+          />
+        </div>
+      )}
 
       {/* Section 1: Configuration */}
       <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 shadow-navy-900/50 space-y-3">
@@ -370,13 +429,17 @@ export function PeriodicTaxTab() {
       </section>
 
       {/* Section 2: Periods Input */}
-      <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+      <section
+        ref={breakdownRef}
+        id="periodic-breakdown"
+        className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3 scroll-mt-28"
+      >
         <header className="flex items-center justify-between gap-2">
           <h2 className="text-sm sm:text-base font-semibold text-navy-100">Pay Periods</h2>
           <button
             type="button"
             onClick={addPeriod}
-            className="rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
+            className="btn-primary px-6 py-3 text-sm"
             aria-label="Add another pay period"
           >
             + Add Period
@@ -809,178 +872,8 @@ export function PeriodicTaxTab() {
         })}
       </section>
 
-              {/* Section 3: YTD Summary */}
-              {results.length > 0 && (
-                <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-2 md:sticky md:top-2 md:z-10">
-          <header className="flex items-center justify-between gap-2">
-            <h2 className="text-sm sm:text-base font-semibold text-navy-100">
-              Year-to-date PAYE position
-            </h2>
-          </header>
-            <p className="text-sm text-navy-200">
-            Period {periods[periods.length - 1]?.periodIndex || 0} of{" "}
-            {payFrequency === "monthly"
-              ? 12
-              : payFrequency === "weekly"
-              ? 52
-              : 13}
-          </p>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <h3 className="text-xs font-medium text-navy-100">Actual YTD</h3>
-              <div className="space-y-1.5 text-sm text-navy-200">
-                <div className="flex justify-between">
-                  <span className="text-navy-200">Gross Income:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(results[results.length - 1]?.ytdActual.gross || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">PAYE Tax:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(results[results.length - 1]?.ytdActual.paye || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">National Insurance:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(results[results.length - 1]?.ytdActual.ni || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">Student Loan:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdActual.studentLoan || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-sea-jet-700/30">
-                  <span className="text-navy-200">Net Income:</span>
-                  <span className="font-semibold text-emerald-400">
-                    {formatGBP(results[results.length - 1]?.ytdActual.net || 0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xs font-medium text-navy-100">
-                Expected YTD (Projected)
-              </h3>
-              <div className="space-y-1.5 text-sm text-navy-200">
-                <div className="flex justify-between">
-                  <span className="text-navy-200">Gross Income:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.gross || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">PAYE Tax:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.paye || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">National Insurance:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.ni || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-navy-200">Student Loan:</span>
-                  <span className="font-semibold text-navy-50">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.studentLoan || 0
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-sea-jet-700/30">
-                  <span className="text-navy-200">Net Income:</span>
-                  <span className="font-semibold text-emerald-400">
-                    {formatGBP(
-                      results[results.length - 1]?.ytdExpected.net || 0
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Variance Summary - Prominent display */}
-          {results[results.length - 1] && (
-            <div className="mt-3 pt-3 border-t border-slate-200">
-              <h3 className="text-xs font-medium text-navy-200 mb-2">
-                Cumulative PAYE over/under payment
-              </h3>
-              <div className="rounded-lg border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-700">Variance Amount:</span>
-                  <span
-                    className={`text-lg font-semibold ${
-                      results[results.length - 1].variance.direction === "over"
-                        ? "text-emerald-700"
-                        : results[results.length - 1].variance.direction ===
-                          "under"
-                        ? "text-rose-700"
-                        : "text-slate-800"
-                    }`}
-                    aria-label={`Tax variance: ${getVarianceText(results[results.length - 1].variance.direction)}`}
-                  >
-                    {results[results.length - 1].variance.direction === "over"
-                      ? "+"
-                      : results[results.length - 1].variance.direction ===
-                        "under"
-                      ? "-"
-                      : ""}
-                    {formatGBP(
-                      Math.abs(results[results.length - 1].variance.amount)
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-700">Status:</span>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded ${
-                      results[results.length - 1].variance.direction === "over"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : results[results.length - 1].variance.direction ===
-                          "under"
-                        ? "bg-rose-100 text-rose-700"
-                        : "bg-slate-100 text-slate-800"
-                    }`}
-                    aria-label={`Tax status: ${getVarianceText(results[results.length - 1].variance.direction)}`}
-                  >
-                    {results[results.length - 1].variance.direction === "over"
-                      ? "Estimated overpayment so far"
-                      : results[results.length - 1].variance.direction === "under"
-                      ? "Estimated underpayment so far"
-                      : "Your PAYE looks broadly in line with expectations so far"}
-                  </span>
-                </div>
-                {results[results.length - 1].variance.toleranceBreached && (
-                  <p className="text-sm text-slate-700 mt-2">
-                    We compare your actual PAYE so far with what we&apos;d expect based on your income pattern. A large difference can indicate potential over- or under-taxation.
-                  </p>
-                )}
-                <p className="text-[11px] text-navy-300 mt-2">
-                  These figures are estimates based on the 2024/25 UK PAYE rules and your inputs. They&apos;re for guidance only and not an official HMRC calculation.
-                </p>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
               {/* Section 3.5: Actual Tax Paid Analysis */}
-              {actualTaxAnalysis && actualTaxAnalysis.items.length > 0 && (
+        {actualTaxAnalysis && actualTaxAnalysis.items.length > 0 && (
                 <section className="rounded-2xl border border-slate-200 bg-sea-jet-900/40 p-4 sm:p-5 space-y-3 md:sticky md:top-2 md:z-10">
           <header className="flex items-center justify-between gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-navy-50">
@@ -1113,8 +1006,8 @@ export function PeriodicTaxTab() {
         </section>
       )}
 
-              {/* Section 4: Period Range Aggregation */}
-              {results.length > 0 && (
+        {/* Section 4: Period Range Aggregation */}
+        {results.length > 0 && (
                 <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
           <header className="flex items-center justify-between gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-navy-50">
@@ -1223,6 +1116,28 @@ export function PeriodicTaxTab() {
               </div>
             </div>
           )}
+        </section>
+        )}
+
+      {hasSummaryResults && projectedAnnualNet > 0 && (
+        <section className="space-y-3 rounded-3xl border border-sea-jet-700/40 bg-sea-jet-900/70 p-4 shadow-inner sm:p-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-navy-300">
+              Wealth percentile
+            </p>
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-navy-50">
+              Projected take-home vs UK peers
+            </h3>
+            <p className="text-xs text-navy-200">
+              We extrapolate your year-to-date PAYE data to show how your income lines up with the national curve.
+            </p>
+          </div>
+          <WealthInsights
+            salary={projectedAnnualNet}
+            cardClassName="border-sea-jet-700/30"
+          />
         </section>
       )}
     </div>

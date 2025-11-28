@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { formatGBP } from "@/lib/format";
 import { calculateContractorAnnual, type ContractorInputs } from "@/domain/tax/contracting";
 import { createUK2025Config, calculateAnnualTax } from "@/domain/tax/periodTax";
@@ -13,6 +13,10 @@ import {
   trackCalculatorRun,
   getSalaryBand,
 } from "@/lib/analytics";
+import { StickySummary } from "@/components/StickySummary";
+import { TaxBreakdownChart } from "@/components/TaxBreakdownChart";
+import { WealthInsights } from "@/components/WealthInsights";
+import type { CalculatorSummary } from "@/types/calculator";
 
 /**
  * UmbrellaCalculator
@@ -22,7 +26,15 @@ import {
  * but always fixes engagementType="umbrella" and ir35Status="inside", and
  * wires multi-plan student loan selections into the annual tax engine.
  */
-export function UmbrellaCalculator() {
+type UmbrellaCalculatorProps = {
+  onSummaryChange?: (summary: CalculatorSummary) => void;
+  onGrossChange?: (value: number) => void;
+};
+
+export function UmbrellaCalculator({
+  onSummaryChange,
+  onGrossChange,
+}: UmbrellaCalculatorProps) {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
   const [dayRate, setDayRate] = useState<number | undefined>(500);
   const [daysPerWeek, setDaysPerWeek] = useState(5);
@@ -74,6 +86,35 @@ export function UmbrellaCalculator() {
     };
   }, [studentLoanSelection, monthlyRate, dayRate, daysPerWeek, hourlyRate, hoursPerDay, taxCode, pensionPct]);
 
+  const breakdownRef = useRef<HTMLDivElement | null>(null);
+  const annualNet = calculationResult.result.annual?.net ?? 0;
+  const hasResults = calculationResult.result.supported && annualNet > 0;
+
+  const handleScrollToBreakdown = () => {
+    breakdownRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  useEffect(() => {
+    if (!hasResults) return;
+    onSummaryChange?.({
+      annualNet,
+      monthlyNet: calculationResult.netMonthly,
+      weeklyNet: calculationResult.netWeekly,
+      annualGross: calculationResult.result.grossAnnualIncome,
+    });
+    if (calculationResult.result.grossAnnualIncome) {
+      onGrossChange?.(calculationResult.result.grossAnnualIncome);
+    }
+  }, [
+    hasResults,
+    annualNet,
+    calculationResult.netMonthly,
+    calculationResult.netWeekly,
+    calculationResult.result.grossAnnualIncome,
+    onSummaryChange,
+    onGrossChange,
+  ]);
+
   // Track calculator submission and calculator_run goal
   useEffect(() => {
     if (calculationResult.result.grossAnnualIncome > 0) {
@@ -99,7 +140,7 @@ export function UmbrellaCalculator() {
   }, [calculationResult]);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className={`space-y-4 sm:space-y-6 ${hasResults ? "pt-32 lg:pt-0" : ""}`}>
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
@@ -109,6 +150,18 @@ export function UmbrellaCalculator() {
           Calculate your take-home pay when contracting via an umbrella company (inside IR35).
         </p>
       </header>
+
+      {hasResults && (
+        <div className="flex justify-center">
+          <StickySummary
+            annualNet={annualNet}
+            monthlyNet={calculationResult.netMonthly}
+            weeklyNet={calculationResult.netWeekly}
+            onSeeBreakdown={handleScrollToBreakdown}
+            className="lg:max-w-3xl"
+          />
+        </div>
+      )}
 
       {/* Section 1: Configuration */}
       <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
@@ -214,7 +267,11 @@ export function UmbrellaCalculator() {
       </section>
 
       {/* Section 2: Results */}
-      <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+      <section
+        ref={breakdownRef}
+        id="umbrella-breakdown"
+        className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3 scroll-mt-28"
+      >
         <header className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-navy-100 sm:text-base">Take-home pay</h2>
         </header>
@@ -228,56 +285,74 @@ export function UmbrellaCalculator() {
           </div>
         ) : calculationResult.result.annual ? (
           <div className="space-y-3">
-            <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
-              <p className="text-xs text-navy-300">Gross annual income</p>
-              <p className="mt-1 text-lg font-semibold text-navy-50">
-                {formatGBP(calculationResult.result.grossAnnualIncome)}
-              </p>
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start">
+              <div className="h-64 lg:h-72">
+                <TaxBreakdownChart
+                  netPay={calculationResult.result.annual.net}
+                  incomeTax={calculationResult.result.annual.paye}
+                  nationalInsurance={calculationResult.result.annual.ni}
+                  pension={calculationResult.result.annual.pensionEmployee}
+                />
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
+                  <p className="text-xs text-navy-300">Gross annual income</p>
+                  <p className="mt-1 text-lg font-semibold text-navy-50">
+                    {formatGBP(calculationResult.result.grossAnnualIncome)}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                    <span className="text-navy-300">Monthly:</span>
+                    <span className="ml-1 font-semibold text-ethereal-300">
+                      {formatGBP(calculationResult.netMonthly)}
+                    </span>
+                  </div>
+                  <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                    <span className="text-navy-300">Weekly:</span>
+                    <span className="ml-1 font-semibold text-ethereal-300">
+                      {formatGBP(calculationResult.netWeekly)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                    <span className="text-navy-300">PAYE:</span>
+                    <span className="ml-1 font-semibold text-navy-50">
+                      {formatGBP(calculationResult.result.annual.paye)}
+                    </span>
+                  </div>
+                  <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                    <span className="text-navy-300">NI:</span>
+                    <span className="ml-1 font-semibold text-navy-50">
+                      {formatGBP(calculationResult.result.annual.ni)}
+                    </span>
+                  </div>
+                  <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                    <span className="text-navy-300">Pension:</span>
+                    <span className="ml-1 font-semibold text-navy-50">
+                      {formatGBP(calculationResult.result.annual.pensionEmployee)}
+                    </span>
+                  </div>
+                  <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
+                    <span className="text-navy-300">Student loan:</span>
+                    <span className="ml-1 font-semibold text-navy-50">
+                      {formatGBP(calculationResult.result.annual.studentLoan)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
+                  <p className="text-xs text-navy-300">Net annual income</p>
+                  <p className="mt-1 text-xl font-semibold text-ethereal-300">
+                    {formatGBP(calculationResult.result.annual.net)}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Monthly:</span>
-                <span className="ml-1 font-semibold text-ethereal-300">
-                  {formatGBP(calculationResult.netMonthly)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Weekly:</span>
-                <span className="ml-1 font-semibold text-ethereal-300">
-                  {formatGBP(calculationResult.netWeekly)}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">PAYE:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.paye)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">NI:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.ni)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Pension:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.pensionEmployee)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Student loan:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.studentLoan)}
-                </span>
-              </div>
-            </div>
-
-            {/* Student loan breakdown */}
             {calculationResult.result.annual.studentLoanBreakdown &&
               calculationResult.result.annual.studentLoanBreakdown.length > 0 && (
                 <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
@@ -307,13 +382,6 @@ export function UmbrellaCalculator() {
                   </div>
                 </div>
               )}
-
-            <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
-              <p className="text-xs text-navy-300">Net annual income</p>
-              <p className="mt-1 text-xl font-semibold text-ethereal-300">
-                {formatGBP(calculationResult.result.annual.net)}
-              </p>
-            </div>
           </div>
         ) : null}
 
@@ -322,6 +390,26 @@ export function UmbrellaCalculator() {
           calculation or full umbrella fee model. This is an inside IR35 estimate.
         </p>
       </section>
+
+      {calculationResult.result.grossAnnualIncome > 0 && (
+        <section className="space-y-3 rounded-3xl border border-sea-jet-700/40 bg-sea-jet-900/70 p-4 shadow-inner sm:p-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-navy-300">
+              Wealth percentile
+            </p>
+            <h3 className="text-base font-semibold text-navy-50">
+              Compare your umbrella income to UK earners
+            </h3>
+            <p className="text-xs text-navy-200">
+              Uses the same ONS distribution as the home page insights to keep the story consistent.
+            </p>
+          </div>
+          <WealthInsights
+            salary={calculationResult.result.grossAnnualIncome}
+            cardClassName="border-sea-jet-700/30"
+          />
+        </section>
+      )}
     </div>
   );
 }

@@ -1,10 +1,12 @@
-import './globals.css';
+import "./globals.css";
 
-import type { Metadata } from 'next';
-import Script from 'next/script';
+import type { Metadata } from "next";
+import Script from "next/script";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/react";
 
-import { Header } from '@/components/Header';
-import { SiteFooter } from '@/components/SiteFooter';
+import { Header } from "@/components/Header";
+import { SiteFooter } from "@/components/SiteFooter";
 
 import { SchemaMarkup } from "@/components/SEO/SchemaMarkup";
 
@@ -52,6 +54,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className="min-h-full bg-brand-bg text-brand-text antialiased">
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID ?? ""} />
         {/* Privacy-friendly analytics by Plausible */}
         <Script
           async
@@ -93,6 +96,7 @@ export default function RootLayout({
 
           <SiteFooter />
         </div>
+        <Analytics />
       </body>
     </html>
   );

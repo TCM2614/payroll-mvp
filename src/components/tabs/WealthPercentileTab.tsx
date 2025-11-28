@@ -21,6 +21,41 @@ import { incomePercentilesByAge } from "@/data/incomePercentilesByAge";
 import { trackEvent } from "@/lib/analytics";
 import { formatGBP, formatGBPShort } from "@/lib/format";
 
+function CustomDistributionTooltip(
+  props: TooltipProps<number, string> & { payload?: readonly any[] },
+) {
+  const { active, payload } = props;
+  if (!active || !payload || payload.length === 0) return null;
+
+  const entries = payload
+    .filter((item) => typeof item.value === "number" && Number(item.value) > 0)
+    .map((item) => ({
+      label: SEGMENT_NAME_MAP[item.dataKey as string] ?? item.dataKey,
+      color: item.color || "#94a3b8",
+    }));
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-xl">
+      <p className="text-xs font-semibold text-slate-400">Percentile band</p>
+      <ul className="mt-2 space-y-1">
+        {entries.map((entry) => (
+          <li key={entry.label} className="flex items-center gap-2">
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-slate-100 text-sm">{entry.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+import { WealthDistributionChart } from "@/components/WealthDistributionChart";
+import { LifestyleComparison } from "@/components/LifestyleComparison";
+
 type ComparisonMode = "gross" | "net";
 
 type WealthPercentileTabProps = {
@@ -31,25 +66,36 @@ type WealthPercentileTabProps = {
 };
 
 const INCOME_COMPARISON_COLORS = {
-  you: "#38bdf8", // sky-400
+  you: "#10b981", // emerald-500
   median: "#64748b", // slate-500
-  top: "#22c55e", // emerald-500
+  top: "#6366f1", // indigo-500
 } as const;
 
 const PERCENTILE_SEGMENTS = [
-  // Broad bands
-  { key: "p0_25", label: "0–25%", start: 0, end: 25, color: "#1f2937" }, // slate-800
-  { key: "p25_50", label: "25–50%", start: 25, end: 50, color: "#0f172a" }, // slate-900
-  { key: "p50_75", label: "50–75%", start: 50, end: 75, color: "#0369a1" }, // sky-700
-  { key: "p75_85", label: "75–85%", start: 75, end: 85, color: "#0284c7" }, // sky-600
-  { key: "p85_95", label: "85–95%", start: 85, end: 95, color: "#0ea5e9" }, // sky-500
-  // Fine-grained top tail
-  { key: "top5", label: "Top 5%", start: 95, end: 96, color: "#22c55e" }, // emerald-500
-  { key: "top4", label: "Top 4%", start: 96, end: 97, color: "#16a34a" }, // green-600
-  { key: "top3", label: "Top 3%", start: 97, end: 98, color: "#15803d" }, // green-700
-  { key: "top2", label: "Top 2%", start: 98, end: 99, color: "#166534" }, // green-800
-  { key: "top1", label: "Top 1%", start: 99, end: 100, color: "#14532d" }, // green-900
+  { key: "p0_25", label: "0–25%", start: 0, end: 25, color: "#0f172a" },
+  { key: "p25_50", label: "25–50%", start: 25, end: 50, color: "#172554" },
+  { key: "p50_75", label: "50–75%", start: 50, end: 75, color: "#1e3a8a" },
+  { key: "p75_85", label: "75–85%", start: 75, end: 85, color: "#3730a3" },
+  { key: "p85_95", label: "85–95%", start: 85, end: 95, color: "#4338ca" },
+  { key: "top5", label: "Top 5%", start: 95, end: 96, color: "#4c1d95" },
+  { key: "top4", label: "Top 4%", start: 96, end: 97, color: "#5b21b6" },
+  { key: "top3", label: "Top 3%", start: 97, end: 98, color: "#6d28d9" },
+  { key: "top2", label: "Top 2%", start: 98, end: 99, color: "#7c3aed" },
+  { key: "top1", label: "Top 1%", start: 99, end: 100, color: "#8b5cf6" },
 ] as const;
+
+const SEGMENT_NAME_MAP: Record<string, string> = {
+  p0_25: "Lowest 25%",
+  p25_50: "25% - 50%",
+  p50_75: "50% - 75%",
+  p75_85: "75% - 85%",
+  p85_95: "85% - 95%",
+  top5: "Top 5%",
+  top4: "Top 4%",
+  top3: "Top 3%",
+  top2: "Top 2%",
+  top1: "Top 1%",
+};
 
 type IncomeTooltipPayload = { name: string; value: number };
 
@@ -366,7 +412,7 @@ export function WealthPercentileTab({
           type="button"
           onClick={handleCompare}
           disabled={!isFormValid}
-          className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-brilliant-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brilliant-500/30 transition hover:bg-brilliant-600 disabled:bg-sea-jet-700 disabled:text-navy-300 disabled:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brilliant-400/70"
+          className="btn-primary w-full sm:w-auto disabled:bg-slate-500 disabled:text-slate-200 disabled:opacity-60"
         >
           Compare my income
         </button>
@@ -405,6 +451,11 @@ export function WealthPercentileTab({
               .
             </p>
           </header>
+
+          <div className="space-y-4">
+            <WealthDistributionChart currentSalary={lastIncome ?? undefined} />
+            <LifestyleComparison currentSalary={lastIncome ?? undefined} />
+          </div>
 
           {/* Progress bar */}
           <div className="space-y-2">
@@ -474,7 +525,7 @@ export function WealthPercentileTab({
           </div>
 
           {/* Bar chart: You vs Median vs Top 10% */}
-          <div className="mt-2 rounded-2xl border border-brand-border/60 bg-brand-bg/60 px-3 py-3 sm:px-4 sm:py-4">
+          <div className="mt-2 rounded-2xl border border-slate-800 bg-slate-900/50 px-3 py-3 sm:px-4 sm:py-4">
             <p className="mb-2 text-xs sm:text-sm font-semibold text-brand-text">
               Income comparison ({result.ageGroupLabel})
             </p>
@@ -500,23 +551,23 @@ export function WealthPercentileTab({
                   ]}
                   margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="name"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
                   />
                   <YAxis
                     tickFormatter={(v) => formatGBPShort(Number(v))}
                     axisLine={false}
                     tickLine={false}
                     width={70}
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
                   />
                   <Tooltip content={<IncomeComparisonTooltip />} cursor={{ fill: "transparent" }} />
                   <Bar
                     dataKey="value"
-                    radius={4}
+                    radius={[4, 4, 0, 0]}
                     activeBar={{ fillOpacity: 0.9 }}
                   >
                     <Cell key="you" fill={INCOME_COMPARISON_COLORS.you} />
@@ -529,7 +580,7 @@ export function WealthPercentileTab({
           </div>
 
           {/* Percentile breakdown chart */}
-          <div className="mt-3 rounded-2xl border border-brand-border/60 bg-brand-bg/60 px-3 py-3 sm:px-4 sm:py-4">
+          <div className="mt-3 rounded-2xl border border-slate-800 bg-slate-900/50 px-3 py-3 sm:px-4 sm:py-4">
             <p className="mb-2 text-xs sm:text-sm font-semibold text-brand-text">
               Where you sit in the distribution
             </p>
@@ -548,17 +599,19 @@ export function WealthPercentileTab({
                   ]}
                   margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
                 >
-                  <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                   <XAxis
                     type="number"
                     domain={[0, 100]}
                     tickFormatter={(v) => `${v}%`}
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis type="category" dataKey="name" hide />
-                  <Tooltip cursor={{ fill: "transparent" }} content={undefined} />
+                  <Tooltip
+                    cursor={{ fill: "transparent" }}
+                    content={<CustomDistributionTooltip />}
+                  />
                   <ReferenceLine
                     x={Math.min(100, Math.max(0, clampedPercentile ?? 0))}
                     stroke={INCOME_COMPARISON_COLORS.you}

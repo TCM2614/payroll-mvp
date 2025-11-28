@@ -54,7 +54,7 @@ The UK Take-Home Pay Calculator is a fintech SaaS product that provides accurate
 - ✅ Period-by-period tax checking
 - ✅ Student loan plan comparison (Plans 1, 2, 4, 5, Postgrad)
 - ✅ 2024/25 and 2025/26 tax year support
-- ✅ Clean, modern UI with no ads
+- ✅ Clean, modern UI with premium-grade UI polish
 - ✅ Accurate calculations using official HMRC rates
 
 ---
