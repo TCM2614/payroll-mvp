@@ -64,6 +64,13 @@ export default function LandingPage() {
   return (
     <AppShell>
       <Script
+        id="adsense-script"
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5163287208898205"
+        strategy="afterInteractive"
+        crossOrigin="anonymous"
+        async
+      />
+      <Script
         id="software-schema"
         type="application/ld+json"
         strategy="afterInteractive"
