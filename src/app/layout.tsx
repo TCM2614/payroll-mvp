@@ -5,6 +5,7 @@ import Script from 'next/script';
 
 import { Header } from '@/components/Header';
 import { SiteFooter } from '@/components/SiteFooter';
+import { AdSenseScript } from "@/components/ads/AdSenseScript";
 
 import { SchemaMarkup } from "@/components/SEO/SchemaMarkup";
 
@@ -77,6 +78,8 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         )}
+        {/* Google AdSense (loaded only after cookie consent) */}
+        <AdSenseScript />
         <SchemaMarkup />
         <div className="relative min-h-screen">
           {/* Background gradient */}

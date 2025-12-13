@@ -92,8 +92,12 @@ export function PeriodicTaxTab() {
     { id: nanoid(), periodIndex: 3, gross: 3000, pension: 150 },
   ]);
 
+  // Mobile UX: bottom sticky summary drawer
+  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
+  const [mobileSummaryMinimized, setMobileSummaryMinimized] = useState(false);
+
   // Calculate results for all periods
-  const results: PeriodTaxResult[] = [];
+  const results: Array<PeriodTaxResult | null> = [];
   let ytdGross = 0;
   let ytdTax = 0;
   let ytdNI = 0;
@@ -110,7 +114,7 @@ export function PeriodicTaxTab() {
     // The UI will handle showing an error state for invalid tax codes
     if (!effectiveTaxCode || effectiveTaxCode.trim().length === 0) {
       // Push null to indicate invalid period - UI will handle display
-      results.push(null as unknown as PeriodTaxResult);
+      results.push(null);
       return; // Skip YTD accumulation for invalid periods
     }
     
@@ -246,11 +250,18 @@ export function PeriodicTaxTab() {
   const [rangeTo, setRangeTo] = useState(Math.min(2, results.length - 1));
   const rangeAggregation =
     results.length > 0 && rangeFrom <= rangeTo && rangeTo < results.length
-      ? aggregatePeriodRange({
-          periods: results,
-          fromIndex: rangeFrom,
-          toIndex: rangeTo,
-        })
+      ? (() => {
+          const slice = results.slice(rangeFrom, rangeTo + 1);
+          if (slice.some((p) => !p)) return null;
+          const safeSlice = slice as PeriodTaxResult[];
+          const agg = aggregatePeriodRange({
+            periods: safeSlice,
+            fromIndex: 0,
+            toIndex: safeSlice.length - 1,
+          });
+          // Preserve the user's selected indices (relative to the full list)
+          return { ...agg, fromIndex: rangeFrom, toIndex: rangeTo };
+        })()
       : null;
 
   const addPeriod = () => {
@@ -299,8 +310,15 @@ export function PeriodicTaxTab() {
     }
   };
 
+  const latestResult = results.length > 0 ? results[results.length - 1] : null;
+  const hasMobileStickySummary = !!latestResult;
+
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div
+      className={`space-y-4 sm:space-y-6${
+        hasMobileStickySummary ? (mobileSummaryMinimized ? " pb-16 md:pb-0" : " pb-24 md:pb-0") : ""
+      }`}
+    >
       {/* Header */}
       <header>
         <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
@@ -811,7 +829,7 @@ export function PeriodicTaxTab() {
 
               {/* Section 3: YTD Summary */}
               {results.length > 0 && (
-                <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-2 md:sticky md:top-2 md:z-10">
+                <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-4 sm:p-6 md:p-8 shadow-xl shadow-navy-900/50 space-y-2 md:sticky md:top-2 md:z-10">
           <header className="flex items-center justify-between gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-navy-100">
               Year-to-date PAYE position
@@ -915,67 +933,69 @@ export function PeriodicTaxTab() {
           </div>
 
           {/* Variance Summary - Prominent display */}
-          {results[results.length - 1] && (
-            <div className="mt-3 pt-3 border-t border-slate-200">
-              <h3 className="text-xs font-medium text-navy-200 mb-2">
-                Cumulative PAYE over/under payment
-              </h3>
-              <div className="rounded-lg border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-700">Variance Amount:</span>
-                  <span
-                    className={`text-lg font-semibold ${
-                      results[results.length - 1].variance.direction === "over"
-                        ? "text-emerald-700"
-                        : results[results.length - 1].variance.direction ===
-                          "under"
-                        ? "text-rose-700"
-                        : "text-slate-800"
-                    }`}
-                    aria-label={`Tax variance: ${getVarianceText(results[results.length - 1].variance.direction)}`}
-                  >
-                    {results[results.length - 1].variance.direction === "over"
-                      ? "+"
-                      : results[results.length - 1].variance.direction ===
-                        "under"
-                      ? "-"
-                      : ""}
-                    {formatGBP(
-                      Math.abs(results[results.length - 1].variance.amount)
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-700">Status:</span>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded ${
-                      results[results.length - 1].variance.direction === "over"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : results[results.length - 1].variance.direction ===
-                          "under"
-                        ? "bg-rose-100 text-rose-700"
-                        : "bg-slate-100 text-slate-800"
-                    }`}
-                    aria-label={`Tax status: ${getVarianceText(results[results.length - 1].variance.direction)}`}
-                  >
-                    {results[results.length - 1].variance.direction === "over"
-                      ? "Estimated overpayment so far"
-                      : results[results.length - 1].variance.direction === "under"
-                      ? "Estimated underpayment so far"
-                      : "Your PAYE looks broadly in line with expectations so far"}
-                  </span>
-                </div>
-                {results[results.length - 1].variance.toleranceBreached && (
-                  <p className="text-sm text-slate-700 mt-2">
-                    We compare your actual PAYE so far with what we&apos;d expect based on your income pattern. A large difference can indicate potential over- or under-taxation.
+          {(() => {
+            const last = results[results.length - 1];
+            if (!last) return null;
+            return (
+              <div className="mt-3 pt-3 border-t border-slate-200">
+                <h3 className="text-xs font-medium text-navy-200 mb-2">
+                  Cumulative PAYE over/under payment
+                </h3>
+                <div className="rounded-lg border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-700">Variance Amount:</span>
+                    <span
+                      className={`text-lg font-semibold ${
+                        last.variance.direction === "over"
+                          ? "text-emerald-700"
+                          : last.variance.direction === "under"
+                          ? "text-rose-700"
+                          : "text-slate-800"
+                      }`}
+                      aria-label={`Tax variance: ${getVarianceText(last.variance.direction)}`}
+                    >
+                      {last.variance.direction === "over"
+                        ? "+"
+                        : last.variance.direction === "under"
+                        ? "-"
+                        : ""}
+                      {formatGBP(Math.abs(last.variance.amount))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-700">Status:</span>
+                    <span
+                      className={`text-xs font-medium px-2 py-1 rounded ${
+                        last.variance.direction === "over"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : last.variance.direction === "under"
+                          ? "bg-rose-100 text-rose-700"
+                          : "bg-slate-100 text-slate-800"
+                      }`}
+                      aria-label={`Tax status: ${getVarianceText(last.variance.direction)}`}
+                    >
+                      {last.variance.direction === "over"
+                        ? "Estimated overpayment so far"
+                        : last.variance.direction === "under"
+                        ? "Estimated underpayment so far"
+                        : "Your PAYE looks broadly in line with expectations so far"}
+                    </span>
+                  </div>
+                  {last.variance.toleranceBreached && (
+                    <p className="text-sm text-slate-700 mt-2">
+                      We compare your actual PAYE so far with what we&apos;d expect based on your
+                      income pattern. A large difference can indicate potential over- or
+                      under-taxation.
+                    </p>
+                  )}
+                  <p className="text-[11px] text-navy-300 mt-2">
+                    These figures are estimates based on the 2024/25 UK PAYE rules and your
+                    inputs. They&apos;re for guidance only and not an official HMRC calculation.
                   </p>
-                )}
-                <p className="text-[11px] text-navy-300 mt-2">
-                  These figures are estimates based on the 2024/25 UK PAYE rules and your inputs. They&apos;re for guidance only and not an official HMRC calculation.
-                </p>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </section>
       )}
 
@@ -1224,6 +1244,218 @@ export function PeriodicTaxTab() {
             </div>
           )}
         </section>
+      )}
+
+      {/* Mobile: sticky summary bar + details drawer */}
+      {latestResult && (
+        <>
+          {!mobileSummaryMinimized ? (
+            <div className="md:hidden fixed inset-x-0 bottom-0 z-50 border-t border-sea-jet-700/40 bg-sea-jet-900/90 backdrop-blur">
+              <div className="mx-auto max-w-5xl px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-navy-300">
+                      YTD summary · Period {periods[periods.length - 1]?.periodIndex || 0} / {totalPeriodsInYear}
+                    </p>
+                    <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+                      <div className="min-w-0">
+                        <p className="text-[11px] text-navy-200">Net (YTD)</p>
+                        <p className="truncate text-sm font-semibold text-emerald-400">
+                          {formatGBP(latestResult.ytdActual.net)}
+                        </p>
+                      </div>
+                      <div className="min-w-0 text-right">
+                        <p className="text-[11px] text-navy-200">Variance</p>
+                        <p
+                          className={`truncate text-sm font-semibold ${
+                            latestResult.variance.direction === "over"
+                              ? "text-amber-300"
+                              : latestResult.variance.direction === "under"
+                              ? "text-rose-300"
+                              : "text-navy-100"
+                          }`}
+                          aria-label={`Cumulative variance: ${getVarianceText(latestResult.variance.direction)}`}
+                        >
+                          {latestResult.variance.direction === "over"
+                            ? "+"
+                            : latestResult.variance.direction === "under"
+                            ? "-"
+                            : ""}
+                          {formatGBP(Math.abs(latestResult.variance.amount))}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMobileSummaryMinimized(true)}
+                      className="rounded-xl border border-sea-jet-700/40 bg-sea-jet-800/60 px-3 py-2 text-xs font-semibold text-navy-50 shadow-sm shadow-navy-900/40 transition hover:bg-sea-jet-800/80"
+                      aria-label="Minimise summary"
+                    >
+                      Minimise
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileSummaryOpen(true)}
+                      className="rounded-xl border border-sea-jet-700/40 bg-sea-jet-800/60 px-3 py-2 text-xs font-semibold text-navy-50 shadow-sm shadow-navy-900/40 transition hover:bg-sea-jet-800/80"
+                    >
+                      Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="md:hidden fixed inset-x-0 bottom-0 z-50">
+              <div className="mx-auto max-w-5xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setMobileSummaryMinimized(false)}
+                    className="inline-flex items-center gap-2 rounded-full border border-sea-jet-700/40 bg-sea-jet-900/90 px-3 py-2 text-xs font-semibold text-navy-50 shadow-lg shadow-navy-900/40 backdrop-blur"
+                    aria-label="Expand summary"
+                  >
+                    <span className="text-navy-200">Summary</span>
+                    <span className="font-semibold text-emerald-400">
+                      {formatGBP(latestResult.ytdActual.net)}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mobileSummaryOpen && (
+            <div className="md:hidden fixed inset-0 z-[60]">
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/60"
+                aria-label="Close summary"
+                onClick={() => setMobileSummaryOpen(false)}
+              />
+
+              <div className="absolute inset-x-0 bottom-0 max-h-[78vh] overflow-auto rounded-t-3xl border-t border-sea-jet-700/40 bg-sea-jet-900/95 backdrop-blur">
+                <div className="px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-navy-300">
+                        Year-to-date summary
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-navy-50">
+                        Period {periods[periods.length - 1]?.periodIndex || 0} of {totalPeriodsInYear}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMobileSummaryOpen(false)}
+                      className="rounded-xl border border-sea-jet-700/40 bg-sea-jet-800/60 px-3 py-2 text-xs font-semibold text-navy-50"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="mt-4 grid gap-3">
+                    <div className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-800/40 p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-navy-300">
+                        Actual YTD
+                      </p>
+                      <dl className="mt-2 space-y-1.5 text-sm">
+                        <div className="flex items-center justify-between gap-3">
+                          <dt className="text-navy-200">Gross</dt>
+                          <dd className="font-semibold text-navy-50">{formatGBP(latestResult.ytdActual.gross)}</dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <dt className="text-navy-200">PAYE</dt>
+                          <dd className="font-semibold text-navy-50">{formatGBP(latestResult.ytdActual.paye)}</dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <dt className="text-navy-200">NI</dt>
+                          <dd className="font-semibold text-navy-50">{formatGBP(latestResult.ytdActual.ni)}</dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <dt className="text-navy-200">Student loan</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdActual.studentLoan)}
+                          </dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 border-t border-sea-jet-700/30 pt-2">
+                          <dt className="text-navy-100 font-medium">Net</dt>
+                          <dd className="font-semibold text-emerald-400">{formatGBP(latestResult.ytdActual.net)}</dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <div className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-800/40 p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-navy-300">
+                        Expected YTD (projected)
+                      </p>
+                      <dl className="mt-2 space-y-1.5 text-sm">
+                        <div className="flex items-center justify-between gap-3">
+                          <dt className="text-navy-200">Gross</dt>
+                          <dd className="font-semibold text-navy-50">{formatGBP(latestResult.ytdExpected.gross)}</dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <dt className="text-navy-200">PAYE</dt>
+                          <dd className="font-semibold text-navy-50">{formatGBP(latestResult.ytdExpected.paye)}</dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <dt className="text-navy-200">NI</dt>
+                          <dd className="font-semibold text-navy-50">{formatGBP(latestResult.ytdExpected.ni)}</dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <dt className="text-navy-200">Student loan</dt>
+                          <dd className="font-semibold text-navy-50">
+                            {formatGBP(latestResult.ytdExpected.studentLoan)}
+                          </dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 border-t border-sea-jet-700/30 pt-2">
+                          <dt className="text-navy-100 font-medium">Net</dt>
+                          <dd className="font-semibold text-emerald-400">{formatGBP(latestResult.ytdExpected.net)}</dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <div className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-800/40 p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-navy-300">
+                        Cumulative variance
+                      </p>
+                      <p
+                        className={`mt-2 text-lg font-semibold ${
+                          latestResult.variance.direction === "over"
+                            ? "text-amber-300"
+                            : latestResult.variance.direction === "under"
+                            ? "text-rose-300"
+                            : "text-navy-50"
+                        }`}
+                      >
+                        {latestResult.variance.direction === "over"
+                          ? "+"
+                          : latestResult.variance.direction === "under"
+                          ? "-"
+                          : ""}
+                        {formatGBP(Math.abs(latestResult.variance.amount))}
+                        <span className="ml-2 text-xs font-medium text-navy-200">
+                          ({getVarianceText(latestResult.variance.direction)})
+                        </span>
+                      </p>
+                      {actualTaxAnalysis && (
+                        <p className="mt-2 text-xs text-navy-300">
+                          You&apos;ve entered actual PAYE for {actualTaxAnalysis.items.length} period
+                          {actualTaxAnalysis.items.length === 1 ? "" : "s"}.
+                        </p>
+                      )}
+                      <p className="mt-2 text-[11px] text-navy-300">
+                        Estimates only — not an official HMRC calculation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

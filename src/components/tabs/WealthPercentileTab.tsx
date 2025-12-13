@@ -12,7 +12,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-import type { TooltipProps } from "recharts";
+import type { TooltipContentProps } from "recharts";
 import {
   getIncomePercentileForAge,
   type IncomePercentileResult,
@@ -54,13 +54,12 @@ const PERCENTILE_SEGMENTS = [
 type IncomeTooltipPayload = { name: string; value: number };
 
 function IncomeComparisonTooltip(
-  props: TooltipProps<any, any> & { payload?: unknown[] },
+  props: TooltipContentProps<number, string>,
 ) {
   const { active, payload } = props;
-  if (!active || !payload || payload.length === 0) return null;
-  const first = payload[0] as { payload?: IncomeTooltipPayload };
-  if (!first.payload) return null;
-  const p = first.payload;
+  const first = payload?.[0];
+  const p = first?.payload as IncomeTooltipPayload | undefined;
+  if (!active || !p) return null;
   return (
     <div className="rounded-lg border border-brand-border/60 bg-brand-bg/95 px-3 py-2 text-xs shadow-md">
       <p className="font-semibold text-brand-text">{p.name}</p>
@@ -69,8 +68,7 @@ function IncomeComparisonTooltip(
   );
 }
 
-type PercentileTooltipProps = TooltipProps<number, string> & {
-  payload?: readonly unknown[];
+type PercentileTooltipProps = TooltipContentProps<number, string> & {
   ageBand?: IncomePercentileResult["ageBand"];
   clampedPercentile?: number | null;
 };
@@ -78,8 +76,8 @@ type PercentileTooltipProps = TooltipProps<number, string> & {
 function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
   const { active, payload, ageBand, clampedPercentile } = props;
   if (!active || !payload || payload.length === 0 || !ageBand) return null;
-  const first = payload[0] as { dataKey?: string };
-  const key = first.dataKey;
+  const dataKey = payload[0]?.dataKey;
+  const key = typeof dataKey === "string" ? dataKey : null;
   const seg = key ? PERCENTILE_SEGMENTS.find((s) => s.key === key) : undefined;
   if (!seg) return null;
 
@@ -513,7 +511,12 @@ export function WealthPercentileTab({
                     tickLine={false}
                     width={70}
                   />
-                  <Tooltip content={<IncomeComparisonTooltip />} cursor={{ fill: "transparent" }} />
+                  <Tooltip
+                    cursor={{ fill: "transparent" }}
+                    content={(p) => (
+                      <IncomeComparisonTooltip {...(p as TooltipContentProps<number, string>)} />
+                    )}
+                  />
                   <Bar
                     dataKey="value"
                     radius={4}
@@ -558,7 +561,16 @@ export function WealthPercentileTab({
                     tickLine={false}
                   />
                   <YAxis type="category" dataKey="name" hide />
-                  <Tooltip cursor={{ fill: "transparent" }} content={undefined} />
+                  <Tooltip
+                    cursor={{ fill: "transparent" }}
+                    content={(p) => (
+                      <PercentileBreakdownTooltip
+                        {...(p as TooltipContentProps<number, string>)}
+                        ageBand={result.ageBand}
+                        clampedPercentile={clampedPercentile}
+                      />
+                    )}
+                  />
                   <ReferenceLine
                     x={Math.min(100, Math.max(0, clampedPercentile ?? 0))}
                     stroke={INCOME_COMPARISON_COLORS.you}
