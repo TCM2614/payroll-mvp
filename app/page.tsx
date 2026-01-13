@@ -6,6 +6,7 @@ import { TAX_YEAR } from "./lib/taxYear";
 import { useState } from "react";
 
 import AppShell from "@/components/layout/AppShell";
+import { TakeHomeCalculator } from "@/components/take-home-calculator";
 
 import FeedbackModal from "@/components/landing/FeedbackModal";
 
@@ -95,6 +96,21 @@ export default function LandingPage() {
 
           </p>
 
+        </section>
+
+        {/* Calculator */}
+        <section className="mt-10 w-full max-w-5xl">
+          <div className="rounded-3xl border border-brand-border/60 bg-brand-surface/80 p-4 shadow-soft-xl backdrop-blur sm:p-6">
+            <TakeHomeCalculator />
+          </div>
+          <div className="mt-3 flex justify-center">
+            <Link
+              href="/calc"
+              className="text-xs text-white/60 hover:text-white/80 transition-colors"
+            >
+              Prefer the full-page calculator? Open /calc
+            </Link>
+          </div>
         </section>
 
         {/* Simple 3-column trust strip */}
