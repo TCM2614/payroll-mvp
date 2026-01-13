@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TAX_YEAR } from "./lib/taxYear";
 
 
 
@@ -9,6 +10,9 @@ export default function Home() {
   return (
 
     <main className="mx-auto max-w-2xl px-6 py-16 text-center">
+      <div className="mb-4 inline-flex rounded-full border border-zinc-200 px-3 py-1 text-sm text-zinc-700 dark:border-zinc-800 dark:text-zinc-300">
+        Tax year {TAX_YEAR}
+      </div>
 
       <h1 className="mb-4 text-4xl font-bold">UK Payroll Take-Home Calculator</h1>
 
