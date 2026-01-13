@@ -1,5 +1,5 @@
 /**
- * Period-based PAYE calculation engine for UK tax year 2024/25
+ * Period-based PAYE calculation engine for UK tax year 2025/26
  * 
  * Calculates tax for specific periods within the tax year and detects
  * mid-year over-taxation or underpayment.
@@ -13,7 +13,7 @@ import { UK_TAX_2025 } from "@/lib/tax/uk2025";
 export type PayFrequency = "monthly" | "weekly" | "four-weekly";
 
 export interface TaxYearConfig {
-  taxYear: "2024-25";
+  taxYear: "2025-26";
   personalAllowance: number;
   basicRateLimit: number;
   higherRateLimit: number;
@@ -58,7 +58,7 @@ export interface AnnualTaxBreakdown {
 }
 
 export interface PeriodTaxInput {
-  taxYear: "2024-25";
+  taxYear: "2025-26";
   payFrequency: PayFrequency;
   /** 1-based index of the current pay period within the tax year (e.g. 1–12 for monthly). */
   periodIndex: number;
@@ -698,11 +698,11 @@ function formatGBP(amount: number): string {
 }
 
 /**
- * Create UK 2024/25 tax year configuration
+ * Create UK 2025/26 tax year configuration
  */
 export function createUK2025Config(): TaxYearConfig {
   return {
-    taxYear: "2024-25",
+    taxYear: "2025-26",
     personalAllowance: UK_TAX_2025.personalAllowance,
     basicRateLimit: UK_TAX_2025.basicBandTop,
     higherRateLimit: UK_TAX_2025.higherBandTop,

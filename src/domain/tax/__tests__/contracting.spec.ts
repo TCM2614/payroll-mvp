@@ -19,7 +19,7 @@ describe("deriveGrossAnnualFromContractorInputs", () => {
   const baseInput: ContractorInputs = {
     engagementType: "umbrella",
     ir35Status: "inside",
-    taxYear: "2024-25",
+    taxYear: "2025-26",
     taxCode: "1257L",
   };
 
@@ -121,7 +121,7 @@ describe("deriveGrossAnnualFromContractorInputs", () => {
 describe("calculateContractorAnnual", () => {
   const createMockDeps = (): ContractorEngineDeps => {
     return {
-      createConfigForYear: (taxYear: "2024-25"): TaxYearConfig => {
+      createConfigForYear: (taxYear: "2025-26"): TaxYearConfig => {
         return createUK2025Config();
       },
       calculateAnnual: (input: {
@@ -153,7 +153,7 @@ describe("calculateContractorAnnual", () => {
       ir35Status: "inside",
       dayRate: 500,
       daysPerWeek: 5,
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       taxCode: "1257L",
       pensionEmployeePercent: 5,
       studentLoanPlan: "plan2",
@@ -174,7 +174,7 @@ describe("calculateContractorAnnual", () => {
       engagementType: "limited",
       ir35Status: "inside",
       monthlyRate: 5000,
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       taxCode: "1257L",
       pensionEmployeePercent: 5,
     };
@@ -192,7 +192,7 @@ describe("calculateContractorAnnual", () => {
       ir35Status: "outside",
       dayRate: 500,
       daysPerWeek: 5,
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       taxCode: "1257L",
     };
 
@@ -207,7 +207,7 @@ describe("calculateContractorAnnual", () => {
     const input: ContractorInputs = {
       engagementType: "umbrella",
       ir35Status: "inside",
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       taxCode: "1257L",
     };
 
@@ -224,7 +224,7 @@ describe("calculateContractorAnnual", () => {
       ir35Status: "inside",
       hourlyRate: 50,
       // Missing required hoursPerDay and daysPerWeek
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       taxCode: "1257L",
     };
 

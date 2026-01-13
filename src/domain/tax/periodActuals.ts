@@ -51,7 +51,7 @@ export interface PeriodActualAnalysisResult {
 }
 
 export interface PeriodActualAnalysisConfig {
-  taxYear: "2024-25";
+  taxYear: "2025-26";
   payFrequency: PayFrequency;
   totalPeriodsInYear: number;
   baseTaxCode: string;

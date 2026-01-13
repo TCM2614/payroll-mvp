@@ -75,7 +75,7 @@ export function testEmergencyTaxCodeOverride(): void {
     const effectiveTaxCode = getEffectiveTaxCode(row.taxCode, globalTaxCode);
 
     const input: PeriodTaxInput = {
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       payFrequency,
       periodIndex: row.periodIndex,
       totalPeriodsInYear,
@@ -185,7 +185,7 @@ export function testBRTaxCodeOverride(): void {
   }
 
   const input: PeriodTaxInput = {
-    taxYear: "2024-25",
+    taxYear: "2025-26",
     payFrequency,
     periodIndex: row.periodIndex,
     totalPeriodsInYear,

@@ -11,7 +11,7 @@ import { calculateAnnualTax, createUK2025Config, type TaxYearConfig } from "./pe
 import { UK_TAX_2025 } from "@/lib/tax/uk2025";
 import type { LoanKey } from "@/lib/tax/uk2025";
 
-export type TaxYear = "2024-25";
+export type TaxYear = "2025-26";
 
 export type EmploymentKind = "main" | "additional";
 

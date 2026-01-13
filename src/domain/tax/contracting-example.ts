@@ -20,7 +20,7 @@
  *   ir35Status: "inside",
  *   dayRate: 500,
  *   daysPerWeek: 5,
- *   taxYear: "2024-25",
+ *   taxYear: "2025-26",
  *   taxCode: "1257L",
  *   pensionEmployeePercent: 5,
  *   studentLoanPlan: "plan2",
@@ -42,7 +42,7 @@ const umbrellaExample: ContractorInputs = {
   ir35Status: "inside", // Umbrella is always inside, but we still need to specify
   dayRate: 500,
   daysPerWeek: 5,
-  taxYear: "2024-25",
+  taxYear: "2025-26",
   taxCode: "1257L",
   pensionEmployeePercent: 5,
   studentLoanPlan: "plan2",
@@ -58,7 +58,7 @@ const limitedInsideIR35: ContractorInputs = {
   hourlyRate: 50,
   hoursPerDay: 7.5,
   daysPerWeek: 5,
-  taxYear: "2024-25",
+  taxYear: "2025-26",
   taxCode: "1257L",
   pensionEmployeePercent: 5,
   studentLoanPlan: "none",
@@ -72,7 +72,7 @@ const limitedOutsideIR35: ContractorInputs = {
   engagementType: "limited",
   ir35Status: "outside",
   monthlyRate: 10000,
-  taxYear: "2024-25",
+  taxYear: "2025-26",
   taxCode: "1257L",
   pensionEmployeePercent: 0,
   studentLoanPlan: "none",
@@ -85,7 +85,7 @@ const limitedOutsideIR35: ContractorInputs = {
 const invalidInput: ContractorInputs = {
   engagementType: "umbrella",
   ir35Status: "inside",
-  taxYear: "2024-25",
+  taxYear: "2025-26",
   taxCode: "1257L",
 };
 

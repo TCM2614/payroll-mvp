@@ -32,7 +32,7 @@ describe("calculatePeriodTax", () => {
       // Calculate first 6 months
       for (let period = 1; period <= 6; period++) {
         const input: PeriodTaxInput = {
-          taxYear: "2024-25",
+          taxYear: "2025-26",
           payFrequency: "monthly",
           periodIndex: period,
           totalPeriodsInYear: 12,
@@ -90,7 +90,7 @@ describe("calculatePeriodTax", () => {
       // First 3 months: high income (£5,000/month = £60k annual)
       for (let period = 1; period <= 3; period++) {
         const input: PeriodTaxInput = {
-          taxYear: "2024-25",
+          taxYear: "2025-26",
           payFrequency: "monthly",
           periodIndex: period,
           totalPeriodsInYear: 12,
@@ -115,7 +115,7 @@ describe("calculatePeriodTax", () => {
       // Then 3 months: lower income (£2,000/month = £24k annual)
       for (let period = 4; period <= 6; period++) {
         const input: PeriodTaxInput = {
-          taxYear: "2024-25",
+          taxYear: "2025-26",
           payFrequency: "monthly",
           periodIndex: period,
           totalPeriodsInYear: 12,
@@ -163,7 +163,7 @@ describe("calculatePeriodTax", () => {
       // First 3 months: low income (£1,000/month)
       for (let period = 1; period <= 3; period++) {
         const input: PeriodTaxInput = {
-          taxYear: "2024-25",
+          taxYear: "2025-26",
           payFrequency: "monthly",
           periodIndex: period,
           totalPeriodsInYear: 12,
@@ -188,7 +188,7 @@ describe("calculatePeriodTax", () => {
       // Then 3 months: high income (£5,000/month)
       for (let period = 4; period <= 6; period++) {
         const input: PeriodTaxInput = {
-          taxYear: "2024-25",
+          taxYear: "2025-26",
           payFrequency: "monthly",
           periodIndex: period,
           totalPeriodsInYear: 12,
@@ -228,7 +228,7 @@ describe("calculatePeriodTax", () => {
   describe("Emergency / non-cumulative tax codes", () => {
     it("should detect non-cumulative tax code (W1/M1)", () => {
       const input: PeriodTaxInput = {
-        taxYear: "2024-25",
+        taxYear: "2025-26",
         payFrequency: "monthly",
         periodIndex: 1,
         totalPeriodsInYear: 12,
@@ -251,7 +251,7 @@ describe("calculatePeriodTax", () => {
 
     it("should detect emergency tax code (0T, BR, D0)", () => {
       const input: PeriodTaxInput = {
-        taxYear: "2024-25",
+        taxYear: "2025-26",
         payFrequency: "monthly",
         periodIndex: 1,
         totalPeriodsInYear: 12,
@@ -284,7 +284,7 @@ describe("calculatePeriodTax", () => {
       // First 5 months: normal income
       for (let period = 1; period <= 5; period++) {
         const input: PeriodTaxInput = {
-          taxYear: "2024-25",
+          taxYear: "2025-26",
           payFrequency: "monthly",
           periodIndex: period,
           totalPeriodsInYear: 12,
@@ -308,7 +308,7 @@ describe("calculatePeriodTax", () => {
 
       // 6th month: large spike (3x average)
       const input: PeriodTaxInput = {
-        taxYear: "2024-25",
+        taxYear: "2025-26",
         payFrequency: "monthly",
         periodIndex: 6,
         totalPeriodsInYear: 12,
@@ -343,7 +343,7 @@ describe("aggregatePeriodRange", () => {
     // Create 4 periods
     for (let period = 1; period <= 4; period++) {
       const input: PeriodTaxInput = {
-        taxYear: "2024-25",
+        taxYear: "2025-26",
         payFrequency: "monthly",
         periodIndex: period,
         totalPeriodsInYear: 12,

@@ -11,7 +11,7 @@ import { createUK2025Config } from "../periodTax";
 
 describe("analyseActualVsExpectedTax", () => {
   const baseConfig: PeriodActualAnalysisConfig = {
-    taxYear: "2024-25",
+    taxYear: "2025-26",
     payFrequency: "monthly",
     totalPeriodsInYear: 12,
     baseTaxCode: "1257L",

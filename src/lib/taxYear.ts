@@ -10,7 +10,8 @@
 
 export type TaxYearLabel = "2024-25" | "2025-26";
 
-export const TAX_YEAR_OPTIONS: TaxYearLabel[] = ["2024-25", "2025-26"];
+// The site currently supports and displays the latest tax year only.
+export const TAX_YEAR_OPTIONS: TaxYearLabel[] = ["2025-26"];
 
 /**
  * Minimal tax-year configuration shape for UI/analytics.

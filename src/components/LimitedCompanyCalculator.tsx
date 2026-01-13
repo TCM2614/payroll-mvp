@@ -44,7 +44,7 @@ export function LimitedCompanyCalculator() {
       daysPerWeek,
       hourlyRate,
       hoursPerDay,
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       taxCode,
       pensionEmployeePercent: pensionPct,
       studentLoanPlan: loans.length > 0 ? (loans[0] as ContractorInputs["studentLoanPlan"]) : undefined,

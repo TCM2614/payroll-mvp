@@ -21,7 +21,7 @@ export function exampleSinglePeriod() {
 
   // Month 6 of the tax year
   const input: PeriodTaxInput = {
-    taxYear: "2024-25",
+    taxYear: "2025-26",
     payFrequency: "monthly",
     periodIndex: 6,
     totalPeriodsInYear: 12,
@@ -64,7 +64,7 @@ export function exampleFullTaxYear() {
   // Calculate all 12 months
   for (let month = 1; month <= 12; month++) {
     const input: PeriodTaxInput = {
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       payFrequency: "monthly",
       periodIndex: month,
       totalPeriodsInYear: 12,
@@ -108,7 +108,7 @@ export function exampleOverTaxation() {
   // First 3 months: high income (£5,000/month)
   for (let month = 1; month <= 3; month++) {
     const input: PeriodTaxInput = {
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       payFrequency: "monthly",
       periodIndex: month,
       totalPeriodsInYear: 12,
@@ -133,7 +133,7 @@ export function exampleOverTaxation() {
   // Next 3 months: lower income (£2,000/month)
   for (let month = 4; month <= 6; month++) {
     const input: PeriodTaxInput = {
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       payFrequency: "monthly",
       periodIndex: month,
       totalPeriodsInYear: 12,
@@ -210,7 +210,7 @@ export function exampleWeeklyPay() {
   // Calculate first 26 weeks (half year)
   for (let week = 1; week <= 26; week++) {
     const input: PeriodTaxInput = {
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       payFrequency: "weekly",
       periodIndex: week,
       totalPeriodsInYear: 52,
@@ -242,7 +242,7 @@ export function exampleEmergencyTaxCode() {
   const config = createUK2025Config();
 
   const input: PeriodTaxInput = {
-    taxYear: "2024-25",
+    taxYear: "2025-26",
     payFrequency: "monthly",
     periodIndex: 1,
     totalPeriodsInYear: 12,

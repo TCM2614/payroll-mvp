@@ -119,7 +119,7 @@ export function PeriodicTaxTab() {
     }
     
     const input: PeriodTaxInput = {
-      taxYear: "2024-25",
+      taxYear: "2025-26",
       payFrequency,
       periodIndex: row.periodIndex,
       totalPeriodsInYear,
@@ -161,7 +161,7 @@ export function PeriodicTaxTab() {
 
     return analyseActualVsExpectedTax(
       {
-        taxYear: "2024-25",
+        taxYear: "2025-26",
         payFrequency,
         totalPeriodsInYear,
         baseTaxCode: taxCode,
@@ -325,7 +325,7 @@ export function PeriodicTaxTab() {
           Periodic PAYE Check
         </h2>
         <p className="mt-1 text-sm text-navy-200">
-          Analyse your PAYE tax on a period-by-period basis. Enter your actual pay for each period and we&apos;ll compare what you&apos;ve paid so far against what you&apos;d usually expect for this point in the 2024/25 tax year.
+          Analyse your PAYE tax on a period-by-period basis. Enter your actual pay for each period and we&apos;ll compare what you&apos;ve paid so far against what you&apos;d usually expect for this point in the 2025/26 tax year.
         </p>
       </header>
 
@@ -989,7 +989,7 @@ export function PeriodicTaxTab() {
                     </p>
                   )}
                   <p className="text-[11px] text-navy-300 mt-2">
-                    These figures are estimates based on the 2024/25 UK PAYE rules and your
+                    These figures are estimates based on the 2025/26 UK PAYE rules and your
                     inputs. They&apos;re for guidance only and not an official HMRC calculation.
                   </p>
                 </div>
@@ -1126,7 +1126,7 @@ export function PeriodicTaxTab() {
               })()}
 
               <p className="text-[11px] text-navy-300 mt-2">
-                These figures are estimates based on the 2024/25 UK PAYE rules and your inputs. They are for guidance only and not an official HMRC calculation.
+                These figures are estimates based on the 2025/26 UK PAYE rules and your inputs. They are for guidance only and not an official HMRC calculation.
               </p>
             </div>
           </div>
