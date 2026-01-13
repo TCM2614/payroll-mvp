@@ -73,13 +73,18 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logError("Early access signup error", err, { endpoint: "/api/early-access" });
     const message =
-      err?.issues?.[0]?.message ??
-      err?.message ??
-      "Something went wrong. Please try again.";
+      err instanceof z.ZodError
+        ? err.issues?.[0]?.message
+        : err instanceof Error
+          ? err.message
+          : undefined;
 
-    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: message ?? "Something went wrong. Please try again." },
+      { status: 400 },
+    );
   }
 }

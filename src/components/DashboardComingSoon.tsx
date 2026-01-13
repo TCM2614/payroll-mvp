@@ -103,7 +103,7 @@ export function DashboardComingSoon() {
             <ul className="list-disc pl-4 space-y-1 text-brand-textMuted opacity-80">
               <li>Log fixed bills and everyday spending.</li>
               <li>Tag and group categories to see where money leaks.</li>
-              <li>Get a "safe to spend" number matched to your net pay.</li>
+              <li>Get a &quot;safe to spend&quot; number matched to your net pay.</li>
             </ul>
           </section>
 

@@ -36,16 +36,14 @@ export default function EmailSignupSection({
       }
 
       // Track email signup goal
-      if (typeof window !== "undefined" && (window as any).plausible) {
-        (window as any).plausible("email_signup", { props: { source: "landing_page" } });
-      }
+      window.plausible?.("email_signup", { props: { source: "landing_page" } });
 
       setStatus("success");
       setEmail("");
       if (onSuccess) onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("idle"); // back to idle, we show error message separately
-      setError(err.message || "Something went wrong. Please try again.");
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     }
   };
 

@@ -174,6 +174,7 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
 
   // Calculate multi-job scenario with per-job and combined breakdowns
   // Use calcPAYECombined for proper multi-job handling with shared PA allocation
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const calculationResult = useMemo(() => {
     const loans = studentLoanSelectionToLoanKeys(studentLoanSelection);
     
@@ -232,7 +233,7 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
       jobs: jobBreakdowns,
       combined,
     };
-  }, [studentLoanSelection, allJobs, pensionPct, sippPersonal, hoursPerWeek]);
+  }, [studentLoanSelection, allJobs, pensionPct, sippPersonal, hoursPerWeek, taxYear]);
 
   // Expose combined gross/net up to the parent for use in other tabs (e.g. wealth percentile)
   useEffect(() => {

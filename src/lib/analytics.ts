@@ -59,7 +59,7 @@ export function trackEvent(
   }
 
   // Fire-and-forget call to Plausible
-  (window as any).plausible?.(name, { props });
+  window.plausible?.(name, { props });
 }
 
 /**

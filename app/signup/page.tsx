@@ -27,9 +27,7 @@ export default function SignupPage() {
 
       if (response.ok) {
         // Track email signup goal
-        if (typeof window !== "undefined" && (window as any).plausible) {
-          (window as any).plausible("email_signup", { props: { source: "signup-page" } });
-        }
+        window.plausible?.("email_signup", { props: { source: "signup-page" } });
         setIsSubmitted(true);
       } else {
         const error = await response.json();

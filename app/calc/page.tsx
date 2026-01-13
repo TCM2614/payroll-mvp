@@ -122,7 +122,7 @@ export default function CalcPage() {
                 Does it cover student loans?
               </h3>
               <p className="text-sm text-brand-textMuted">
-                Yes. The calculator supports Plan 1, Plan 2, Plan 4, Plan 5 and Postgraduate loan repayments, using the correct thresholds and rates for the 2024/25 tax year.
+                Yes. The calculator supports Plan 1, Plan 2, Plan 4, Plan 5 and Postgraduate loan repayments, using the correct thresholds and rates for the {TAX_YEAR} tax year.
               </p>
             </div>
 

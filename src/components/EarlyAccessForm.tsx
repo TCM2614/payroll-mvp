@@ -28,12 +28,10 @@ export function EarlyAccessForm() {
       setEmail("");
 
       // Track email signup goal
-      if (typeof window !== "undefined" && (window as any).plausible) {
-        (window as any).plausible("email_signup", { props: { source: "early_access_form" } });
-      }
-    } catch (err: any) {
+      window.plausible?.("email_signup", { props: { source: "early_access_form" } });
+    } catch (err: unknown) {
       setStatus("error");
-      setError(err.message || "Something went wrong");
+      setError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 

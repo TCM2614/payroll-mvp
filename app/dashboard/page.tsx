@@ -145,7 +145,7 @@ export default function DashboardPage() {
               Dashboard: from payslip to plan
             </h1>
             <p className="text-sm md:text-base text-brand-textMuted opacity-80 max-w-2xl">
-              Turn your payslip into a financial plan. The dashboard connects your take-home pay calculations to expense tracking, debt management, and savings goals – all powered by the same accurate UK tax calculator you're using now.
+              Turn your payslip into a financial plan. The dashboard connects your take-home pay calculations to expense tracking, debt management, and savings goals – all powered by the same accurate UK tax calculator you&apos;re using now.
             </p>
           </header>
 
@@ -163,7 +163,7 @@ export default function DashboardPage() {
               <ul className="list-disc pl-4 space-y-1 text-brand-textMuted opacity-80">
                 <li>Log fixed bills and everyday spending.</li>
                 <li>Tag and group categories to see where money leaks.</li>
-                <li>Get a "safe to spend" number matched to your net pay.</li>
+                <li>Get a &quot;safe to spend&quot; number matched to your net pay.</li>
               </ul>
             </section>
 

@@ -21,6 +21,10 @@ export default function LandingPage() {
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
+  type PlausibleWindow = Window & {
+    plausible?: (eventName: string, options?: { props?: Record<string, string> }) => void;
+  };
+
   return (
 
     <AppShell>
@@ -66,9 +70,9 @@ export default function LandingPage() {
               href="/calc"
 
               onClick={() => {
-                if (typeof window !== "undefined" && (window as any).plausible) {
-                  (window as any).plausible("cta_click", { props: { cta: "calculate_take_home_pay", location: "landing_hero" } });
-                }
+                (window as PlausibleWindow).plausible?.("cta_click", {
+                  props: { cta: "calculate_take_home_pay", location: "landing_hero" },
+                });
               }}
 
               className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
