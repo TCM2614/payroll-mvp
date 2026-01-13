@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050816;
+  --foreground: #E5E7EB;
 }
 
 @theme inline {
@@ -10,17 +10,34 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  
+  /* Brand Colors */
+  --color-brand-bg: #050816;
+  --color-brand-surface: #070B17;
+  --color-brand-primary: #3B82F6;
+  --color-brand-primarySoft: #1D4ED8;
+  --color-brand-accent: #22C55E;
+  --color-brand-accentSoft: #16A34A;
+  --color-brand-border: #1F2937;
+  --color-brand-muted: #9CA3AF;
+  --color-brand-text: #E5E7EB;
+  --color-brand-textMuted: #6B7280;
+  --color-brand-warning: #FBBF24;
+  --color-brand-danger: #F97373;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Utility class for hiding scrollbars while maintaining scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
