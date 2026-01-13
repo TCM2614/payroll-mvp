@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/preserve-manual-memoization */
+
 import { useState, useEffect, useMemo } from "react";
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
@@ -174,7 +176,6 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
 
   // Calculate multi-job scenario with per-job and combined breakdowns
   // Use calcPAYECombined for proper multi-job handling with shared PA allocation
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const calculationResult = useMemo(() => {
     const loans = studentLoanSelectionToLoanKeys(studentLoanSelection);
     
