@@ -7,13 +7,9 @@ import { useState } from "react";
 
 import AppShell from "@/components/layout/AppShell";
 
-import EmailSignupSection from "@/components/landing/EmailSignupSection";
-
 import FeedbackModal from "@/components/landing/FeedbackModal";
 
 import CookieBanner from "@/components/landing/CookieBanner";
-
-import { EarlyAccessForm } from "@/components/EarlyAccessForm";
 
 
 
@@ -39,7 +35,7 @@ export default function LandingPage() {
 
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
 
-            Early access · UK tax year {TAX_YEAR}
+            UK tax year {TAX_YEAR}
 
           </div>
 
@@ -54,14 +50,6 @@ export default function LandingPage() {
           <p className="mt-4 text-balance text-sm text-white/70 sm:text-base">
             Instant UK take-home pay calculator. Accurate PAYE, Umbrella and Limited Company tax breakdowns with student loan, pension and salary sacrifice support — updated for the {TAX_YEAR} tax year.
           </p>
-
-          <p className="mt-5 text-sm text-white/80">
-            Join early access to save and compare your take-home pay scenarios.
-          </p>
-
-          <div className="mt-4 flex justify-center">
-            <EarlyAccessForm />
-          </div>
 
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
 
@@ -108,14 +96,6 @@ export default function LandingPage() {
           </p>
 
         </section>
-
-
-
-        {/* Email signup */}
-
-        <EmailSignupSection />
-
-
 
         {/* Simple 3-column trust strip */}
 
