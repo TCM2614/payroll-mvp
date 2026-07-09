@@ -113,7 +113,7 @@ export function AdditionalJobsTab() {
     // Calculate using domain function
     try {
       return calculateMultiJob({
-        taxYear: "2025-26",
+        taxYear: "2026-27",
         jobs: jobInputs,
         studentLoan: {
           plans: loans,

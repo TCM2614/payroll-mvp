@@ -1,6 +1,6 @@
 /**
- * Contractor calculation engine for UK tax year 2025/26
- * 
+ * Contractor calculation engine for UK tax years 2025/26 and 2026/27.
+ *
  * Provides safe, explicit calculations for:
  * - Umbrella (inside IR35) → PAYE-like treatment
  * - Limited company + IR35 flag → inside IR35 uses PAYE-like treatment
@@ -12,6 +12,7 @@
 
 import {
   type AnnualTaxBreakdown,
+  type SupportedTaxYear,
   type TaxYearConfig,
 } from "./periodTax";
 
@@ -31,7 +32,7 @@ export interface ContractorInputs {
   monthlyRate?: number;
 
   /** Tax-year + PAYE config. */
-  taxYear: "2025-26";
+  taxYear: SupportedTaxYear;
   taxCode: string;
   pensionEmployeePercent?: number;
   studentLoanPlan?: "none" | "plan1" | "plan2" | "plan4" | "plan5" | "postgrad";
@@ -126,7 +127,7 @@ export function deriveGrossAnnualFromContractorInputs(input: ContractorInputs): 
  * Allows injection of tax calculation logic for testability.
  */
 export interface ContractorEngineDeps {
-  createConfigForYear(taxYear: "2025-26"): TaxYearConfig;
+  createConfigForYear(taxYear: SupportedTaxYear): TaxYearConfig;
   calculateAnnual(input: {
     grossAnnualIncome: number;
     taxCode: string;

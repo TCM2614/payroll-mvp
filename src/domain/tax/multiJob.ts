@@ -7,11 +7,16 @@
  * Pure TypeScript domain functions - deterministic, side-effect free.
  */
 
-import { calculateAnnualTax, createUK2025Config, type TaxYearConfig } from "./periodTax";
-import { UK_TAX_2025 } from "@/lib/tax/uk2025";
+import {
+  calculateAnnualTax,
+  createConfigForYear,
+  type SupportedTaxYear,
+  type TaxYearConfig,
+} from "./periodTax";
+import { getPayeTaxConfig } from "@/lib/tax/uk2025";
 import type { LoanKey } from "@/lib/tax/uk2025";
 
-export type TaxYear = "2025-26";
+export type TaxYear = SupportedTaxYear;
 
 export type EmploymentKind = "main" | "additional";
 
@@ -79,9 +84,9 @@ export interface MultiJobCalculationResult {
  */
 export function calculateMultiJob(input: MultiJobInput): MultiJobCalculationResult {
   const { taxYear, jobs, studentLoan } = input;
-  
-  // Get tax year config
-  const config = createUK2025Config();
+
+  const config: TaxYearConfig = createConfigForYear(taxYear);
+  const rates = getPayeTaxConfig(taxYear);
   
   // Validate at least one job
   if (jobs.length === 0) {
@@ -153,7 +158,7 @@ export function calculateMultiJob(input: MultiJobInput): MultiJobCalculationResu
   };
   
   for (const loanKey of studentLoan.plans) {
-    const loan = UK_TAX_2025.studentLoans[loanKey];
+    const loan = rates.studentLoans[loanKey];
     if (!loan) continue;
     const repayable = Math.max(0, totalGrossAnnual - loan.threshold);
     const amount = repayable * loan.rate;

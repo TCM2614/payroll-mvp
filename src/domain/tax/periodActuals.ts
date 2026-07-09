@@ -12,6 +12,7 @@ import {
   type PayFrequency,
   type PeriodTaxResult,
   type PeriodTaxInput,
+  type SupportedTaxYear,
   type TaxYearConfig,
 } from "./periodTax";
 
@@ -51,7 +52,7 @@ export interface PeriodActualAnalysisResult {
 }
 
 export interface PeriodActualAnalysisConfig {
-  taxYear: "2025-26";
+  taxYear: SupportedTaxYear;
   payFrequency: PayFrequency;
   totalPeriodsInYear: number;
   baseTaxCode: string;

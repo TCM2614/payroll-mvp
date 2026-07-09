@@ -116,12 +116,61 @@ export const UK_TAX_2024 = {
   },
 } as const;
 
+// 2026/27 config for the PAYE multi-job engine (used when taxYear = "2026-27").
+//
+// Most core allowances and thresholds remain frozen for 2026/27 in line with
+// current UK government policy (Personal Allowance, basic/higher band tops, NI
+// primary threshold and UEL, dividend allowance). The main structural change
+// from 2025/26 is that Plan 5 student loan repayments become active from
+// April 2026 at the standard 9% rate.
+//
+// If HMRC publishes a threshold update in future Budgets, tweak the numbers
+// below; the rest of the calculation engine picks up the new config
+// automatically via `getPayeTaxConfig`.
+export const UK_TAX_2026 = {
+  personalAllowance: 12_570,
+  paTaperStart: 100_000,
+  paTaperEnd: 125_140,
+  basicRate: 0.2,
+  higherRate: 0.4,
+  additionalRate: 0.45,
+  basicBandTop: 37_700,
+  higherBandTop: 125_140,
+  ni: {
+    primaryThreshold: 12_570,
+    upperEarningsLimit: 50_270,
+    mainRate: 0.08,
+    upperRate: 0.02,
+  },
+  employerNi: {
+    secondaryThreshold: 5_000,
+    rate: 0.15,
+    apprenticeshipLevy: 0.005,
+  },
+  corpTaxRate: 0.19,
+  dividend: {
+    allowance: 500,
+    basic: 0.0875,
+    higher: 0.3375,
+    additional: 0.3935,
+  },
+  studentLoans: {
+    // 2026/27 thresholds. Plan 5 becomes active from April 2026 at 9%.
+    plan1: { threshold: 26_065, rate: 0.09 },
+    plan2: { threshold: 28_470, rate: 0.09 },
+    plan4: { threshold: 32_745, rate: 0.09 },
+    plan5: { threshold: 25_000, rate: 0.09 },
+    postgrad: { threshold: 21_000, rate: 0.06 },
+  },
+} as const;
+
 const PAYE_TAX_CONFIGS: Record<TaxYearLabel, PayeTaxConfig> = {
   "2024-25": UK_TAX_2024,
   "2025-26": UK_TAX_2025,
+  "2026-27": UK_TAX_2026,
 };
 
 export function getPayeTaxConfig(taxYear: TaxYearLabel): PayeTaxConfig {
-  return PAYE_TAX_CONFIGS[taxYear] ?? UK_TAX_2025;
+  return PAYE_TAX_CONFIGS[taxYear] ?? UK_TAX_2026;
 }
 

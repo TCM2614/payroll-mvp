@@ -121,7 +121,7 @@ describe("deriveGrossAnnualFromContractorInputs", () => {
 describe("calculateContractorAnnual", () => {
   const createMockDeps = (): ContractorEngineDeps => {
     return {
-      createConfigForYear: (taxYear: "2025-26"): TaxYearConfig => {
+      createConfigForYear: (): TaxYearConfig => {
         return createUK2025Config();
       },
       calculateAnnual: (input: {
