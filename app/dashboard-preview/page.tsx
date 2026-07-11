@@ -1,16 +1,10 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import AppShell from "@/components/layout/AppShell";
-import { DashboardComingSoon } from "@/components/DashboardComingSoon";
-
+/**
+ * Legacy preview route. Kept as a permanent redirect so any older bookmarks
+ * or backlinks still work; the canonical "coming soon" content lives on
+ * /dashboard.
+ */
 export default function DashboardPreviewPage() {
-  return (
-    <AppShell>
-      <div className="flex min-h-[60vh] flex-col items-center justify-start px-4 pt-20 md:pt-28 pb-8">
-        <div className="w-full max-w-5xl">
-          <DashboardComingSoon />
-        </div>
-      </div>
-    </AppShell>
-  );
+  redirect("/dashboard");
 }

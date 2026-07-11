@@ -158,13 +158,6 @@ export function trackPeriodicAnalysisUsed(): void {
 }
 
 /**
- * Track email signup goal
- */
-export function trackEmailSignup(source?: string): void {
-  trackEvent("email_signup", source ? { source } : undefined);
-}
-
-/**
  * Track calculator run goal
  */
 export function trackCalculatorRun(tab: CalculatorTab): void {
