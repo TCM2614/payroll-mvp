@@ -9,6 +9,8 @@ import { createUK2026Config, calculateAnnualTax } from "@/domain/tax/periodTax";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { CalculatorSummary } from "@/components/CalculatorSummary";
 import { IR35Badge } from "@/components/IR35Badge";
+import { TakeHomeComparisonStrip } from "@/components/landing/TakeHomeComparisonStrip";
+import { deriveComparisonInputs } from "@/lib/marketing/deriveComparisonInputs";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import {
@@ -306,6 +308,42 @@ export function LimitedCompanyCalculator() {
           disclaimer="These figures use PAYE-style rules for guidance only and are not an official HMRC calculation. This is an inside IR35 estimate."
         />
       ) : null}
+
+      {/*
+        Live comparison strip: same assignment rate under all four
+        engagement types, updating with the inputs above.
+      */}
+      {(() => {
+        const stripInputs = deriveComparisonInputs({
+          kind: "annual-income",
+          annualIncome: calculationResult.result.assignmentGrossAnnual,
+          daysPerWeek,
+          weeksWorkedPerYear,
+        });
+        if (!stripInputs) return null;
+        return (
+          <TakeHomeComparisonStrip
+            inputs={stripInputs}
+            analyticsSource="calc_limited_inside"
+            showCta={false}
+            eyebrow="Compare with other engagement types"
+            title={
+              <>
+                Your assignment rate under all four engagement types.
+              </>
+            }
+            subtitle={
+              <>
+                Based on your current inputs above ({daysPerWeek} day
+                {daysPerWeek === 1 ? "" : "s"} per week ×{" "}
+                {weeksWorkedPerYear} weeks), UK 2026/27 tax year. The
+                Limited (Inside IR35) figure matches your take-home above.
+              </>
+            }
+            className="mt-8 w-full"
+          />
+        );
+      })()}
     </div>
   );
 }

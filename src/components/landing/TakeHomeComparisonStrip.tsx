@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import {
   computeLandingComparison,
@@ -15,13 +16,13 @@ import {
 interface Props {
   /**
    * Override the default scenario inputs. Used by the share URLs at
-   * `/compare/[slug]` (e.g. `500-a-day`, `50-per-hour`) to render the
-   * strip for a specific rate.
+   * `/compare/[slug]` (e.g. `500-a-day`, `50-per-hour`) and by the
+   * calculators to keep the strip in sync with the user's inputs.
    */
   inputs?: Partial<ComparisonScenarioInputs>;
   /**
    * Analytics source label so we can distinguish landing-hero views from
-   * share-URL views in Plausible.
+   * share-URL views and embedded-in-calculator views in Plausible.
    */
   analyticsSource?: string;
   /**
@@ -29,6 +30,33 @@ interface Props {
    * share URLs pointing to the calculator with pre-filled inputs).
    */
   ctaHref?: string;
+  /**
+   * Optional eyebrow text ("SEE THE DIFFERENCE" by default).
+   */
+  eyebrow?: string;
+  /**
+   * Optional title override. When omitted the strip auto-composes
+   * "Same £X/day contractor. Four engagement types." from the resolved
+   * day rate. Calculators that use monthly / annual mental models pass
+   * their own headline instead.
+   */
+  title?: ReactNode;
+  /**
+   * Optional subtitle override. When omitted the strip auto-composes
+   * a working-pattern sentence from the resolved inputs.
+   */
+  subtitle?: ReactNode;
+  /**
+   * Whether to render the "Model your own rate" CTA. Suppressed when the
+   * strip is embedded inside the calculator itself (there's no need to
+   * link to /calc from /calc).
+   */
+  showCta?: boolean;
+  /**
+   * Extra utility classes for the outer <section>. Lets callers tighten
+   * spacing when embedding the strip below a CalculatorSummary.
+   */
+  className?: string;
 }
 
 /**
@@ -45,6 +73,11 @@ export function TakeHomeComparisonStrip({
   inputs,
   analyticsSource = "landing_hero",
   ctaHref = "/calc",
+  eyebrow = "See the difference",
+  title,
+  subtitle,
+  showCta = true,
+  className,
 }: Props = {}) {
   const comparison = useMemo(
     () => computeLandingComparison(inputs),
@@ -93,20 +126,35 @@ export function TakeHomeComparisonStrip({
     "Outside IR35": "border-emerald-400/40 bg-emerald-500/10 text-emerald-200",
   };
 
+  const resolvedTitle: ReactNode = title ?? (
+    <>
+      Same {formatGBP(comparison.headlineDayRate)}/day contractor. Four
+      engagement types.
+    </>
+  );
+  const resolvedSubtitle: ReactNode = subtitle ?? (
+    <>
+      Assumes {comparison.inputs.daysPerWeek} days a week ×{" "}
+      {comparison.inputs.weeksWorkedPerYear} billable weeks, tax code 1257L,
+      no student loans, UK 2026/27 tax year — all figures are live from the
+      same engines that power the calculators.
+    </>
+  );
+
   return (
-    <section ref={sectionRef} className="mt-14 w-full max-w-5xl">
+    <section
+      ref={sectionRef}
+      className={className ?? "mt-14 w-full max-w-5xl"}
+    >
       <div className="mb-5 flex flex-col gap-1 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
-          See the difference
+          {eyebrow}
         </p>
         <h2 className="text-balance text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Same {formatGBP(comparison.headlineDayRate)}/day contractor. Four engagement types.
+          {resolvedTitle}
         </h2>
         <p className="mt-2 text-balance text-sm text-white/70">
-          Assumes {comparison.inputs.daysPerWeek} days a week ×{" "}
-          {comparison.inputs.weeksWorkedPerYear} billable weeks, tax code 1257L,
-          no student loans, UK 2026/27 tax year — all figures are live from the
-          same engines that power the calculators.
+          {resolvedSubtitle}
         </p>
       </div>
 
@@ -197,15 +245,17 @@ export function TakeHomeComparisonStrip({
           <span className="font-semibold text-white">
             {formatGBP(comparison.bestVsWorstAnnual)}
           </span>{" "}
-          / year on the same day rate.
+          / year on the same working assumptions.
         </p>
-        <Link
-          href={ctaHref}
-          onClick={() => trackComparisonStripCta(analyticsSource)}
-          className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
-        >
-          Model your own rate →
-        </Link>
+        {showCta && (
+          <Link
+            href={ctaHref}
+            onClick={() => trackComparisonStripCta(analyticsSource)}
+            className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
+          >
+            Model your own rate →
+          </Link>
+        )}
       </div>
     </section>
   );

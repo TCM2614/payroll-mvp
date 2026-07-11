@@ -10,6 +10,8 @@ import { createUK2026Config, calculateAnnualTax } from "@/domain/tax/periodTax";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { CalculatorSummary } from "@/components/CalculatorSummary";
 import { IR35Badge } from "@/components/IR35Badge";
+import { TakeHomeComparisonStrip } from "@/components/landing/TakeHomeComparisonStrip";
+import { deriveComparisonInputs } from "@/lib/marketing/deriveComparisonInputs";
 import { formatGBP } from "@/lib/format";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
@@ -471,6 +473,51 @@ export function UmbrellaCalculator() {
           );
         })()
       ) : null}
+
+      {/*
+        Live comparison strip so the user can see how the same assignment
+        rate plays out under the other engagement types. Updates in real
+        time as they tweak the rate / weeks / umbrella fee inputs above.
+      */}
+      {(() => {
+        const stripInputs = deriveComparisonInputs({
+          kind: "annual-income",
+          annualIncome: calculationResult.result.assignmentGrossAnnual,
+          daysPerWeek,
+          weeksWorkedPerYear,
+          umbrellaFeeWeekly:
+            umbrellaFeeFrequency === "monthly"
+              ? (umbrellaFeeAmount * 12) / Math.max(1, weeksWorkedPerYear)
+              : umbrellaFeeAmount,
+        });
+        if (!stripInputs) return null;
+        return (
+          <TakeHomeComparisonStrip
+            inputs={stripInputs}
+            analyticsSource="calc_umbrella"
+            showCta={false}
+            eyebrow="Compare with other engagement types"
+            title={
+              <>
+                Your assignment rate under all four engagement types.
+              </>
+            }
+            subtitle={
+              <>
+                Based on your current inputs above ({daysPerWeek} day
+                {daysPerWeek === 1 ? "" : "s"} per week ×{" "}
+                {weeksWorkedPerYear} weeks, {formatGBP(umbrellaFeeAmount)}
+                {umbrellaFeeFrequency === "monthly" ? "/month" : "/week"} umbrella
+                fee), UK 2026/27 tax year. The umbrella figure matches your
+                take-home above; the others show what the same assignment
+                income would yield under Standard PAYE, Limited Inside IR35
+                and Limited Outside IR35.
+              </>
+            }
+            className="mt-8 w-full"
+          />
+        );
+      })()}
     </div>
   );
 }

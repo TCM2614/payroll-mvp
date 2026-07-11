@@ -7,6 +7,8 @@ import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { TaxYearToggle } from "@/components/TaxYearToggle";
 import { CalculatorSummary } from "@/components/CalculatorSummary";
+import { TakeHomeComparisonStrip } from "@/components/landing/TakeHomeComparisonStrip";
+import { deriveComparisonInputs } from "@/lib/marketing/deriveComparisonInputs";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import { calcPAYECombined } from "@/lib/calculators/paye";
@@ -767,6 +769,45 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
           );
         })()}
       </section>
+
+      {/*
+        Live comparison strip: shows how the same annualised gross salary
+        would fare if the user were instead operating via umbrella, inside
+        IR35 or outside IR35. Updates as they tweak inputs above. Hidden
+        until the combined gross is > 0.
+      */}
+      {(() => {
+        const stripInputs = deriveComparisonInputs({
+          kind: "annual-income",
+          annualIncome: calculationResult.combined.grossAnnual,
+        });
+        if (!stripInputs) return null;
+        return (
+          <TakeHomeComparisonStrip
+            inputs={stripInputs}
+            analyticsSource="calc_paye"
+            showCta={false}
+            eyebrow="Compare with contracting"
+            title={
+              <>
+                Same {formatGBP(calculationResult.combined.grossAnnual)}/year
+                gross under all four engagement types.
+              </>
+            }
+            subtitle={
+              <>
+                If you were contracting at an equivalent day rate instead of
+                being on PAYE payroll, this is how the same annual income
+                would break down under an umbrella (Inside IR35), a limited
+                company inside IR35, or a limited company outside IR35 — UK
+                2026/27 tax year. The Standard PAYE figure matches your
+                combined take-home above.
+              </>
+            }
+            className="mt-8 w-full"
+          />
+        );
+      })()}
 
     </div>
 
