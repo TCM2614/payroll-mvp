@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { formatGBP } from "@/lib/format";
 import { calculateContractorAnnual, type ContractorInputs } from "@/domain/tax/contracting";
-import { createUK2025Config, calculateAnnualTax } from "@/domain/tax/periodTax";
+import { createUK2026Config, calculateAnnualTax } from "@/domain/tax/periodTax";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
+import { CalculatorSummary } from "@/components/CalculatorSummary";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import {
@@ -47,14 +47,14 @@ export function UmbrellaCalculator() {
       daysPerWeek,
       hourlyRate,
       hoursPerDay,
-      taxYear: "2025-26",
+      taxYear: "2026-27",
       taxCode,
       pensionEmployeePercent: pensionPct,
       studentLoanPlan: loans.length > 0 ? (loans[0] as ContractorInputs["studentLoanPlan"]) : undefined,
     };
 
     const result = calculateContractorAnnual(contractorInputs, {
-      createConfigForYear: () => createUK2025Config(),
+      createConfigForYear: () => createUK2026Config(),
       calculateAnnual: (input) => {
         // Use the new multi-plan support
         return calculateAnnualTax({
@@ -213,115 +213,44 @@ export function UmbrellaCalculator() {
         </div>
       </section>
 
-      {/* Section 2: Results */}
-      <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
-        <header className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-navy-100 sm:text-base">Take-home pay</h2>
-        </header>
-
-        {!calculationResult.result.supported ? (
-          <div className="rounded-xl border border-aqua-500/30 bg-aqua-500/10 p-3">
-            <p className="text-sm font-medium text-aqua-300">Calculation not available</p>
-            <p className="mt-1 text-xs text-aqua-400">
-              {calculationResult.result.reasonIfUnsupported}
-            </p>
-          </div>
-        ) : calculationResult.result.annual ? (
-          <div className="space-y-3">
-            <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
-              <p className="text-xs text-navy-300">Gross annual income</p>
-              <p className="mt-1 text-lg font-semibold text-navy-50">
-                {formatGBP(calculationResult.result.grossAnnualIncome)}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Monthly:</span>
-                <span className="ml-1 font-semibold text-ethereal-300">
-                  {formatGBP(calculationResult.netMonthly)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Weekly:</span>
-                <span className="ml-1 font-semibold text-ethereal-300">
-                  {formatGBP(calculationResult.netWeekly)}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">PAYE:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.paye)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">NI:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.ni)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Pension:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.pensionEmployee)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-2">
-                <span className="text-navy-300">Student loan:</span>
-                <span className="ml-1 font-semibold text-navy-50">
-                  {formatGBP(calculationResult.result.annual.studentLoan)}
-                </span>
-              </div>
-            </div>
-
-            {/* Student loan breakdown */}
-            {calculationResult.result.annual.studentLoanBreakdown &&
-              calculationResult.result.annual.studentLoanBreakdown.length > 0 && (
-                <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3 space-y-2">
-                  <h3 className="text-xs font-semibold text-navy-100 uppercase tracking-wide">
-                    Student loan deductions
-                  </h3>
-                  <div className="space-y-1">
-                    {calculationResult.result.annual.studentLoanBreakdown.map(
-                      ({ plan, label, amount }) => (
-                        <div
-                          key={plan}
-                          className="flex items-center justify-between text-xs"
-                        >
-                          <span className="text-navy-300">Student loan ({label}):</span>
-                          <span className="font-semibold text-navy-50">
-                            {formatGBP(amount / 12)}/month
-                          </span>
-                        </div>
-                      )
-                    )}
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-sea-jet-700/30">
-                      <span className="font-medium text-navy-100">Total student loans:</span>
-                      <span className="font-semibold text-navy-50">
-                        {formatGBP(calculationResult.result.annual.studentLoan / 12)}/month
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            <div className="rounded-xl border border-sea-jet-700/30 bg-sea-jet-900/50 p-3">
-              <p className="text-xs text-navy-300">Net annual income</p>
-              <p className="mt-1 text-xl font-semibold text-ethereal-300">
-                {formatGBP(calculationResult.result.annual.net)}
-              </p>
-            </div>
-          </div>
-        ) : null}
-
-        <p className="text-xs text-navy-300">
-          These figures use PAYE-style rules for guidance only and are not an official HMRC
-          calculation or full umbrella fee model. This is an inside IR35 estimate.
-        </p>
-      </section>
+      {/* Section 2: Results — shared CalculatorSummary template */}
+      {!calculationResult.result.supported ? (
+        <CalculatorSummary
+          title="Umbrella take-home pay"
+          subtitle="Inside IR35 estimate — PAYE-style rules apply."
+          grossAnnual={0}
+          incomeTaxAnnual={0}
+          nationalInsuranceAnnual={0}
+          netAnnual={0}
+          notice={{
+            variant: "warn",
+            heading: "Calculation not available",
+            body:
+              calculationResult.result.reasonIfUnsupported ??
+              "We can't calculate umbrella take-home for these inputs.",
+          }}
+          disclaimer="These figures use PAYE-style rules for guidance only and are not an official HMRC calculation or full umbrella fee model. This is an inside IR35 estimate."
+        />
+      ) : calculationResult.result.annual ? (
+        <CalculatorSummary
+          title="Umbrella take-home pay"
+          subtitle="Estimated take-home when contracting via an umbrella company (inside IR35)."
+          grossAnnual={calculationResult.result.grossAnnualIncome}
+          incomeTaxAnnual={calculationResult.result.annual.paye}
+          nationalInsuranceAnnual={calculationResult.result.annual.ni}
+          workplacePensionAnnual={calculationResult.result.annual.pensionEmployee}
+          studentLoanAnnual={calculationResult.result.annual.studentLoan}
+          studentLoanBreakdown={(calculationResult.result.annual.studentLoanBreakdown ?? []).map(
+            ({ plan, label, amount }) => ({
+              key: plan,
+              label,
+              annualAmount: amount,
+            }),
+          )}
+          netAnnual={calculationResult.result.annual.net}
+          disclaimer="These figures use PAYE-style rules for guidance only and are not an official HMRC calculation or full umbrella fee model. This is an inside IR35 estimate."
+        />
+      ) : null}
     </div>
   );
 }

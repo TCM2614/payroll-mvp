@@ -1,19 +1,21 @@
 /**
- * Period-based PAYE calculation engine for UK tax year 2025/26
- * 
+ * Period-based PAYE calculation engine for UK tax years 2025/26 and 2026/27.
+ *
  * Calculates tax for specific periods within the tax year and detects
  * mid-year over-taxation or underpayment.
- * 
+ *
  * Pure TypeScript domain functions - deterministic, side-effect free,
  * suitable for serverless/edge context.
  */
 
-import { UK_TAX_2025 } from "@/lib/tax/uk2025";
+import { UK_TAX_2025, UK_TAX_2026 } from "@/lib/tax/uk2025";
+
+export type SupportedTaxYear = "2025-26" | "2026-27";
 
 export type PayFrequency = "monthly" | "weekly" | "four-weekly";
 
 export interface TaxYearConfig {
-  taxYear: "2025-26";
+  taxYear: SupportedTaxYear;
   personalAllowance: number;
   basicRateLimit: number;
   higherRateLimit: number;
@@ -58,7 +60,7 @@ export interface AnnualTaxBreakdown {
 }
 
 export interface PeriodTaxInput {
-  taxYear: "2025-26";
+  taxYear: SupportedTaxYear;
   payFrequency: PayFrequency;
   /** 1-based index of the current pay period within the tax year (e.g. 1–12 for monthly). */
   periodIndex: number;
@@ -698,7 +700,7 @@ function formatGBP(amount: number): string {
 }
 
 /**
- * Create UK 2025/26 tax year configuration
+ * Create UK 2025/26 tax year configuration.
  */
 export function createUK2025Config(): TaxYearConfig {
   return {
@@ -731,5 +733,56 @@ export function createUK2025Config(): TaxYearConfig {
     },
     studentLoans: UK_TAX_2025.studentLoans,
   };
+}
+
+/**
+ * Create UK 2026/27 tax year configuration.
+ */
+export function createUK2026Config(): TaxYearConfig {
+  return {
+    taxYear: "2026-27",
+    personalAllowance: UK_TAX_2026.personalAllowance,
+    basicRateLimit: UK_TAX_2026.basicBandTop,
+    higherRateLimit: UK_TAX_2026.higherBandTop,
+    additionalRateThreshold: UK_TAX_2026.higherBandTop,
+    bands: [
+      {
+        rate: UK_TAX_2026.basicRate,
+        lower: 0,
+        upper: UK_TAX_2026.basicBandTop,
+      },
+      {
+        rate: UK_TAX_2026.higherRate,
+        lower: UK_TAX_2026.basicBandTop,
+        upper: UK_TAX_2026.higherBandTop,
+      },
+      {
+        rate: UK_TAX_2026.additionalRate,
+        lower: UK_TAX_2026.higherBandTop,
+      },
+    ],
+    ni: {
+      primaryThreshold: UK_TAX_2026.ni.primaryThreshold,
+      upperEarningsLimit: UK_TAX_2026.ni.upperEarningsLimit,
+      mainRate: UK_TAX_2026.ni.mainRate,
+      upperRate: UK_TAX_2026.ni.upperRate,
+    },
+    studentLoans: UK_TAX_2026.studentLoans,
+  };
+}
+
+/**
+ * Factory that returns the PAYE tax-year config for a given supported tax year.
+ * Falls back to the current tax year (2026/27) if a future year is requested.
+ */
+export function createConfigForYear(taxYear: SupportedTaxYear): TaxYearConfig {
+  switch (taxYear) {
+    case "2025-26":
+      return createUK2025Config();
+    case "2026-27":
+      return createUK2026Config();
+    default:
+      return createUK2026Config();
+  }
 }
 

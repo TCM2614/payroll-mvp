@@ -60,7 +60,7 @@ export function Header() {
 
         {/* Tax year - Desktop */}
         <div className="hidden items-center gap-2 sm:flex">
-          <span className="text-xs text-brand-textMuted">Tax year 2025/26</span>
+          <span className="text-xs text-brand-textMuted">Tax year 2026/27</span>
         </div>
 
         {/* Mobile Menu Button */}

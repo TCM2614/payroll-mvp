@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { LoanKey, UK_TAX_2025 } from "@/lib/tax/uk2025";
+import { LoanKey, UK_TAX_2026 } from "@/lib/tax/uk2025";
 
 type Props = {
   value: LoanKey[];
@@ -41,7 +41,7 @@ export default function LoansMultiSelect({ value, onChange }: Props) {
             />
             <span>
               {option.label} — threshold £
-              {UK_TAX_2025.studentLoans[option.id].threshold.toLocaleString("en-GB")}
+              {UK_TAX_2026.studentLoans[option.id].threshold.toLocaleString("en-GB")}
             </span>
           </label>
         ))}

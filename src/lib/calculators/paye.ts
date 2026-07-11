@@ -1,4 +1,4 @@
-import { getPayeTaxConfig, UK_TAX_2025, type LoanKey, type PayeTaxConfig } from "../tax/uk2025";
+import { getPayeTaxConfig, type LoanKey, type PayeTaxConfig } from "../tax/uk2025";
 import type { TaxYearLabel } from "../taxYear";
 
 export type Frequency = "hourly"|"daily"|"monthly"|"annual";
@@ -17,7 +17,7 @@ export type CombinedPayeInput = {
   loans?: LoanKey[];
   /**
    * Optional tax year for PAYE calculations in the multi-job engine.
-   * Defaults to "2025-26" to preserve existing behaviour.
+   * Defaults to "2026-27" (the current UK tax year).
    */
   taxYear?: TaxYearLabel;
 };
@@ -191,7 +191,7 @@ function calcStreamAnnual(
 }
 
 export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
-  const { streams, sippPersonal = 0, loans = [], taxYear = "2025-26" } = input;
+  const { streams, sippPersonal = 0, loans = [], taxYear = "2026-27" } = input;
   const config = getPayeTaxConfig(taxYear);
 
   let totalAfterSSPrimary = 0;

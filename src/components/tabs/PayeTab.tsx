@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { TaxYearToggle } from "@/components/TaxYearToggle";
+import { CalculatorSummary } from "@/components/CalculatorSummary";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import { calcPAYECombined } from "@/lib/calculators/paye";
@@ -129,7 +130,7 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
   });
 
   // UI-level tax year selection (kept separate from postgrad schema)
-  const [taxYear, setTaxYear] = useState<TaxYearLabel>("2025-26");
+  const [taxYear, setTaxYear] = useState<TaxYearLabel>("2026-27");
 
   const [pensionPct, setPensionPct] = useState(5);
 
@@ -720,196 +721,51 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
           ))}
         </div>
 
-        {/* Combined summary */}
-        <div className="rounded-3xl bg-brand-surface/80 border border-brand-border/60 shadow-soft-xl backdrop-blur-xl p-4 sm:p-6 space-y-4">
-          <header className="flex items-center justify-between gap-2">
-            <div>
-              <h3 className="text-sm font-semibold text-brand-text">
-                Combined across all jobs
-              </h3>
-              <p className="mt-1 text-xs text-brand-textMuted">
-                Estimated PAYE take-home after income tax, NI, pension and SIPP.
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-xxs text-brand-textMuted">Net take-home (monthly)</p>
-              <p className="text-2xl font-bold text-brand-text">
-                {formatGBP(calculationResult.combined.monthly)}
-              </p>
-            </div>
-          </header>
+        {/* Combined summary — shared CalculatorSummary template */}
+        {(() => {
+          const parsedOptionalHours = optionalHoursPerWeek
+            ? parseFloat(optionalHoursPerWeek.replace(/,/g, ""))
+            : NaN;
+          const derivedHoursPerWeek =
+            Number.isFinite(parsedOptionalHours) && parsedOptionalHours > 0
+              ? parsedOptionalHours
+              : primaryFrequency === "hourly"
+              ? hoursPerWeek
+              : undefined;
 
-          <dl className="space-y-2 text-sm">
-            <div className="flex items-center justify-between gap-2">
-              <dt className="text-brand-textMuted">Gross pay (annual)</dt>
-              <dd className="text-right font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.grossAnnual)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <dt className="text-brand-textMuted">PAYE income tax</dt>
-              <dd className="text-right font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.annualPAYE)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <dt className="text-brand-textMuted">National Insurance</dt>
-              <dd className="text-right font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.annualNI)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <dt className="text-brand-textMuted">Workplace pension (employee)</dt>
-              <dd className="text-right font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.annualPensionEmployee)}
-              </dd>
-            </div>
-            {sippPersonal > 0 && (
-              <div className="flex items-center justify-between gap-2">
-                <dt className="text-brand-textMuted">SIPP contributions (personal)</dt>
-                <dd className="text-right font-medium text-brand-text">
-                  {formatGBP(sippPersonal)}
-                </dd>
-              </div>
-            )}
-
-            {/* Student loan per-plan breakdown where available */}
-            {calculationResult.combined.studentLoanBreakdown.length > 0 && (
-              <>
-                <div className="pt-2 border-t border-brand-border/40">
-                  <p className="text-xxs font-semibold text-brand-textMuted uppercase tracking-wide">
-                    Student loan deductions (annual)
-                  </p>
-                </div>
-                {calculationResult.combined.studentLoanBreakdown.map(
-                  ({ plan, label, amount }) => (
-                    <div
-                      key={plan}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <dt className="text-brand-textMuted">
-                        Student loan ({label})
-                      </dt>
-                      <dd className="text-right font-medium text-brand-text">
-                        {formatGBP(amount)}
-                      </dd>
-                    </div>
-                  )
-                )}
-                <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
-                  <dt className="text-brand-text font-medium">
-                    Total student loans
-                  </dt>
-                  <dd className="text-right font-semibold text-brand-text">
-                    {formatGBP(calculationResult.combined.annualStudentLoan)}
-                  </dd>
-                </div>
-              </>
-            )}
-
-            <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
-              <dt className="text-brand-text font-medium">Net take-home (annual)</dt>
-              <dd className="text-right font-semibold text-brand-accent">
-                {formatGBP(calculationResult.combined.netAnnual)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-2 text-xs text-brand-textMuted">
-              <span>Net monthly</span>
-              <span className="font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.monthly)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-2 text-xs text-brand-textMuted">
-              <span>Net weekly</span>
-              <span className="font-medium text-brand-text">
-                {formatGBP(calculationResult.combined.weekly)}
-              </span>
-            </div>
-
-            {onShowWealthTab && calculationResult.combined.grossAnnual > 0 && (
-              <div className="pt-3 border-t border-brand-border/40 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xxs text-brand-textMuted">
-                  Curious how this compares to others in the UK on a similar salary?
-                </p>
-                <button
-                  type="button"
-                  onClick={onShowWealthTab}
-                  className="inline-flex items-center justify-center rounded-xl bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-soft-xl transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70"
-                >
-                  See how your pay compares
-                </button>
-              </div>
-            )}
-          </dl>
-
-          {/* Optional Hourly Context Section */}
-          {(() => {
-            // Derive hourly breakdown from existing calculations (no new calculations)
-            // Use optionalHoursPerWeek if provided, otherwise fall back to calculation hours or default
-            const numericHoursPerWeek = optionalHoursPerWeek 
-              ? parseFloat(optionalHoursPerWeek.replace(/,/g, "")) 
-              : (primaryFrequency === "hourly" ? hoursPerWeek : undefined);
-
-            // Only show if we have valid hours per week and existing weekly results
-            if (numericHoursPerWeek && numericHoursPerWeek > 0 && calculationResult.combined.weekly > 0) {
-              // Derive hourly rates from existing weekly results
-              const grossWeekly = calculationResult.combined.grossAnnual / 52;
-              const netWeekly = calculationResult.combined.weekly;
-              const taxWeekly = calculationResult.combined.annualPAYE / 52;
-              const niWeekly = calculationResult.combined.annualNI / 52;
-
-              const impliedGrossHourly = grossWeekly / numericHoursPerWeek;
-              const impliedNetHourly = netWeekly / numericHoursPerWeek;
-              const impliedTaxHourly = taxWeekly / numericHoursPerWeek;
-              const impliedNiHourly = niWeekly / numericHoursPerWeek;
-
-              return (
-                <div className="mt-4 pt-4 border-t border-brand-border/40">
-                  <div className="mb-3">
-                    <p className="text-xxs font-semibold text-brand-textMuted uppercase tracking-wide">
-                      Hourly breakdown (derived)
-                    </p>
-                    <p className="mt-1 text-xxs text-brand-textMuted">
-                      Based on {numericHoursPerWeek.toFixed(1)} hours/week × 52 weeks
-                    </p>
-                  </div>
-                  <dl className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <dt className="text-brand-textMuted">Gross pay (per hour)</dt>
-                      <dd className="text-right font-medium text-brand-text">
-                        {formatGBP(impliedGrossHourly)}
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <dt className="text-brand-textMuted">PAYE income tax (per hour)</dt>
-                      <dd className="text-right font-medium text-brand-text">
-                        {formatGBP(impliedTaxHourly)}
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <dt className="text-brand-textMuted">National Insurance (per hour)</dt>
-                      <dd className="text-right font-medium text-brand-text">
-                        {formatGBP(impliedNiHourly)}
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
-                      <dt className="text-brand-text font-medium">Net take-home (per hour)</dt>
-                      <dd className="text-right font-semibold text-brand-accent">
-                        {formatGBP(impliedNetHourly)}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              );
-            }
-            return null;
-          })()}
-
-          <p className="mt-2 text-xxs text-brand-textMuted">
-            These figures are estimates based on current UK PAYE rules and your inputs.
-            They&apos;re for guidance only and not an official HMRC calculation.
-          </p>
-        </div>
+          return (
+            <CalculatorSummary
+              title="Combined across all jobs"
+              subtitle="Estimated PAYE take-home after income tax, NI, pension and SIPP."
+              grossAnnual={calculationResult.combined.grossAnnual}
+              incomeTaxAnnual={calculationResult.combined.annualPAYE}
+              nationalInsuranceAnnual={calculationResult.combined.annualNI}
+              workplacePensionAnnual={
+                calculationResult.combined.annualPensionEmployee
+              }
+              sippAnnual={sippPersonal}
+              studentLoanAnnual={calculationResult.combined.annualStudentLoan}
+              studentLoanBreakdown={calculationResult.combined.studentLoanBreakdown.map(
+                ({ plan, label, amount }) => ({
+                  key: plan,
+                  label,
+                  annualAmount: amount,
+                }),
+              )}
+              netAnnual={calculationResult.combined.netAnnual}
+              hoursPerWeek={derivedHoursPerWeek}
+              cta={
+                onShowWealthTab
+                  ? {
+                      label: "See how your pay compares",
+                      hint: "Curious how this compares to others in the UK on a similar salary?",
+                      onClick: onShowWealthTab,
+                    }
+                  : undefined
+              }
+            />
+          );
+        })()}
       </section>
 
     </div>
