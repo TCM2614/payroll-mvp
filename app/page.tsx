@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import AppShell from "@/components/layout/AppShell";
 import { TakeHomeCalculator } from "@/components/take-home-calculator";
+import { TakeHomeComparisonStrip } from "@/components/landing/TakeHomeComparisonStrip";
 
 import FeedbackModal from "@/components/landing/FeedbackModal";
 
@@ -49,7 +50,7 @@ export default function LandingPage() {
 
 
           <p className="mt-4 text-balance text-sm text-white/70 sm:text-base">
-            Instant UK take-home pay calculator. Accurate PAYE, Umbrella and Limited Company tax breakdowns with student loan, pension and salary sacrifice support — updated for the {TAX_YEAR} tax year.
+            The only UK calculator that models PAYE, Umbrella (Inside IR35), Limited Company (Inside IR35) and Limited Company (Outside IR35) side by side — with a full umbrella-payslip reconciliation and corporation-tax marginal relief on the outside-IR35 side. Updated for {TAX_YEAR}.
           </p>
 
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
@@ -112,6 +113,9 @@ export default function LandingPage() {
             </Link>
           </div>
         </section>
+
+        {/* "See the difference" landing comparison strip */}
+        <TakeHomeComparisonStrip />
 
         {/* Simple 3-column trust strip */}
 

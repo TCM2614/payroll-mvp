@@ -1,0 +1,145 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo } from "react";
+import { computeLandingComparison } from "@/lib/marketing/landingComparison";
+import { formatGBP } from "@/lib/format";
+
+/**
+ * "See the difference — same £500/day contractor" comparison strip.
+ *
+ * A landing-page marketing block that puts all four engagement types
+ * side-by-side using the site's own calculation engines. Highlights the
+ * differentiator (a UK take-home calculator that covers PAYE, umbrella,
+ * inside IR35 and outside IR35 in one place — with a real umbrella-payslip
+ * model and marginal-relief corporation tax on the outside-IR35 side) with
+ * a single visual glance and a clear CTA into /calc.
+ */
+export function TakeHomeComparisonStrip() {
+  const comparison = useMemo(() => computeLandingComparison(), []);
+
+  const bestKey = comparison.bestScenarioKey;
+  const worstKey = comparison.worstScenarioKey;
+
+  const regimeClasses: Record<string, string> = {
+    PAYE: "border-white/20 bg-white/5 text-white/80",
+    "Inside IR35": "border-amber-400/40 bg-amber-500/10 text-amber-200",
+    "Outside IR35": "border-emerald-400/40 bg-emerald-500/10 text-emerald-200",
+  };
+
+  return (
+    <section className="mt-14 w-full max-w-5xl">
+      <div className="mb-5 flex flex-col gap-1 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
+          See the difference
+        </p>
+        <h2 className="text-balance text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          Same {formatGBP(comparison.headlineDayRate)}/day contractor. Four engagement types.
+        </h2>
+        <p className="mt-2 text-balance text-sm text-white/70">
+          Assumes {comparison.inputs.daysPerWeek} days a week ×{" "}
+          {comparison.inputs.weeksWorkedPerYear} billable weeks, tax code 1257L,
+          no student loans, UK 2026/27 tax year — all figures are live from the
+          same engines that power the calculators.
+        </p>
+      </div>
+
+      <ol className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {comparison.scenarios.map((s) => {
+          const isBest = s.key === bestKey;
+          const isWorst = s.key === worstKey && bestKey !== worstKey;
+          const cardBorder = isBest
+            ? "border-emerald-400/60 shadow-emerald-500/20"
+            : "border-white/10";
+          const deltaLabel =
+            s.deltaVsPayeAnnual === 0
+              ? "Baseline"
+              : `${s.deltaVsPayeAnnual > 0 ? "+" : "−"}${formatGBP(Math.abs(s.deltaVsPayeAnnual))} vs PAYE`;
+
+          return (
+            <li
+              key={s.key}
+              className={`relative rounded-2xl border ${cardBorder} bg-white/[0.03] p-4 shadow-lg transition hover:bg-white/[0.06]`}
+            >
+              {isBest && (
+                <span className="absolute -top-2 left-4 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-black">
+                  Highest net
+                </span>
+              )}
+              {isWorst && (
+                <span className="absolute -top-2 left-4 rounded-full bg-rose-500/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                  Lowest net
+                </span>
+              )}
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-white">{s.label}</p>
+                  <span
+                    className={`mt-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${regimeClasses[s.regime] ?? regimeClasses.PAYE}`}
+                  >
+                    {s.regime}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-1">
+                <p className="text-[11px] uppercase tracking-wide text-white/50">
+                  Annual take-home
+                </p>
+                <p className="text-2xl font-bold text-white tabular-nums">
+                  {formatGBP(s.netAnnual)}
+                </p>
+                <p className="text-xs text-white/60">
+                  {formatGBP(s.netMonthly)} / month
+                </p>
+              </div>
+
+              <dl className="mt-4 space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between text-white/70">
+                  <dt>Effective tax rate</dt>
+                  <dd className="font-medium text-white/90 tabular-nums">
+                    {(s.effectiveTaxRate * 100).toFixed(1)}%
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between text-white/70">
+                  <dt>vs. Standard PAYE</dt>
+                  <dd
+                    className={`font-medium tabular-nums ${
+                      s.deltaVsPayeAnnual > 0
+                        ? "text-emerald-300"
+                        : s.deltaVsPayeAnnual < 0
+                          ? "text-rose-300"
+                          : "text-white/80"
+                    }`}
+                  >
+                    {deltaLabel}
+                  </dd>
+                </div>
+              </dl>
+
+              <p className="mt-3 text-[11px] leading-snug text-white/60">
+                {s.note}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-5 flex flex-col items-center gap-2">
+        <p className="text-xs text-white/60">
+          Gap between the best and worst option:{" "}
+          <span className="font-semibold text-white">
+            {formatGBP(comparison.bestVsWorstAnnual)}
+          </span>{" "}
+          / year on the same day rate.
+        </p>
+        <Link
+          href="/calc"
+          className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
+        >
+          Model your own rate →
+        </Link>
+      </div>
+    </section>
+  );
+}
