@@ -332,7 +332,7 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
             Standard PAYE salary calculator
           </h2>
           <p className="mt-1 text-sm text-navy-200">
-            Use this tab if you&apos;re a UK employee paid through PAYE. For payslip-by-payslip checks, use the &apos;Periodic tax check&apos; tab.
+            Use this tab if you&apos;re a UK employee paid through PAYE. If you contract via an umbrella or a limited company, use the dedicated Umbrella or Limited (Inside / Outside IR35) tabs instead.
           </p>
         </div>
         <TaxYearToggle value={taxYear} onChange={setTaxYear} />
