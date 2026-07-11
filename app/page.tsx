@@ -7,7 +7,6 @@ import { useState } from "react";
 
 import AppShell from "@/components/layout/AppShell";
 import { TakeHomeCalculator } from "@/components/take-home-calculator";
-import { TakeHomeComparisonStrip } from "@/components/landing/TakeHomeComparisonStrip";
 
 import FeedbackModal from "@/components/landing/FeedbackModal";
 
@@ -113,9 +112,6 @@ export default function LandingPage() {
             </Link>
           </div>
         </section>
-
-        {/* "See the difference" landing comparison strip */}
-        <TakeHomeComparisonStrip />
 
         {/* Simple 3-column trust strip */}
 
