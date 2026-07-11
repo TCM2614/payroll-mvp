@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -68,32 +68,30 @@ function IncomeComparisonTooltip(
   );
 }
 
-type PercentileTooltipProps = TooltipContentProps<number, string> & {
-  ageBand?: IncomePercentileResult["ageBand"];
-  clampedPercentile?: number | null;
-  /**
-   * Key of the segment the user is actually hovering over. Set by the
-   * per-bar onMouseOver handler because recharts' `payload[0]` for a
-   * stacked bar always points to the first segment in the stack, not the
-   * segment under the cursor.
-   */
-  hoveredSegKey?: string | null;
-};
+type PercentileSegment = (typeof PERCENTILE_SEGMENTS)[number];
 
-function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
-  const { active, payload, ageBand, clampedPercentile, hoveredSegKey } = props;
-  if (!active || !payload || payload.length === 0 || !ageBand) return null;
-  // Prefer the explicitly-tracked hovered segment. Fall back to the payload's
-  // first dataKey only if we somehow don't have one (e.g. keyboard focus).
-  const fallbackKey = payload[0]?.dataKey;
-  const key =
-    hoveredSegKey ??
-    (typeof fallbackKey === "string" ? fallbackKey : null);
-  const seg = key ? PERCENTILE_SEGMENTS.find((s) => s.key === key) : undefined;
-  if (!seg) return null;
+interface PercentileBreakdownTooltipProps {
+  segment: PercentileSegment;
+  ageBand: IncomePercentileResult["ageBand"];
+  clampedPercentile: number | null;
+}
 
-  const minIncome = estimateIncomeForPercentile(ageBand, seg.start);
-  const maxIncome = estimateIncomeForPercentile(ageBand, seg.end);
+/**
+ * Plain-React tooltip for the distribution chart. Previously wired into
+ * recharts' `<Tooltip>` content prop, but recharts' hit-testing across ten
+ * stacked segments (some only 1% wide) was unreliable — the payload's
+ * `dataKey` for a stacked bar always points at the *first* segment in the
+ * stack, so the tooltip effectively showed the 0–25% band whatever the
+ * cursor was over. We now drive the hover state ourselves via absolutely
+ * positioned hit-boxes and call this component directly.
+ */
+function PercentileBreakdownTooltip({
+  segment,
+  ageBand,
+  clampedPercentile,
+}: PercentileBreakdownTooltipProps) {
+  const minIncome = estimateIncomeForPercentile(ageBand, segment.start);
+  const maxIncome = estimateIncomeForPercentile(ageBand, segment.end);
   let incomeText: string | null = null;
   if (minIncome != null && maxIncome != null && maxIncome > minIncome) {
     incomeText = `${formatGBP(minIncome)}–${formatGBP(maxIncome)} per year`;
@@ -103,19 +101,17 @@ function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
 
   const isUserBand =
     clampedPercentile != null &&
-    clampedPercentile >= seg.start &&
-    clampedPercentile <= seg.end;
+    clampedPercentile >= segment.start &&
+    clampedPercentile <= segment.end;
 
   return (
     <div className="rounded-lg border border-brand-border/60 bg-brand-bg/95 px-3 py-2 text-xs shadow-md">
-      <p className="font-semibold text-brand-text">{seg.label}</p>
+      <p className="font-semibold text-brand-text">{segment.label}</p>
       <p className="mt-1 font-medium text-brand-text">
-        Range {seg.start.toFixed(1)}–{seg.end.toFixed(1)} percentile
+        Range {segment.start.toFixed(1)}–{segment.end.toFixed(1)} percentile
       </p>
       {incomeText && (
-        <p className="mt-1 text-brand-textMuted">
-          {incomeText}
-        </p>
+        <p className="mt-1 text-brand-textMuted">{incomeText}</p>
       )}
       {isUserBand && clampedPercentile != null && (
         <p className="mt-1 font-semibold text-brand-text">
@@ -217,7 +213,15 @@ export function WealthPercentileTab({
   const [lastIncome, setLastIncome] = useState<number | null>(
     typeof initialSource === "number" && initialSource > 0 ? Math.round(initialSource) : null,
   );
-  const [hoveredSegKey, setHoveredSegKey] = useState<string | null>(null);
+  /**
+   * Hover state for the "Where you sit in the distribution" chart. We
+   * carry both the segment key and the mouse's x-offset within the
+   * chart wrapper so the tooltip can render close to the cursor.
+   */
+  const [hoveredSeg, setHoveredSeg] = useState<
+    { key: string; xPct: number } | null
+  >(null);
+  const distributionWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const parsedAge = useMemo(() => {
     const age = parseInt(ageInput, 10);
@@ -559,7 +563,11 @@ export function WealthPercentileTab({
             <p className="mb-2 text-xs sm:text-sm font-semibold text-brand-text">
               Where you sit in the distribution
             </p>
-            <div className="h-40 w-full">
+            <div
+              ref={distributionWrapperRef}
+              className="relative h-40 w-full"
+              onMouseLeave={() => setHoveredSeg(null)}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   layout="vertical"
@@ -584,17 +592,6 @@ export function WealthPercentileTab({
                     tickLine={false}
                   />
                   <YAxis type="category" dataKey="name" hide />
-                  <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    content={(p) => (
-                      <PercentileBreakdownTooltip
-                        {...(p as TooltipContentProps<number, string>)}
-                        ageBand={result.ageBand}
-                        clampedPercentile={clampedPercentile}
-                        hoveredSegKey={hoveredSegKey}
-                      />
-                    )}
-                  />
                   <ReferenceLine
                     x={Math.min(100, Math.max(0, clampedPercentile ?? 0))}
                     stroke={INCOME_COMPARISON_COLORS.you}
@@ -613,12 +610,87 @@ export function WealthPercentileTab({
                           : 0
                       }
                       fill={seg.color}
-                      onMouseOver={() => setHoveredSegKey(seg.key)}
-                      onMouseOut={() => setHoveredSegKey(null)}
                     />
                   ))}
                 </BarChart>
               </ResponsiveContainer>
+
+              {/*
+                Hit-test overlay. Recharts' tooltip payload for a stacked
+                bar always points at the first segment, so we drive hover
+                state ourselves. Each hit-box is proportionally sized to
+                its band (25%, 25%, 25%, 10%, 10%, 1%, 1%, 1%, 1%, 1%)
+                and covers the same horizontal region the coloured bars
+                do, matching the chart's right-side margin (8px).
+              */}
+              <div
+                className="absolute inset-x-0 top-0 flex"
+                style={{
+                  height: "calc(100% - 20px)",
+                  paddingRight: 8,
+                }}
+                aria-hidden="true"
+              >
+                {PERCENTILE_SEGMENTS.map((seg) => (
+                  <div
+                    key={seg.key}
+                    className="h-full cursor-crosshair"
+                    style={{ flex: `${seg.end - seg.start} 0 0%` }}
+                    onMouseEnter={(e) => {
+                      const rect =
+                        distributionWrapperRef.current?.getBoundingClientRect();
+                      const xPct = rect
+                        ? Math.max(
+                            0,
+                            Math.min(
+                              100,
+                              ((e.clientX - rect.left) / rect.width) * 100,
+                            ),
+                          )
+                        : (seg.start + seg.end) / 2;
+                      setHoveredSeg({ key: seg.key, xPct });
+                    }}
+                    onMouseMove={(e) => {
+                      const rect =
+                        distributionWrapperRef.current?.getBoundingClientRect();
+                      if (!rect) return;
+                      const xPct = Math.max(
+                        0,
+                        Math.min(
+                          100,
+                          ((e.clientX - rect.left) / rect.width) * 100,
+                        ),
+                      );
+                      setHoveredSeg({ key: seg.key, xPct });
+                    }}
+                  />
+                ))}
+              </div>
+
+              {hoveredSeg &&
+                (() => {
+                  const segment = PERCENTILE_SEGMENTS.find(
+                    (s) => s.key === hoveredSeg.key,
+                  );
+                  if (!segment) return null;
+                  // Clamp the tooltip so it stays inside the wrapper — for
+                  // the top-tail 1% bands the mouse can be right at the
+                  // edge; the transform pulls the tooltip's centre onto
+                  // the cursor unless that would clip off-screen.
+                  const clampedX = Math.max(12, Math.min(88, hoveredSeg.xPct));
+                  return (
+                    <div
+                      className="pointer-events-none absolute top-0 z-10 -translate-x-1/2"
+                      style={{ left: `${clampedX}%` }}
+                    >
+                      <PercentileBreakdownTooltip
+                        segment={segment}
+                        ageBand={result.ageBand}
+                        clampedPercentile={clampedPercentile}
+                      />
+                    </div>
+                  );
+                })()}
             </div>
             <div className="mt-2 flex flex-wrap gap-2 text-[10px] sm:text-xs">
               {PERCENTILE_SEGMENTS.map((seg) => (
