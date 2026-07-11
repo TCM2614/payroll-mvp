@@ -9,6 +9,7 @@ import {
 import { createUK2026Config, calculateAnnualTax } from "@/domain/tax/periodTax";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { CalculatorSummary } from "@/components/CalculatorSummary";
+import { IR35Badge } from "@/components/IR35Badge";
 import { formatGBP } from "@/lib/format";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
@@ -131,16 +132,19 @@ export function UmbrellaCalculator() {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <header>
-        <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
-          Umbrella company calculator
-        </h2>
-        <p className="mt-1 text-sm text-navy-200">
-          Calculate your take-home pay when contracting via an umbrella
-          company (inside IR35). We model the full reconciliation: from
-          company income received down through apprenticeship levy,
-          employer&apos;s NI, employer&apos;s pension and the umbrella&apos;s
-          margin, and then the standard PAYE / NI / student loan
-          deductions on your wages.
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
+            Umbrella company calculator
+          </h2>
+          <IR35Badge status="inside" />
+        </div>
+        <p className="mt-2 text-sm text-navy-200">
+          Umbrella engagements are always treated as inside IR35 — you&apos;re
+          taxed as a PAYE employee of the umbrella. We model the full
+          reconciliation: from company income received down through
+          apprenticeship levy, employer&apos;s NI, employer&apos;s pension and
+          the umbrella&apos;s margin, and then the standard PAYE / NI /
+          student loan deductions on your wages.
         </p>
       </header>
 

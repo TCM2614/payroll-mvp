@@ -43,6 +43,21 @@ export interface PreTaxDeduction {
   hint?: string;
 }
 
+export interface GrossSubRow {
+  key: string;
+  label: string;
+  annualAmount: number;
+  hint?: string;
+}
+
+export interface ExtraDeduction {
+  key: string;
+  label: string;
+  /** Positive annual amount to be shown as a deduction. */
+  annualAmount: number;
+  hint?: string;
+}
+
 export interface CalculatorSummaryProps {
   /** Title of the summary card, e.g. "Combined across all jobs". */
   title?: string;
@@ -63,10 +78,29 @@ export interface CalculatorSummaryProps {
   assignmentGrossAnnual?: number;
   /** Ordered list of pre-tax deductions (e.g. umbrella fee). */
   preTaxDeductions?: PreTaxDeduction[];
+  /**
+   * Optional label override for the taxable gross row. Defaults to "Gross
+   * taxable pay (annual)" when a pre-tax section is shown, or "Gross pay
+   * (annual)" otherwise. Outside-IR35 uses "Salary + dividends (annual)".
+   */
+  grossLabel?: string;
+  /**
+   * Optional breakdown of what makes up the taxable gross figure. Rendered
+   * as an indented sub-list under the gross row (e.g. "Salary: £12,570" and
+   * "Dividends: £78,000" for an outside-IR35 contractor).
+   */
+  grossSubRows?: GrossSubRow[];
   /** Annual PAYE income tax. */
   incomeTaxAnnual: number;
+  /** Optional label override for the income tax row. */
+  incomeTaxLabel?: string;
   /** Annual employee National Insurance. */
   nationalInsuranceAnnual: number;
+  /**
+   * Optional additional post-gross deductions rendered alongside the fixed
+   * PAYE/NI/pension rows (e.g. "Dividend tax" for outside-IR35).
+   */
+  extraDeductions?: ExtraDeduction[];
   /** Workplace / salary-sacrifice pension employee contribution (annual). */
   workplacePensionAnnual?: number;
   /** Personal SIPP contributions (annual). Only shown when > 0. */
@@ -116,8 +150,12 @@ export function CalculatorSummary({
   grossAnnual,
   assignmentGrossAnnual,
   preTaxDeductions = [],
+  grossLabel,
+  grossSubRows = [],
   incomeTaxAnnual,
+  incomeTaxLabel = "PAYE income tax",
   nationalInsuranceAnnual,
+  extraDeductions = [],
   workplacePensionAnnual = 0,
   sippAnnual = 0,
   studentLoanAnnual = 0,
@@ -221,7 +259,7 @@ export function CalculatorSummary({
             ))}
             <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
               <dt className="text-brand-text font-medium">
-                Gross taxable pay (annual)
+                {grossLabel ?? "Gross taxable pay (annual)"}
               </dt>
               <dd className="text-right font-semibold text-brand-text">
                 {formatGBP(grossAnnual)}
@@ -231,14 +269,38 @@ export function CalculatorSummary({
         )}
         {!hasPreTaxSection && (
           <div className="flex items-center justify-between gap-2">
-            <dt className="text-brand-textMuted">Gross pay (annual)</dt>
+            <dt className="text-brand-textMuted">
+              {grossLabel ?? "Gross pay (annual)"}
+            </dt>
             <dd className="text-right font-medium text-brand-text">
               {formatGBP(grossAnnual)}
             </dd>
           </div>
         )}
+        {grossSubRows.length > 0 && (
+          <div className="pl-4 border-l-2 border-brand-border/30 space-y-1">
+            {grossSubRows.map(({ key, label, annualAmount, hint }) => (
+              <div
+                key={key}
+                className="flex items-start justify-between gap-2 text-xs"
+              >
+                <dt className="text-brand-textMuted">
+                  {label}
+                  {hint && (
+                    <span className="ml-1 text-xxs text-brand-textMuted/80">
+                      ({hint})
+                    </span>
+                  )}
+                </dt>
+                <dd className="text-right font-medium text-brand-text">
+                  {formatGBP(annualAmount)}
+                </dd>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex items-center justify-between gap-2">
-          <dt className="text-brand-textMuted">PAYE income tax</dt>
+          <dt className="text-brand-textMuted">{incomeTaxLabel}</dt>
           <dd className="text-right font-medium text-brand-text">
             {formatGBP(incomeTaxAnnual)}
           </dd>
@@ -249,6 +311,24 @@ export function CalculatorSummary({
             {formatGBP(nationalInsuranceAnnual)}
           </dd>
         </div>
+        {extraDeductions.map(({ key, label, annualAmount, hint }) => (
+          <div
+            key={key}
+            className="flex items-start justify-between gap-2"
+          >
+            <dt className="text-brand-textMuted">
+              {label}
+              {hint && (
+                <span className="ml-1 text-xxs text-brand-textMuted/80">
+                  ({hint})
+                </span>
+              )}
+            </dt>
+            <dd className="text-right font-medium text-brand-text">
+              {formatGBP(annualAmount)}
+            </dd>
+          </div>
+        ))}
         <div className="flex items-center justify-between gap-2">
           <dt className="text-brand-textMuted">Workplace pension (employee)</dt>
           <dd className="text-right font-medium text-brand-text">

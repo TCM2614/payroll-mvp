@@ -20,7 +20,17 @@ export const UK_TAX_2025 = {
     rate: 0.15,
     apprenticeshipLevy: 0.005,
   },
+  // Legacy flat rate kept for consumers that don't need marginal relief.
   corpTaxRate: 0.19,
+  corporationTax: {
+    mainRate: 0.25,
+    smallProfitsRate: 0.19,
+    smallProfitsUpperLimit: 50_000,
+    mainRateLowerLimit: 250_000,
+    // HMRC marginal relief fraction = (mainRate - smallProfitsRate)
+    //   / (upperLimit - lowerLimit) = 0.06 / 200_000 = 3/200.
+    marginalReliefFraction: 3 / 200,
+  },
   dividend: {
     allowance: 500,
     basic: 0.0875,
@@ -61,6 +71,13 @@ export type PayeTaxConfig = {
     apprenticeshipLevy: number;
   };
   corpTaxRate: number;
+  corporationTax: {
+    mainRate: number;
+    smallProfitsRate: number;
+    smallProfitsUpperLimit: number;
+    mainRateLowerLimit: number;
+    marginalReliefFraction: number;
+  };
   dividend: {
     allowance: number;
     basic: number;
@@ -100,6 +117,13 @@ export const UK_TAX_2024 = {
     apprenticeshipLevy: 0.005,
   },
   corpTaxRate: 0.19,
+  corporationTax: {
+    mainRate: 0.25,
+    smallProfitsRate: 0.19,
+    smallProfitsUpperLimit: 50_000,
+    mainRateLowerLimit: 250_000,
+    marginalReliefFraction: 3 / 200,
+  },
   dividend: {
     allowance: 500,
     basic: 0.0875,
@@ -148,6 +172,13 @@ export const UK_TAX_2026 = {
     apprenticeshipLevy: 0.005,
   },
   corpTaxRate: 0.19,
+  corporationTax: {
+    mainRate: 0.25,
+    smallProfitsRate: 0.19,
+    smallProfitsUpperLimit: 50_000,
+    mainRateLowerLimit: 250_000,
+    marginalReliefFraction: 3 / 200,
+  },
   dividend: {
     allowance: 500,
     basic: 0.0875,

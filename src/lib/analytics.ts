@@ -5,7 +5,12 @@
  * All events are fire-and-forget and contain no PII.
  */
 
-type CalculatorTab = "standard" | "umbrella" | "limited" | "periodic";
+type CalculatorTab =
+  | "standard"
+  | "umbrella"
+  | "limited"
+  | "limited-outside"
+  | "periodic";
 
 type SalaryBand = "<30k" | "30-60k" | "60-100k" | ">100k";
 

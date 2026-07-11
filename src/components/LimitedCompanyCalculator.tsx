@@ -4,11 +4,11 @@ import { useState, useMemo, useEffect } from "react";
 import {
   calculateContractorAnnual,
   type ContractorInputs,
-  type Ir35Status,
 } from "@/domain/tax/contracting";
 import { createUK2026Config, calculateAnnualTax } from "@/domain/tax/periodTax";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { CalculatorSummary } from "@/components/CalculatorSummary";
+import { IR35Badge } from "@/components/IR35Badge";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import {
@@ -18,13 +18,18 @@ import {
   getSalaryBand,
 } from "@/lib/analytics";
 
+/**
+ * Limited-company calculator for **inside-IR35** engagements. The
+ * fee-payer treats the assignment as deemed employment income, so the
+ * pipeline mirrors PAYE. For outside-IR35 (dividends + corporation tax)
+ * see the dedicated `LimitedCompanyOutsideIR35Calculator`.
+ */
 export function LimitedCompanyCalculator() {
   const [monthlyRate, setMonthlyRate] = useState<number | undefined>(undefined);
   const [dayRate, setDayRate] = useState<number | undefined>(500);
   const [daysPerWeek, setDaysPerWeek] = useState(5);
   const [hourlyRate, setHourlyRate] = useState<number | undefined>(undefined);
   const [hoursPerDay, setHoursPerDay] = useState(7.5);
-  const [ir35Status, setIr35Status] = useState<Ir35Status>("inside");
   const [weeksWorkedPerYear, setWeeksWorkedPerYear] = useState(46);
   const [taxCode, setTaxCode] = useState("1257L");
   const [pensionPct, setPensionPct] = useState(5);
@@ -33,13 +38,12 @@ export function LimitedCompanyCalculator() {
     hasPostgraduateLoan: false,
   });
 
-  // Calculate single scenario with combined student loans
   const calculationResult = useMemo(() => {
     const loans = studentLoanSelectionToLoanKeys(studentLoanSelection);
-    
+
     const contractorInputs: ContractorInputs = {
       engagementType: "limited",
-      ir35Status,
+      ir35Status: "inside",
       monthlyRate,
       dayRate,
       daysPerWeek,
@@ -72,7 +76,6 @@ export function LimitedCompanyCalculator() {
     };
   }, [
     studentLoanSelection,
-    ir35Status,
     monthlyRate,
     dayRate,
     daysPerWeek,
@@ -111,11 +114,22 @@ export function LimitedCompanyCalculator() {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <header>
-        <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
-          Limited company calculator
-        </h2>
-        <p className="mt-1 text-sm text-navy-200">
-          Calculate your take-home pay when contracting via a limited company. Select your IR35 status below.
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
+            Limited company calculator
+          </h2>
+          <IR35Badge status="inside" />
+        </div>
+        <p className="mt-2 text-sm text-navy-200">
+          For contractors operating a personal service company where the
+          engagement is caught by IR35. Your fee-payer applies PAYE-style
+          treatment: employer&apos;s NI, apprenticeship levy and PAYE tax
+          come out of the assignment rate before you see it. For
+          outside-IR35 (dividends + corporation tax) use the
+          <span className="mx-1 font-medium text-navy-100">
+            Limited (Outside IR35)
+          </span>
+          tab.
         </p>
       </header>
 
@@ -129,22 +143,6 @@ export function LimitedCompanyCalculator() {
         </p>
 
         <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4">
-          {/* IR35 Status - prominent */}
-          <div className="space-y-1 md:col-span-2">
-            <label className="block text-sm font-medium text-navy-100">IR35 status</label>
-            <select
-              value={ir35Status}
-              onChange={(e) => setIr35Status(e.target.value as Ir35Status)}
-              className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
-            >
-              <option value="inside">Inside IR35</option>
-              <option value="outside">Outside IR35</option>
-            </select>
-            <p className="text-xs text-navy-300">
-              Inside IR35: PAYE-style treatment. Outside IR35: Not yet supported (see results).
-            </p>
-          </div>
-
           {/* Rate inputs */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-navy-100">Monthly rate (£)</label>
@@ -273,40 +271,10 @@ export function LimitedCompanyCalculator() {
       </section>
 
       {/* Section 2: Results — shared CalculatorSummary template */}
-      {!calculationResult.result.supported ? (
+      {calculationResult.result.supported && calculationResult.result.annual ? (
         <CalculatorSummary
-          title="Limited company take-home pay"
-          subtitle="We currently model inside IR35 (PAYE-style) only."
-          grossAnnual={calculationResult.result.grossAnnualIncome}
-          incomeTaxAnnual={0}
-          nationalInsuranceAnnual={0}
-          netAnnual={0}
-          notice={{
-            variant: "warn",
-            heading: "Outside IR35 not yet supported",
-            body: (
-              <>
-                <p>
-                  We do not currently model full limited company and dividend tax. We only provide inside IR35 / PAYE-style estimates.
-                </p>
-                {calculationResult.result.reasonIfUnsupported && (
-                  <p className="mt-2">
-                    {calculationResult.result.reasonIfUnsupported}
-                  </p>
-                )}
-              </>
-            ),
-          }}
-          disclaimer="These figures use PAYE-style rules for guidance only and are not an official HMRC calculation. This is an inside IR35 estimate."
-        />
-      ) : calculationResult.result.annual ? (
-        <CalculatorSummary
-          title="Limited company take-home pay"
-          subtitle={
-            ir35Status === "inside"
-              ? "Inside IR35 — PAYE-style estimate."
-              : "Estimated take-home for your engagement."
-          }
+          title="Limited company take-home pay (Inside IR35)"
+          subtitle="Inside IR35 — PAYE-style estimate applied by the fee-payer."
           contextLine={
             monthlyRate && monthlyRate > 0 ? (
               <>Based on a monthly retainer over 12 months.</>
