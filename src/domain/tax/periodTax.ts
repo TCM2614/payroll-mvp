@@ -206,17 +206,23 @@ export function calculateAnnualTax(inputs: AnnualTaxInputs): AnnualTaxBreakdown 
   // Apply pension deduction
   const grossAfterPension = grossAnnualIncome - pensionEmployeeAnnual;
 
-  // Calculate personal allowance (with tapering)
+  // Resolve the personal allowance from the tax code (e.g. 1257L → £12,570,
+  // BR/D0/D1/0T → 0). Fall back to the config default when the code doesn't
+  // encode a PA (NT).
+  const taxCodePA = parseTaxCodePA(taxCode, config.personalAllowance);
+  const baselinePA = taxCodePA ?? config.personalAllowance;
+
+  // Apply the £100k+ personal-allowance taper — HMRC removes £1 of PA for
+  // every £2 of adjusted net income above £100,000. Previously the taper
+  // was computed against `config.personalAllowance` but then overwritten
+  // by the code-derived PA, so anyone with a standard "1257L" code
+  // silently skipped the taper.
   const paTaperStart = 100000;
-  let personalAllowance = config.personalAllowance;
+  let effectivePA = baselinePA;
   if (grossAfterPension > paTaperStart) {
     const reduction = Math.floor((grossAfterPension - paTaperStart) / 2);
-    personalAllowance = Math.max(0, personalAllowance - reduction);
+    effectivePA = Math.max(0, effectivePA - reduction);
   }
-
-  // Parse tax code to determine personal allowance
-  const taxCodePA = parseTaxCodePA(taxCode, config.personalAllowance);
-  const effectivePA = taxCodePA ?? personalAllowance;
 
   // Calculate taxable income
   const taxableIncome = Math.max(0, grossAfterPension - effectivePA);
