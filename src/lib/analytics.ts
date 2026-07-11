@@ -47,24 +47,68 @@ function isProduction(): boolean {
 }
 
 /**
+ * Sanitised list of UTM parameters we care about. Kept small and
+ * hand-selected — nothing PII, nothing arbitrary — because Plausible custom
+ * props have a limit on distinct values per property.
+ */
+const UTM_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+] as const;
+type UtmKey = (typeof UTM_KEYS)[number];
+
+/**
+ * Read the current page's UTM parameters. Only called from the browser;
+ * returns an empty object on the server or when no UTM tags are present.
+ * Values are truncated to 60 characters to guard against absurd inputs.
+ */
+export function readUtmParams(): Partial<Record<UtmKey, string>> {
+  if (typeof window === "undefined") return {};
+  try {
+    const search = new URLSearchParams(window.location.search);
+    const out: Partial<Record<UtmKey, string>> = {};
+    for (const key of UTM_KEYS) {
+      const raw = search.get(key);
+      if (raw) out[key] = raw.slice(0, 60);
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/**
  * Fire an analytics event (no-op in development)
- * 
+ *
  * @param name - Event name
  * @param props - Optional event properties
+ *
+ * UTM parameters from the current URL are attached automatically so we
+ * can attribute conversions to acquisition sources without adding UTM
+ * plumbing to every call-site.
  */
 export function trackEvent(
   name: string,
   props?: Record<string, string | number | boolean>
 ): void {
   if (typeof window === "undefined") return;
-  
+
   if (process.env.NODE_ENV !== "production") {
     // Optional: console.log(name, props);
     return;
   }
 
+  const utm = readUtmParams();
+  const merged: Record<string, string | number | boolean> = {
+    ...(props ?? {}),
+    ...utm,
+  };
+
   // Fire-and-forget call to Plausible
-  window.plausible?.(name, { props });
+  window.plausible?.(name, { props: merged });
 }
 
 /**
@@ -132,6 +176,24 @@ export function trackCalculatorRun(tab: CalculatorTab): void {
  */
 export function trackCTAClick(ctaName: string, location?: string): void {
   trackEvent("cta_click", { cta: ctaName, location: location || "unknown" });
+}
+
+/**
+ * Marketing: fire when the "See the difference" landing strip enters the
+ * viewport for the first time in a session. Attached via IntersectionObserver
+ * so we can measure how many landing-page visitors actually see it.
+ */
+export function trackComparisonStripView(source: string): void {
+  trackEvent("comparison_strip_view", { source });
+}
+
+/**
+ * Marketing: fire when a visitor clicks the "Model your own rate" CTA
+ * (or an equivalent) on the comparison strip. This is the strip's
+ * conversion event.
+ */
+export function trackComparisonStripCta(source: string): void {
+  trackEvent("comparison_strip_cta_click", { source });
 }
 
 // Extend Window interface for Plausible
