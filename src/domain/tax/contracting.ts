@@ -49,6 +49,14 @@ export interface ContractorInputs {
   /** How the umbrella fee is quoted. Defaults to "weekly". */
   umbrellaFeeFrequency?: UmbrellaFeeFrequency;
 
+  /**
+   * Employer's pension contribution as a percentage of the employee's
+   * wages, deducted by the umbrella from the assignment rate before PAYE.
+   * Only applies when engagementType === "umbrella". Defaults to 0 (most
+   * umbrella contractors opt out of the umbrella's auto-enrolment scheme).
+   */
+  employerPensionPercent?: number;
+
   /** Tax-year + PAYE config. */
   taxYear: SupportedTaxYear;
   taxCode: string;
@@ -56,25 +64,56 @@ export interface ContractorInputs {
   studentLoanPlan?: "none" | "plan1" | "plan2" | "plan4" | "plan5" | "postgrad";
 }
 
+/**
+ * Employer-side costs that come out of an umbrella assignment before the
+ * remainder becomes the employee's PAYE gross pay. Mirrors the "Company
+ * Income and Costs" block on a real umbrella reconciliation payslip.
+ */
+export interface UmbrellaEmployerCosts {
+  /** Annual employer NI (secondary Class 1 contributions). */
+  employerNIAnnual: number;
+  /** Annual apprenticeship levy passed on to the assignment. */
+  apprenticeshipLevyAnnual: number;
+  /** Annual employer pension contribution paid by the umbrella. */
+  employerPensionAnnual: number;
+  /** Total annual company margin / umbrella fee. */
+  umbrellaFeeAnnual: number;
+  /** Sum of the four pre-tax deductions above. */
+  totalEmployerCostsAnnual: number;
+  /**
+   * The employee's PAYE gross pay for the year — i.e. assignment income
+   * minus all employer costs. This is the number fed into PAYE / NI /
+   * pension / student-loan calculations.
+   */
+  wagesAnnual: number;
+}
+
 export interface ContractorAnnualResult {
   supported: boolean;
   reasonIfUnsupported?: string;
 
   /**
-   * Annualised taxable gross income (after any umbrella-fee deduction).
-   * This is the figure fed into PAYE/NI calculations.
+   * Annualised taxable gross income (after any umbrella-side pre-tax
+   * deductions). Equals `wagesAnnual` on the employer-cost breakdown for
+   * umbrella scenarios, and `assignmentGrossAnnual` otherwise. This is the
+   * figure fed into PAYE/NI calculations.
    */
   grossAnnualIncome: number;
 
   /**
    * Total annualised invoiced/assignment income before any pre-tax
-   * deductions such as the umbrella fee. Equals `grossAnnualIncome` when no
-   * pre-tax deductions apply.
+   * deductions. Equals `grossAnnualIncome` when no pre-tax deductions apply.
    */
   assignmentGrossAnnual: number;
 
   /** Total annual umbrella fee (0 for limited-company or fee-less scenarios). */
   umbrellaFeeAnnual: number;
+
+  /**
+   * Umbrella-side employer costs breakdown. Populated for umbrella
+   * engagements; undefined for limited-company engagements.
+   */
+  employerCosts?: UmbrellaEmployerCosts;
 
   /** Number of billable weeks used in the derivation (52 when unspecified). */
   weeksWorkedPerYear: number;
@@ -92,6 +131,8 @@ export interface ContractorAnnualResult {
     umbrellaFee: number;
     /** Assignment/invoiced gross (mirrors top-level field). */
     assignmentGrossAnnual: number;
+    /** Umbrella-side employer costs (mirrors top-level field). */
+    employerCosts?: UmbrellaEmployerCosts;
   };
 }
 
@@ -134,6 +175,92 @@ export function resolveAnnualUmbrellaFee(input: ContractorInputs): number {
   }
   const weeks = resolveWeeksWorkedPerYear(input);
   return amount * weeks;
+}
+
+/**
+ * Solve the umbrella pay pipeline for the employee wage figure that PAYE is
+ * assessed on. Mirrors how umbrella payroll bureaus reconcile an assignment
+ * rate on the way to a payslip:
+ *
+ *   assignmentIncome
+ *     − apprenticeship levy (AL_rate · wages)
+ *     − employer NI          (eRate · max(0, wages − secondary threshold))
+ *     − employer pension     (epRate · wages)
+ *     − umbrella margin      (fixed £)
+ *   = wages (PAYE gross)
+ *
+ * Because the first three deductions are linear in `wages`, we can solve
+ * analytically. Numbers are clamped to be non-negative for degenerate cases
+ * where the assignment is smaller than the fixed costs.
+ */
+export function computeUmbrellaEmployerCosts(params: {
+  assignmentGrossAnnual: number;
+  umbrellaFeeAnnual: number;
+  employerNiRate: number;
+  employerNiSecondaryThresholdAnnual: number;
+  apprenticeshipLevyRate: number;
+  employerPensionRate: number;
+}): UmbrellaEmployerCosts {
+  const {
+    assignmentGrossAnnual,
+    umbrellaFeeAnnual,
+    employerNiRate,
+    employerNiSecondaryThresholdAnnual,
+    apprenticeshipLevyRate,
+    employerPensionRate,
+  } = params;
+
+  const netAfterFixed = Math.max(0, assignmentGrossAnnual - umbrellaFeeAnnual);
+
+  // Try the "wages above secondary threshold" branch first, which produces
+  // the closed-form solution used above the ST. If it yields wages below
+  // the threshold we fall back to the sub-threshold branch (no employer
+  // NI applies).
+  const denomAbove =
+    1 + employerNiRate + apprenticeshipLevyRate + employerPensionRate;
+  const wagesAbove = denomAbove > 0
+    ? (netAfterFixed + employerNiRate * employerNiSecondaryThresholdAnnual)
+        / denomAbove
+    : 0;
+
+  let wagesAnnual: number;
+  let employerNIAnnual: number;
+
+  if (wagesAbove >= employerNiSecondaryThresholdAnnual) {
+    wagesAnnual = wagesAbove;
+    employerNIAnnual = employerNiRate * (wagesAbove - employerNiSecondaryThresholdAnnual);
+  } else {
+    const denomBelow = 1 + apprenticeshipLevyRate + employerPensionRate;
+    wagesAnnual = denomBelow > 0 ? netAfterFixed / denomBelow : 0;
+    employerNIAnnual = 0;
+  }
+
+  wagesAnnual = Math.max(0, wagesAnnual);
+  employerNIAnnual = Math.max(0, employerNIAnnual);
+
+  const apprenticeshipLevyAnnual = Math.max(
+    0,
+    apprenticeshipLevyRate * wagesAnnual,
+  );
+  const employerPensionAnnual = Math.max(
+    0,
+    employerPensionRate * wagesAnnual,
+  );
+
+  const totalEmployerCostsAnnual =
+    employerNIAnnual +
+    apprenticeshipLevyAnnual +
+    employerPensionAnnual +
+    umbrellaFeeAnnual;
+
+  return {
+    employerNIAnnual,
+    apprenticeshipLevyAnnual,
+    employerPensionAnnual,
+    umbrellaFeeAnnual,
+    totalEmployerCostsAnnual,
+    wagesAnnual,
+  };
 }
 
 /**
@@ -252,12 +379,6 @@ export function calculateContractorAnnual(
   }
 
   const umbrellaFeeAnnual = resolveAnnualUmbrellaFee(input);
-  // Umbrella fee is a pre-tax deduction from the assignment income. Guard
-  // against fees larger than the assignment income.
-  const grossAnnualIncome = Math.max(
-    0,
-    assignmentGrossAnnual - umbrellaFeeAnnual,
-  );
 
   if (assignmentGrossAnnual <= 0) {
     return {
@@ -271,6 +392,43 @@ export function calculateContractorAnnual(
     };
   }
 
+  // Resolve the tax-year config up front so we can build the umbrella
+  // employer-cost breakdown (which needs the employer NI settings).
+  const config = deps.createConfigForYear(input.taxYear);
+
+  let employerCosts: UmbrellaEmployerCosts | undefined;
+  let grossAnnualIncome: number;
+
+  if (input.engagementType === "umbrella") {
+    const employerPensionRate = Math.max(
+      0,
+      (input.employerPensionPercent ?? 0) / 100,
+    );
+
+    // Employer NI / apprenticeship-levy settings default to 2026/27 rates
+    // when the config was produced by an older factory that didn't include
+    // `employerNi`.
+    const employerNi = config.employerNi ?? {
+      secondaryThreshold: 5_000,
+      rate: 0.15,
+      apprenticeshipLevy: 0.005,
+    };
+
+    employerCosts = computeUmbrellaEmployerCosts({
+      assignmentGrossAnnual,
+      umbrellaFeeAnnual,
+      employerNiRate: employerNi.rate,
+      employerNiSecondaryThresholdAnnual: employerNi.secondaryThreshold,
+      apprenticeshipLevyRate: employerNi.apprenticeshipLevy,
+      employerPensionRate,
+    });
+    grossAnnualIncome = employerCosts.wagesAnnual;
+  } else {
+    // Limited company: no umbrella-side employer costs; the assignment
+    // income is the taxable gross directly.
+    grossAnnualIncome = assignmentGrossAnnual;
+  }
+
   if (input.ir35Status === "outside") {
     return {
       supported: false,
@@ -280,13 +438,12 @@ export function calculateContractorAnnual(
       grossAnnualIncome,
       assignmentGrossAnnual,
       umbrellaFeeAnnual,
+      employerCosts,
       weeksWorkedPerYear,
     };
   }
 
   if (input.ir35Status === "inside") {
-    const config = deps.createConfigForYear(input.taxYear);
-
     const studentLoanPlans =
       input.studentLoanPlan && input.studentLoanPlan !== "none"
         ? [input.studentLoanPlan]
@@ -306,6 +463,7 @@ export function calculateContractorAnnual(
       grossAnnualIncome,
       assignmentGrossAnnual,
       umbrellaFeeAnnual,
+      employerCosts,
       weeksWorkedPerYear,
       annual: {
         paye: breakdown.annualPAYE,
@@ -316,6 +474,7 @@ export function calculateContractorAnnual(
         net: breakdown.netAnnualIncome,
         umbrellaFee: umbrellaFeeAnnual,
         assignmentGrossAnnual,
+        employerCosts,
       },
     };
   }
@@ -326,6 +485,7 @@ export function calculateContractorAnnual(
     grossAnnualIncome,
     assignmentGrossAnnual,
     umbrellaFeeAnnual,
+    employerCosts,
     weeksWorkedPerYear,
   };
 }

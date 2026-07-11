@@ -31,6 +31,17 @@ export interface TaxYearConfig {
     mainRate: number;
     upperRate: number;
   };
+  /**
+   * Employer-side National Insurance / apprenticeship-levy config. Used by
+   * the umbrella engine to model the employer costs that come out of the
+   * assignment rate before the employee's PAYE gross is set. Optional so
+   * older callers don't need to populate it.
+   */
+  employerNi?: {
+    secondaryThreshold: number;
+    rate: number;
+    apprenticeshipLevy: number;
+  };
   studentLoans: {
     [key: string]: { threshold: number; rate: number };
   };
@@ -731,6 +742,11 @@ export function createUK2025Config(): TaxYearConfig {
       mainRate: UK_TAX_2025.ni.mainRate,
       upperRate: UK_TAX_2025.ni.upperRate,
     },
+    employerNi: {
+      secondaryThreshold: UK_TAX_2025.employerNi.secondaryThreshold,
+      rate: UK_TAX_2025.employerNi.rate,
+      apprenticeshipLevy: UK_TAX_2025.employerNi.apprenticeshipLevy,
+    },
     studentLoans: UK_TAX_2025.studentLoans,
   };
 }
@@ -766,6 +782,11 @@ export function createUK2026Config(): TaxYearConfig {
       upperEarningsLimit: UK_TAX_2026.ni.upperEarningsLimit,
       mainRate: UK_TAX_2026.ni.mainRate,
       upperRate: UK_TAX_2026.ni.upperRate,
+    },
+    employerNi: {
+      secondaryThreshold: UK_TAX_2026.employerNi.secondaryThreshold,
+      rate: UK_TAX_2026.employerNi.rate,
+      apprenticeshipLevy: UK_TAX_2026.employerNi.apprenticeshipLevy,
     },
     studentLoans: UK_TAX_2026.studentLoans,
   };

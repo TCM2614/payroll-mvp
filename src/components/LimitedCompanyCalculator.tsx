@@ -55,9 +55,11 @@ export function LimitedCompanyCalculator() {
     const result = calculateContractorAnnual(contractorInputs, {
       createConfigForYear: () => createUK2026Config(),
       calculateAnnual: (input) => {
-        // Use the new multi-plan support
+        const pensionEmployeeAnnual =
+          ((input.pensionEmployeePercent ?? 0) / 100) * input.grossAnnualIncome;
         return calculateAnnualTax({
           ...input,
+          pensionEmployeeAnnual,
           studentLoanPlans: loans.length > 0 ? loans : undefined,
         });
       },

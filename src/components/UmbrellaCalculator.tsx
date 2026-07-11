@@ -37,6 +37,7 @@ export function UmbrellaCalculator() {
   const [umbrellaFeeAmount, setUmbrellaFeeAmount] = useState(25);
   const [umbrellaFeeFrequency, setUmbrellaFeeFrequency] =
     useState<UmbrellaFeeFrequency>("weekly");
+  const [employerPensionPct, setEmployerPensionPct] = useState(0);
   const [taxCode, setTaxCode] = useState("1257L");
   const [pensionPct, setPensionPct] = useState(5);
   const [studentLoanSelection, setStudentLoanSelection] = useState<StudentLoanSelection>({
@@ -58,6 +59,7 @@ export function UmbrellaCalculator() {
       weeksWorkedPerYear,
       umbrellaFeeAmount,
       umbrellaFeeFrequency,
+      employerPensionPercent: employerPensionPct,
       taxYear: "2026-27",
       taxCode,
       pensionEmployeePercent: pensionPct,
@@ -67,8 +69,11 @@ export function UmbrellaCalculator() {
     const result = calculateContractorAnnual(contractorInputs, {
       createConfigForYear: () => createUK2026Config(),
       calculateAnnual: (input) => {
+        const pensionEmployeeAnnual =
+          ((input.pensionEmployeePercent ?? 0) / 100) * input.grossAnnualIncome;
         return calculateAnnualTax({
           ...input,
+          pensionEmployeeAnnual,
           studentLoanPlans: loans.length > 0 ? loans : undefined,
         });
       },
@@ -93,6 +98,7 @@ export function UmbrellaCalculator() {
     weeksWorkedPerYear,
     umbrellaFeeAmount,
     umbrellaFeeFrequency,
+    employerPensionPct,
     taxCode,
     pensionPct,
   ]);
@@ -129,7 +135,12 @@ export function UmbrellaCalculator() {
           Umbrella company calculator
         </h2>
         <p className="mt-1 text-sm text-navy-200">
-          Calculate your take-home pay when contracting via an umbrella company (inside IR35).
+          Calculate your take-home pay when contracting via an umbrella
+          company (inside IR35). We model the full reconciliation: from
+          company income received down through apprenticeship levy,
+          employer&apos;s NI, employer&apos;s pension and the umbrella&apos;s
+          margin, and then the standard PAYE / NI / student loan
+          deductions on your wages.
         </p>
       </header>
 
@@ -290,6 +301,34 @@ export function UmbrellaCalculator() {
             </p>
           </div>
 
+          {/* Employer's pension */}
+          <div className="space-y-1 md:col-span-2">
+            <label className="block text-sm font-medium text-navy-100">
+              Employer&apos;s pension (%)
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={20}
+              step="0.1"
+              value={employerPensionPct}
+              onChange={(e) => {
+                const raw = Number(e.target.value);
+                setEmployerPensionPct(
+                  Number.isFinite(raw) && raw >= 0 ? Math.min(20, raw) : 0,
+                );
+              }}
+              className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+              placeholder="0"
+            />
+            <p className="text-xs text-navy-300">
+              Employer pension contribution paid by the umbrella (out of the
+              assignment rate, before your PAYE). Leave at 0 if you&apos;ve
+              opted out of the umbrella&apos;s auto-enrolment scheme;
+              statutory AE minimum is 3%.
+            </p>
+          </div>
+
           {/* Tax inputs */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-navy-100">Tax code</label>
@@ -340,57 +379,93 @@ export function UmbrellaCalculator() {
           disclaimer="These figures use PAYE-style rules for guidance only and are not an official HMRC calculation or full umbrella fee model. This is an inside IR35 estimate."
         />
       ) : calculationResult.result.annual ? (
-        <CalculatorSummary
-          title="Umbrella take-home pay"
-          subtitle="Estimated take-home when contracting via an umbrella company (inside IR35)."
-          contextLine={
-            <>
-              Based on {daysPerWeek} day
-              {daysPerWeek === 1 ? "" : "s"} per week ×{" "}
-              {calculationResult.result.weeksWorkedPerYear} week
-              {calculationResult.result.weeksWorkedPerYear === 1 ? "" : "s"}{" "}
-              worked (≈{" "}
-              {daysPerWeek *
-                calculationResult.result.weeksWorkedPerYear}{" "}
-              billable days per year).
-            </>
+        (() => {
+          const {
+            assignmentGrossAnnual,
+            employerCosts,
+            weeksWorkedPerYear: resultWeeksWorkedPerYear,
+          } = calculationResult.result;
+          const preTaxDeductions: {
+            key: string;
+            label: string;
+            annualAmount: number;
+            hint?: string;
+          }[] = [];
+          if (employerCosts) {
+            if (employerCosts.apprenticeshipLevyAnnual > 0) {
+              preTaxDeductions.push({
+                key: "apprenticeship-levy",
+                label: "Apprenticeship levy",
+                annualAmount: employerCosts.apprenticeshipLevyAnnual,
+                hint: "0.5% of wages",
+              });
+            }
+            if (employerCosts.employerNIAnnual > 0) {
+              preTaxDeductions.push({
+                key: "employer-ni",
+                label: "Employer's NI",
+                annualAmount: employerCosts.employerNIAnnual,
+                hint: "15% on wages above £5,000",
+              });
+            }
+            if (employerCosts.employerPensionAnnual > 0) {
+              preTaxDeductions.push({
+                key: "employer-pension",
+                label: "Employer's pension",
+                annualAmount: employerCosts.employerPensionAnnual,
+                hint: `${employerPensionPct.toFixed(
+                  employerPensionPct % 1 === 0 ? 0 : 1,
+                )}% of wages`,
+              });
+            }
+            if (employerCosts.umbrellaFeeAnnual > 0) {
+              preTaxDeductions.push({
+                key: "umbrella-margin",
+                label: "Company margin",
+                annualAmount: employerCosts.umbrellaFeeAnnual,
+                hint:
+                  umbrellaFeeFrequency === "monthly"
+                    ? `${formatGBP(umbrellaFeeAmount)}/month`
+                    : `${formatGBP(umbrellaFeeAmount)}/week × ${resultWeeksWorkedPerYear}`,
+              });
+            }
           }
-          assignmentGrossAnnual={
-            calculationResult.result.assignmentGrossAnnual
-          }
-          preTaxDeductions={
-            calculationResult.result.umbrellaFeeAnnual > 0
-              ? [
-                  {
-                    key: "umbrella-fee",
-                    label: "Umbrella company fee",
-                    annualAmount:
-                      calculationResult.result.umbrellaFeeAnnual,
-                    hint:
-                      umbrellaFeeFrequency === "monthly"
-                        ? `${formatGBP(umbrellaFeeAmount)}/month`
-                        : `${formatGBP(umbrellaFeeAmount)}/week × ${
-                            calculationResult.result.weeksWorkedPerYear
-                          }`,
-                  },
-                ]
-              : []
-          }
-          grossAnnual={calculationResult.result.grossAnnualIncome}
-          incomeTaxAnnual={calculationResult.result.annual.paye}
-          nationalInsuranceAnnual={calculationResult.result.annual.ni}
-          workplacePensionAnnual={calculationResult.result.annual.pensionEmployee}
-          studentLoanAnnual={calculationResult.result.annual.studentLoan}
-          studentLoanBreakdown={(calculationResult.result.annual.studentLoanBreakdown ?? []).map(
-            ({ plan, label, amount }) => ({
-              key: plan,
-              label,
-              annualAmount: amount,
-            }),
-          )}
-          netAnnual={calculationResult.result.annual.net}
-          disclaimer="These figures use PAYE-style rules for guidance only and are not an official HMRC calculation or full umbrella fee model. This is an inside IR35 estimate."
-        />
+
+          return (
+            <CalculatorSummary
+              title="Umbrella take-home pay"
+              subtitle="Assignment income reconciled through employer costs and PAYE deductions, matching a real umbrella payslip."
+              contextLine={
+                <>
+                  Based on {daysPerWeek} day
+                  {daysPerWeek === 1 ? "" : "s"} per week ×{" "}
+                  {resultWeeksWorkedPerYear} week
+                  {resultWeeksWorkedPerYear === 1 ? "" : "s"} worked (≈{" "}
+                  {daysPerWeek * resultWeeksWorkedPerYear} billable days per
+                  year).
+                </>
+              }
+              assignmentGrossAnnual={assignmentGrossAnnual}
+              preTaxDeductions={preTaxDeductions}
+              grossAnnual={calculationResult.result.grossAnnualIncome}
+              incomeTaxAnnual={calculationResult.result.annual.paye}
+              nationalInsuranceAnnual={calculationResult.result.annual.ni}
+              workplacePensionAnnual={
+                calculationResult.result.annual.pensionEmployee
+              }
+              studentLoanAnnual={calculationResult.result.annual.studentLoan}
+              studentLoanBreakdown={(
+                calculationResult.result.annual.studentLoanBreakdown ?? []
+              ).map(({ plan, label, amount }) => ({
+                key: plan,
+                label,
+                annualAmount: amount,
+              }))}
+              netAnnual={calculationResult.result.annual.net}
+              disclaimer="These figures mirror the reconciliation shown on a real umbrella payslip (company income → apprenticeship levy → employer's NI → employer's pension → margin → PAYE gross → tax, NIC, employee pension and student loans). Estimates for guidance only, not an official HMRC calculation."
+            />
+          );
+        })()
       ) : null}
     </div>
   );
