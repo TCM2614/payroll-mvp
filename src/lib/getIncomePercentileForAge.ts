@@ -69,9 +69,13 @@ export function getIncomePercentileForAge(
     p90Income: p90Row.income,
   };
 
-  // Below the 10th percentile anchor – nudge slightly below
+  // Below the 10th percentile anchor – extrapolate towards 0 asymptotically
+  // using the ratio of income to the p10 anchor. Someone on £1 shouldn't
+  // sit in the same bucket as someone on £9,999 when p10 is £10,000.
   if (income <= first.income) {
-    const pct = Math.max(0, first.percentile - 5);
+    const denom = first.income > 0 ? first.income : 1;
+    const pctRaw = first.percentile * (income / denom);
+    const pct = Math.max(0, Math.min(first.percentile, pctRaw));
     const pctRounded = Math.round(pct * 10) / 10;
     return {
       percentile: pctRounded,
@@ -80,9 +84,26 @@ export function getIncomePercentileForAge(
     };
   }
 
-  // Above the 95th/90th percentile anchor – nudge slightly above
+  // Above the top anchor – extrapolate towards 100 asymptotically rather
+  // than clamping the entire top tail to a single value. Otherwise anyone
+  // above the p95 anchor (£60k for 25–29 year olds) is reported as "100%",
+  // which is both false and impossible.
+  //
+  //   percentile = last.percentile + (100 - last.percentile) · (1 - last.income / income)
+  //
+  // Sanity check for the p95=£60k anchor:
+  //   income = £60k   → 95.0
+  //   income = £72k   → 95.83
+  //   income = £100k  → 97.0
+  //   income = £250k  → 98.8
+  //   income → ∞     → 100 (asymptotic; never reached).
+  //
+  // We cap the reported value at 99.9 so we never claim someone earns more
+  // than 100% of their peers.
   if (income >= last.income) {
-    const pct = Math.min(100, last.percentile + 5);
+    const ratio = income > 0 ? last.income / income : 1;
+    const pctRaw = last.percentile + (100 - last.percentile) * (1 - ratio);
+    const pct = Math.max(last.percentile, Math.min(99.9, pctRaw));
     const pctRounded = Math.round(pct * 10) / 10;
     return {
       percentile: pctRounded,

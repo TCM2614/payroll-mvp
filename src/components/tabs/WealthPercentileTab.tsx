@@ -71,13 +71,24 @@ function IncomeComparisonTooltip(
 type PercentileTooltipProps = TooltipContentProps<number, string> & {
   ageBand?: IncomePercentileResult["ageBand"];
   clampedPercentile?: number | null;
+  /**
+   * Key of the segment the user is actually hovering over. Set by the
+   * per-bar onMouseOver handler because recharts' `payload[0]` for a
+   * stacked bar always points to the first segment in the stack, not the
+   * segment under the cursor.
+   */
+  hoveredSegKey?: string | null;
 };
 
 function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
-  const { active, payload, ageBand, clampedPercentile } = props;
+  const { active, payload, ageBand, clampedPercentile, hoveredSegKey } = props;
   if (!active || !payload || payload.length === 0 || !ageBand) return null;
-  const dataKey = payload[0]?.dataKey;
-  const key = typeof dataKey === "string" ? dataKey : null;
+  // Prefer the explicitly-tracked hovered segment. Fall back to the payload's
+  // first dataKey only if we somehow don't have one (e.g. keyboard focus).
+  const fallbackKey = payload[0]?.dataKey;
+  const key =
+    hoveredSegKey ??
+    (typeof fallbackKey === "string" ? fallbackKey : null);
   const seg = key ? PERCENTILE_SEGMENTS.find((s) => s.key === key) : undefined;
   if (!seg) return null;
 
@@ -116,33 +127,44 @@ function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
 }
 
 function formatPercentile(value: number): string {
-  const clamped = Math.min(100, Math.max(0, value));
-  if (clamped >= 99.995) {
-    return "100%";
-  }
-  return `${clamped.toFixed(2)}%`;
+  const clamped = Math.min(99.99, Math.max(0, value));
+  // Trim to at most 2 decimals and drop trailing zeros for a cleaner read
+  // (e.g. "50%", "95.8%", "99.99%") but never claim exactly 100%.
+  const rounded = Math.round(clamped * 100) / 100;
+  const str = rounded.toFixed(2).replace(/\.?0+$/, "");
+  return `${str}%`;
 }
 
 function formatTopShare(value: number): string {
-  const clamped = Math.min(100, Math.max(0, value));
+  const clamped = Math.min(99.99, Math.max(0, value));
   const distanceFromTop = 100 - clamped;
 
-  // Very high percentiles: snap to simple labels
-  if (clamped >= 99.5) {
-    return "top 1%";
-  }
-  if (clamped >= 99) {
-    return "top 2%";
-  }
+  // Round to 2dp and drop trailing zeros so we get e.g. "top 4.2%" rather
+  // than "top 4.20%", while still preserving fine-grained detail near the
+  // top of the distribution.
+  const rounded = Math.round(distanceFromTop * 100) / 100;
+  const topShare = Math.max(0.01, rounded);
+  const str = topShare.toFixed(2).replace(/\.?0+$/, "");
+  return `top ${str}%`;
+}
 
-  const topShare = Math.max(0.01, Number(distanceFromTop.toFixed(2)));
-
-  // Safety net: never say top 0%
-  if (topShare <= 0) {
-    return "top 1%";
+/**
+ * Build the primary result-card headline. Uses "top X%" phrasing for the
+ * upper tail (where "you earn more than 99.9% of people" reads oddly) and
+ * "more than X%" phrasing for the middle/lower ranges.
+ */
+function buildResultHeadline(
+  percentile: number,
+  ageGroupLabel: string,
+): string {
+  const clamped = Math.min(99.99, Math.max(0, percentile));
+  if (clamped >= 90) {
+    return `You're in the ${formatTopShare(clamped)} of earners for ${ageGroupLabel} in the UK.`;
   }
-
-  return `top ${topShare.toFixed(2)}%`;
+  if (clamped >= 50) {
+    return `You earn more than roughly ${formatPercentile(clamped)} of people in ${ageGroupLabel} in the UK.`;
+  }
+  return `You earn less than the median for ${ageGroupLabel} in the UK.`;
 }
 
 function estimateIncomeForPercentile(
@@ -195,6 +217,7 @@ export function WealthPercentileTab({
   const [lastIncome, setLastIncome] = useState<number | null>(
     typeof initialSource === "number" && initialSource > 0 ? Math.round(initialSource) : null,
   );
+  const [hoveredSegKey, setHoveredSegKey] = useState<string | null>(null);
 
   const parsedAge = useMemo(() => {
     const age = parseInt(ageInput, 10);
@@ -381,7 +404,7 @@ export function WealthPercentileTab({
         <section className="rounded-3xl bg-brand-surface/80 border border-brand-border/60 shadow-soft-xl backdrop-blur-xl p-4 sm:p-6 space-y-6">
           <header className="space-y-1">
             <h3 className="text-lg sm:text-xl font-semibold text-brand-text">
-              You earn more than {percentileDisplay} of people your age in the UK.
+              {buildResultHeadline(clampedPercentile, result.ageGroupLabel)}
             </h3>
             <p className="text-sm text-brand-textMuted">
               You are in the{" "}
@@ -422,16 +445,16 @@ export function WealthPercentileTab({
               />
             </div>
             <p className="text-xs text-brand-textMuted">
-              Percentiles show how you compare with others. Being at{" "}
+              Percentiles show how you compare with others in your age group.
+              At{" "}
               <span className="font-semibold text-brand-text">
                 {percentileDisplay}
               </span>{" "}
-              means you earn more than {percentileDisplay} of people in your age group. That
-              places you in the{" "}
+              you sit in the{" "}
               <span className="font-semibold text-brand-text">
                 {formatTopShare(clampedPercentile)}
               </span>{" "}
-              of earners for your age group.
+              of earners for {result.ageGroupLabel} in the UK.
             </p>
           </div>
 
@@ -568,6 +591,7 @@ export function WealthPercentileTab({
                         {...(p as TooltipContentProps<number, string>)}
                         ageBand={result.ageBand}
                         clampedPercentile={clampedPercentile}
+                        hoveredSegKey={hoveredSegKey}
                       />
                     )}
                   />
@@ -589,6 +613,8 @@ export function WealthPercentileTab({
                           : 0
                       }
                       fill={seg.color}
+                      onMouseOver={() => setHoveredSegKey(seg.key)}
+                      onMouseOut={() => setHoveredSegKey(null)}
                     />
                   ))}
                 </BarChart>
