@@ -1,9 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
-import { computeLandingComparison } from "@/lib/marketing/landingComparison";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  computeLandingComparison,
+  type ComparisonScenarioInputs,
+} from "@/lib/marketing/landingComparison";
 import { formatGBP } from "@/lib/format";
+import {
+  trackComparisonStripCta,
+  trackComparisonStripView,
+} from "@/lib/analytics";
+
+interface Props {
+  /**
+   * Override the default scenario inputs. Used by the share URLs at
+   * `/compare/[slug]` (e.g. `500-a-day`, `50-per-hour`) to render the
+   * strip for a specific rate.
+   */
+  inputs?: Partial<ComparisonScenarioInputs>;
+  /**
+   * Analytics source label so we can distinguish landing-hero views from
+   * share-URL views in Plausible.
+   */
+  analyticsSource?: string;
+  /**
+   * Extra props applied to the internal Link CTA (e.g. a custom href for
+   * share URLs pointing to the calculator with pre-filled inputs).
+   */
+  ctaHref?: string;
+}
 
 /**
  * "See the difference — same £500/day contractor" comparison strip.
@@ -15,8 +41,48 @@ import { formatGBP } from "@/lib/format";
  * model and marginal-relief corporation tax on the outside-IR35 side) with
  * a single visual glance and a clear CTA into /calc.
  */
-export function TakeHomeComparisonStrip() {
-  const comparison = useMemo(() => computeLandingComparison(), []);
+export function TakeHomeComparisonStrip({
+  inputs,
+  analyticsSource = "landing_hero",
+  ctaHref = "/calc",
+}: Props = {}) {
+  const comparison = useMemo(
+    () => computeLandingComparison(inputs),
+    [inputs],
+  );
+
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const hasFiredViewRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (hasFiredViewRef.current) return;
+    const node = sectionRef.current;
+    if (!node) return;
+
+    // Support older browsers gracefully — fire immediately if IO is missing.
+    if (typeof IntersectionObserver === "undefined") {
+      hasFiredViewRef.current = true;
+      trackComparisonStripView(analyticsSource);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && !hasFiredViewRef.current) {
+            hasFiredViewRef.current = true;
+            trackComparisonStripView(analyticsSource);
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      { threshold: 0.25 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [analyticsSource]);
 
   const bestKey = comparison.bestScenarioKey;
   const worstKey = comparison.worstScenarioKey;
@@ -28,7 +94,7 @@ export function TakeHomeComparisonStrip() {
   };
 
   return (
-    <section className="mt-14 w-full max-w-5xl">
+    <section ref={sectionRef} className="mt-14 w-full max-w-5xl">
       <div className="mb-5 flex flex-col gap-1 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
           See the difference
@@ -134,7 +200,8 @@ export function TakeHomeComparisonStrip() {
           / year on the same day rate.
         </p>
         <Link
-          href="/calc"
+          href={ctaHref}
+          onClick={() => trackComparisonStripCta(analyticsSource)}
           className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400"
         >
           Model your own rate →

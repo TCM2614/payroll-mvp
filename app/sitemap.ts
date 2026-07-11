@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { CALC_SCENARIO_SLUGS } from "@/lib/marketing/calcScenarios";
+import { CANONICAL_COMPARE_SLUGS } from "@/lib/marketing/compareSlug";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
@@ -24,6 +25,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
+  const compareEntries: MetadataRoute.Sitemap = CANONICAL_COMPARE_SLUGS.map(
+    (slug) => ({
+      url: `${siteUrl}/compare/${slug}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }),
+  );
+
   const supportingEntries: MetadataRoute.Sitemap = [
     {
       url: `${siteUrl}/dashboard`,
@@ -45,5 +55,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  return [...rootEntries, ...scenarioEntries, ...supportingEntries];
+  return [
+    ...rootEntries,
+    ...scenarioEntries,
+    ...compareEntries,
+    ...supportingEntries,
+  ];
 }
