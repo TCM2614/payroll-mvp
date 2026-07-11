@@ -34,14 +34,35 @@ export interface SummaryCta {
   onClick: () => void;
 }
 
+export interface PreTaxDeduction {
+  key: string;
+  label: string;
+  /** Positive annual amount to be shown as a deduction. */
+  annualAmount: number;
+  /** Optional supporting hint shown next to the row. */
+  hint?: string;
+}
+
 export interface CalculatorSummaryProps {
   /** Title of the summary card, e.g. "Combined across all jobs". */
   title?: string;
   /** Short lead line under the title. */
   subtitle?: string;
 
-  /** Annual gross income (before deductions). */
+  /**
+   * Taxable gross annual income — the figure that PAYE / NI are computed on.
+   * When `assignmentGrossAnnual` and/or `preTaxDeductions` are supplied this
+   * is the post-deduction value.
+   */
   grossAnnual: number;
+  /**
+   * Total invoiced / assignment income (annual) before any pre-tax
+   * deductions such as umbrella fees. When omitted or equal to `grossAnnual`
+   * the "Assignment income" row is hidden.
+   */
+  assignmentGrossAnnual?: number;
+  /** Ordered list of pre-tax deductions (e.g. umbrella fee). */
+  preTaxDeductions?: PreTaxDeduction[];
   /** Annual PAYE income tax. */
   incomeTaxAnnual: number;
   /** Annual employee National Insurance. */
@@ -56,6 +77,12 @@ export interface CalculatorSummaryProps {
   studentLoanBreakdown?: StudentLoanLineItem[];
   /** Net take-home (annual). */
   netAnnual: number;
+
+  /**
+   * Optional context line rendered above the numeric breakdown, useful for
+   * showing derived quantities like "≈ 230 billable days per year".
+   */
+  contextLine?: ReactNode;
 
   /**
    * Optional hours-per-week for a derived hourly breakdown. When omitted, the
@@ -87,6 +114,8 @@ export function CalculatorSummary({
   title = "Take-home pay summary",
   subtitle = "Estimated take-home after income tax, NI, pension and any student loan repayments.",
   grossAnnual,
+  assignmentGrossAnnual,
+  preTaxDeductions = [],
   incomeTaxAnnual,
   nationalInsuranceAnnual,
   workplacePensionAnnual = 0,
@@ -94,11 +123,20 @@ export function CalculatorSummary({
   studentLoanAnnual = 0,
   studentLoanBreakdown = [],
   netAnnual,
+  contextLine,
   hoursPerWeek,
   disclaimer,
   cta,
   notice,
 }: CalculatorSummaryProps) {
+  const hasPreTaxSection =
+    preTaxDeductions.length > 0 ||
+    (typeof assignmentGrossAnnual === "number" &&
+      Math.abs(assignmentGrossAnnual - grossAnnual) > 0.01);
+  const effectiveAssignmentGross =
+    typeof assignmentGrossAnnual === "number"
+      ? assignmentGrossAnnual
+      : grossAnnual;
   const netMonthly = netAnnual / 12;
   const netWeekly = netAnnual / 52;
 
@@ -150,13 +188,55 @@ export function CalculatorSummary({
         </div>
       )}
 
+      {contextLine && (
+        <p className="text-xs text-brand-textMuted">{contextLine}</p>
+      )}
+
       <dl className="space-y-2 text-sm">
-        <div className="flex items-center justify-between gap-2">
-          <dt className="text-brand-textMuted">Gross pay (annual)</dt>
-          <dd className="text-right font-medium text-brand-text">
-            {formatGBP(grossAnnual)}
-          </dd>
-        </div>
+        {hasPreTaxSection && (
+          <>
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-brand-textMuted">Assignment income (annual)</dt>
+              <dd className="text-right font-medium text-brand-text">
+                {formatGBP(effectiveAssignmentGross)}
+              </dd>
+            </div>
+            {preTaxDeductions.map(({ key, label, annualAmount, hint }) => (
+              <div
+                key={key}
+                className="flex items-start justify-between gap-2"
+              >
+                <dt className="text-brand-textMuted">
+                  {label}
+                  {hint && (
+                    <span className="ml-1 text-xxs text-brand-textMuted/80">
+                      ({hint})
+                    </span>
+                  )}
+                </dt>
+                <dd className="text-right font-medium text-brand-text">
+                  −{formatGBP(annualAmount)}
+                </dd>
+              </div>
+            ))}
+            <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
+              <dt className="text-brand-text font-medium">
+                Gross taxable pay (annual)
+              </dt>
+              <dd className="text-right font-semibold text-brand-text">
+                {formatGBP(grossAnnual)}
+              </dd>
+            </div>
+          </>
+        )}
+        {!hasPreTaxSection && (
+          <div className="flex items-center justify-between gap-2">
+            <dt className="text-brand-textMuted">Gross pay (annual)</dt>
+            <dd className="text-right font-medium text-brand-text">
+              {formatGBP(grossAnnual)}
+            </dd>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-2">
           <dt className="text-brand-textMuted">PAYE income tax</dt>
           <dd className="text-right font-medium text-brand-text">

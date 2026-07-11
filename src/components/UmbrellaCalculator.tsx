@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { calculateContractorAnnual, type ContractorInputs } from "@/domain/tax/contracting";
+import {
+  calculateContractorAnnual,
+  type ContractorInputs,
+  type UmbrellaFeeFrequency,
+} from "@/domain/tax/contracting";
 import { createUK2026Config, calculateAnnualTax } from "@/domain/tax/periodTax";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { CalculatorSummary } from "@/components/CalculatorSummary";
+import { formatGBP } from "@/lib/format";
 import type { StudentLoanSelection } from "@/lib/student-loans";
 import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
 import {
@@ -28,6 +33,10 @@ export function UmbrellaCalculator() {
   const [daysPerWeek, setDaysPerWeek] = useState(5);
   const [hourlyRate, setHourlyRate] = useState<number | undefined>(undefined);
   const [hoursPerDay, setHoursPerDay] = useState(7.5);
+  const [weeksWorkedPerYear, setWeeksWorkedPerYear] = useState(46);
+  const [umbrellaFeeAmount, setUmbrellaFeeAmount] = useState(25);
+  const [umbrellaFeeFrequency, setUmbrellaFeeFrequency] =
+    useState<UmbrellaFeeFrequency>("weekly");
   const [taxCode, setTaxCode] = useState("1257L");
   const [pensionPct, setPensionPct] = useState(5);
   const [studentLoanSelection, setStudentLoanSelection] = useState<StudentLoanSelection>({
@@ -35,10 +44,9 @@ export function UmbrellaCalculator() {
     hasPostgraduateLoan: false,
   });
 
-  // Calculate single scenario with combined student loans
   const calculationResult = useMemo(() => {
     const loans = studentLoanSelectionToLoanKeys(studentLoanSelection);
-    
+
     const contractorInputs: ContractorInputs = {
       engagementType: "umbrella",
       ir35Status: "inside", // Umbrella is always inside IR35
@@ -47,6 +55,9 @@ export function UmbrellaCalculator() {
       daysPerWeek,
       hourlyRate,
       hoursPerDay,
+      weeksWorkedPerYear,
+      umbrellaFeeAmount,
+      umbrellaFeeFrequency,
       taxYear: "2026-27",
       taxCode,
       pensionEmployeePercent: pensionPct,
@@ -56,7 +67,6 @@ export function UmbrellaCalculator() {
     const result = calculateContractorAnnual(contractorInputs, {
       createConfigForYear: () => createUK2026Config(),
       calculateAnnual: (input) => {
-        // Use the new multi-plan support
         return calculateAnnualTax({
           ...input,
           studentLoanPlans: loans.length > 0 ? loans : undefined,
@@ -68,11 +78,24 @@ export function UmbrellaCalculator() {
       result,
       netMonthly: result.supported && result.annual ? result.annual.net / 12 : 0,
       netWeekly: result.supported && result.annual ? result.annual.net / 52 : 0,
-      netDaily: result.supported && result.annual && daysPerWeek > 0
-        ? result.annual.net / (daysPerWeek * 52)
-        : 0,
+      netDaily:
+        result.supported && result.annual && daysPerWeek > 0
+          ? result.annual.net / (daysPerWeek * result.weeksWorkedPerYear)
+          : 0,
     };
-  }, [studentLoanSelection, monthlyRate, dayRate, daysPerWeek, hourlyRate, hoursPerDay, taxCode, pensionPct]);
+  }, [
+    studentLoanSelection,
+    monthlyRate,
+    dayRate,
+    daysPerWeek,
+    hourlyRate,
+    hoursPerDay,
+    weeksWorkedPerYear,
+    umbrellaFeeAmount,
+    umbrellaFeeFrequency,
+    taxCode,
+    pensionPct,
+  ]);
 
   // Track calculator submission and calculator_run goal
   useEffect(() => {
@@ -182,6 +205,91 @@ export function UmbrellaCalculator() {
             <p className="text-xs text-navy-300">Default: 7.5</p>
           </div>
 
+          {/* Weeks worked per year */}
+          <div className="space-y-1 md:col-span-2">
+            <label className="block text-sm font-medium text-navy-100">
+              Weeks worked per year
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={52}
+              step={1}
+              value={weeksWorkedPerYear}
+              onChange={(e) => {
+                const raw = Number(e.target.value);
+                if (!Number.isFinite(raw) || raw <= 0) {
+                  setWeeksWorkedPerYear(46);
+                  return;
+                }
+                setWeeksWorkedPerYear(Math.min(52, Math.max(1, Math.round(raw))));
+              }}
+              className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+            />
+            <p className="text-xs text-navy-300">
+              Days worked won&apos;t be the same every month — use this to
+              account for holidays, sick leave and gaps between contracts.
+              Typical: 46 weeks (≈ 6 weeks unpaid time off). At{" "}
+              {daysPerWeek} day{daysPerWeek === 1 ? "" : "s"} per week that&apos;s{" "}
+              <span className="font-medium text-navy-100">
+                {daysPerWeek * weeksWorkedPerYear} billable day
+                {daysPerWeek * weeksWorkedPerYear === 1 ? "" : "s"} per year
+              </span>
+              .
+            </p>
+          </div>
+
+          {/* Umbrella fee */}
+          <div className="space-y-1 md:col-span-2">
+            <label className="block text-sm font-medium text-navy-100">
+              Umbrella company fee
+            </label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-navy-300">
+                  £
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={umbrellaFeeAmount}
+                  onChange={(e) => {
+                    const raw = Number(e.target.value);
+                    setUmbrellaFeeAmount(
+                      Number.isFinite(raw) && raw >= 0 ? raw : 0,
+                    );
+                  }}
+                  className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 pl-7 pr-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+                  placeholder="0"
+                />
+              </div>
+              <select
+                value={umbrellaFeeFrequency}
+                onChange={(e) =>
+                  setUmbrellaFeeFrequency(e.target.value as UmbrellaFeeFrequency)
+                }
+                className="rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+              >
+                <option value="weekly">per week</option>
+                <option value="monthly">per month</option>
+              </select>
+            </div>
+            <p className="text-xs text-navy-300">
+              The margin your umbrella deducts from the assignment rate before
+              your PAYE is calculated. Typical UK umbrellas charge £15–£30/week.
+              Annualised at your working pattern this is currently{" "}
+              <span className="font-medium text-navy-100">
+                {formatGBP(
+                  umbrellaFeeFrequency === "monthly"
+                    ? umbrellaFeeAmount * 12
+                    : umbrellaFeeAmount * weeksWorkedPerYear,
+                )}
+              </span>
+              .
+            </p>
+          </div>
+
           {/* Tax inputs */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-navy-100">Tax code</label>
@@ -235,6 +343,39 @@ export function UmbrellaCalculator() {
         <CalculatorSummary
           title="Umbrella take-home pay"
           subtitle="Estimated take-home when contracting via an umbrella company (inside IR35)."
+          contextLine={
+            <>
+              Based on {daysPerWeek} day
+              {daysPerWeek === 1 ? "" : "s"} per week ×{" "}
+              {calculationResult.result.weeksWorkedPerYear} week
+              {calculationResult.result.weeksWorkedPerYear === 1 ? "" : "s"}{" "}
+              worked (≈{" "}
+              {daysPerWeek *
+                calculationResult.result.weeksWorkedPerYear}{" "}
+              billable days per year).
+            </>
+          }
+          assignmentGrossAnnual={
+            calculationResult.result.assignmentGrossAnnual
+          }
+          preTaxDeductions={
+            calculationResult.result.umbrellaFeeAnnual > 0
+              ? [
+                  {
+                    key: "umbrella-fee",
+                    label: "Umbrella company fee",
+                    annualAmount:
+                      calculationResult.result.umbrellaFeeAnnual,
+                    hint:
+                      umbrellaFeeFrequency === "monthly"
+                        ? `${formatGBP(umbrellaFeeAmount)}/month`
+                        : `${formatGBP(umbrellaFeeAmount)}/week × ${
+                            calculationResult.result.weeksWorkedPerYear
+                          }`,
+                  },
+                ]
+              : []
+          }
           grossAnnual={calculationResult.result.grossAnnualIncome}
           incomeTaxAnnual={calculationResult.result.annual.paye}
           nationalInsuranceAnnual={calculationResult.result.annual.ni}

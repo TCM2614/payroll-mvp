@@ -25,6 +25,7 @@ export function LimitedCompanyCalculator() {
   const [hourlyRate, setHourlyRate] = useState<number | undefined>(undefined);
   const [hoursPerDay, setHoursPerDay] = useState(7.5);
   const [ir35Status, setIr35Status] = useState<Ir35Status>("inside");
+  const [weeksWorkedPerYear, setWeeksWorkedPerYear] = useState(46);
   const [taxCode, setTaxCode] = useState("1257L");
   const [pensionPct, setPensionPct] = useState(5);
   const [studentLoanSelection, setStudentLoanSelection] = useState<StudentLoanSelection>({
@@ -44,6 +45,7 @@ export function LimitedCompanyCalculator() {
       daysPerWeek,
       hourlyRate,
       hoursPerDay,
+      weeksWorkedPerYear,
       taxYear: "2026-27",
       taxCode,
       pensionEmployeePercent: pensionPct,
@@ -66,7 +68,18 @@ export function LimitedCompanyCalculator() {
       netMonthly: result.supported && result.annual ? result.annual.net / 12 : 0,
       netWeekly: result.supported && result.annual ? result.annual.net / 52 : 0,
     };
-  }, [studentLoanSelection, ir35Status, monthlyRate, dayRate, daysPerWeek, hourlyRate, hoursPerDay, taxCode, pensionPct]);
+  }, [
+    studentLoanSelection,
+    ir35Status,
+    monthlyRate,
+    dayRate,
+    daysPerWeek,
+    hourlyRate,
+    hoursPerDay,
+    weeksWorkedPerYear,
+    taxCode,
+    pensionPct,
+  ]);
 
   // Track calculator submission and calculator_run goal
   useEffect(() => {
@@ -192,6 +205,40 @@ export function LimitedCompanyCalculator() {
             <p className="text-xs text-navy-300">Default: 7.5</p>
           </div>
 
+          {/* Weeks worked per year */}
+          <div className="space-y-1 md:col-span-2">
+            <label className="block text-sm font-medium text-navy-100">
+              Weeks worked per year
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={52}
+              step={1}
+              value={weeksWorkedPerYear}
+              onChange={(e) => {
+                const raw = Number(e.target.value);
+                if (!Number.isFinite(raw) || raw <= 0) {
+                  setWeeksWorkedPerYear(46);
+                  return;
+                }
+                setWeeksWorkedPerYear(Math.min(52, Math.max(1, Math.round(raw))));
+              }}
+              className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+            />
+            <p className="text-xs text-navy-300">
+              Contract days won&apos;t be uniform every month — use this to
+              account for holidays, bench time and gaps between contracts.
+              Typical: 46 weeks. At {daysPerWeek} day
+              {daysPerWeek === 1 ? "" : "s"} per week that&apos;s{" "}
+              <span className="font-medium text-navy-100">
+                {daysPerWeek * weeksWorkedPerYear} billable day
+                {daysPerWeek * weeksWorkedPerYear === 1 ? "" : "s"} per year
+              </span>
+              . Ignored when you enter a monthly rate.
+            </p>
+          </div>
+
           {/* Tax inputs */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-navy-100">Tax code</label>
@@ -257,6 +304,21 @@ export function LimitedCompanyCalculator() {
             ir35Status === "inside"
               ? "Inside IR35 — PAYE-style estimate."
               : "Estimated take-home for your engagement."
+          }
+          contextLine={
+            monthlyRate && monthlyRate > 0 ? (
+              <>Based on a monthly retainer over 12 months.</>
+            ) : (
+              <>
+                Based on {daysPerWeek} day
+                {daysPerWeek === 1 ? "" : "s"} per week ×{" "}
+                {calculationResult.result.weeksWorkedPerYear} week
+                {calculationResult.result.weeksWorkedPerYear === 1 ? "" : "s"}{" "}
+                worked (≈{" "}
+                {daysPerWeek * calculationResult.result.weeksWorkedPerYear}{" "}
+                billable days per year).
+              </>
+            )
           }
           grossAnnual={calculationResult.result.grossAnnualIncome}
           incomeTaxAnnual={calculationResult.result.annual.paye}

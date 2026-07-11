@@ -20,6 +20,8 @@ export type ContractorEngagementType = "umbrella" | "limited";
 
 export type Ir35Status = "inside" | "outside";
 
+export type UmbrellaFeeFrequency = "weekly" | "monthly";
+
 export interface ContractorInputs {
   engagementType: ContractorEngagementType;
   ir35Status: Ir35Status;
@@ -30,6 +32,22 @@ export interface ContractorInputs {
   daysPerWeek?: number;
   hourlyRate?: number;
   monthlyRate?: number;
+
+  /**
+   * Number of billable weeks worked in the tax year. Defaults to 52 for
+   * back-compat. For most contractors 46 (5 weeks holiday + 1 non-billable
+   * week) is a more realistic default.
+   */
+  weeksWorkedPerYear?: number;
+
+  /**
+   * Umbrella company fee/margin. Only applies when
+   * engagementType === "umbrella". Deducted from the assignment/invoiced
+   * income before the remainder is taxed as PAYE employment income.
+   */
+  umbrellaFeeAmount?: number;
+  /** How the umbrella fee is quoted. Defaults to "weekly". */
+  umbrellaFeeFrequency?: UmbrellaFeeFrequency;
 
   /** Tax-year + PAYE config. */
   taxYear: SupportedTaxYear;
@@ -42,7 +60,24 @@ export interface ContractorAnnualResult {
   supported: boolean;
   reasonIfUnsupported?: string;
 
+  /**
+   * Annualised taxable gross income (after any umbrella-fee deduction).
+   * This is the figure fed into PAYE/NI calculations.
+   */
   grossAnnualIncome: number;
+
+  /**
+   * Total annualised invoiced/assignment income before any pre-tax
+   * deductions such as the umbrella fee. Equals `grossAnnualIncome` when no
+   * pre-tax deductions apply.
+   */
+  assignmentGrossAnnual: number;
+
+  /** Total annual umbrella fee (0 for limited-company or fee-less scenarios). */
+  umbrellaFeeAnnual: number;
+
+  /** Number of billable weeks used in the derivation (52 when unspecified). */
+  weeksWorkedPerYear: number;
 
   /** When supported = true and treated as PAYE employment: */
   annual?: {
@@ -53,33 +88,76 @@ export interface ContractorAnnualResult {
     /** Per-plan student loan breakdown */
     studentLoanBreakdown?: Array<{ plan: string; label: string; amount: number }>;
     net: number;
+    /** Total annual umbrella fee (mirrors top-level field). */
+    umbrellaFee: number;
+    /** Assignment/invoiced gross (mirrors top-level field). */
+    assignmentGrossAnnual: number;
   };
 }
 
+const DEFAULT_WEEKS_PER_YEAR = 52;
+const WEEKS_PER_YEAR_CALENDAR = 52;
+const MONTHS_PER_YEAR = 12;
+
 /**
- * Derive annual gross income from contractor inputs.
- * 
+ * Resolve the effective weeks-worked-per-year for a contractor input. Falls
+ * back to 52 when unspecified or invalid.
+ */
+export function resolveWeeksWorkedPerYear(input: ContractorInputs): number {
+  const weeks = input.weeksWorkedPerYear;
+  if (weeks === undefined) {
+    return DEFAULT_WEEKS_PER_YEAR;
+  }
+  if (!Number.isFinite(weeks) || weeks <= 0) {
+    return DEFAULT_WEEKS_PER_YEAR;
+  }
+  // Cap at the number of calendar weeks in a year. Anything above 52 is not
+  // physically possible for a single engagement.
+  return Math.min(weeks, WEEKS_PER_YEAR_CALENDAR);
+}
+
+/**
+ * Compute the annualised umbrella fee for an input. Returns 0 when the
+ * engagement is not umbrella-based or no fee is configured.
+ */
+export function resolveAnnualUmbrellaFee(input: ContractorInputs): number {
+  if (input.engagementType !== "umbrella") {
+    return 0;
+  }
+  const amount = input.umbrellaFeeAmount ?? 0;
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 0;
+  }
+  const frequency: UmbrellaFeeFrequency = input.umbrellaFeeFrequency ?? "weekly";
+  if (frequency === "monthly") {
+    return amount * MONTHS_PER_YEAR;
+  }
+  const weeks = resolveWeeksWorkedPerYear(input);
+  return amount * weeks;
+}
+
+/**
+ * Derive annualised assignment/invoiced income from contractor inputs. This
+ * is the total contract income before any pre-tax deductions like umbrella
+ * fees.
+ *
  * Rules:
- * - If monthlyRate is provided, use monthlyRate * 12
+ * - If monthlyRate is provided, use monthlyRate * 12 (weeksWorkedPerYear
+ *   does not apply — a monthly retainer implies year-round engagement).
  * - Else if dayRate is provided:
  *   - Use daysPerWeek if provided, else default to 5
- *   - Annual = dayRate * daysPerWeek * 52
+ *   - Annual = dayRate * daysPerWeek * weeksWorkedPerYear (default 52)
  * - Else if hourlyRate is provided:
  *   - Require hoursPerDay and daysPerWeek, otherwise throw a domain error
- *   - Annual = hourlyRate * hoursPerDay * daysPerWeek * 52
- * 
+ *   - Annual = hourlyRate * hoursPerDay * daysPerWeek * weeksWorkedPerYear
+ *
  * Priority: monthly > day > hourly
- * 
+ *
  * Validates all numbers are finite and ≥ 0; throws for invalid input.
- * 
- * @param input - Contractor inputs
- * @returns Annual gross income
- * @throws Error if validation fails or required fields are missing
  */
 export function deriveGrossAnnualFromContractorInputs(input: ContractorInputs): number {
   const { monthlyRate, dayRate, hourlyRate, daysPerWeek, hoursPerDay } = input;
 
-  // Validate all provided numbers are finite and non-negative
   const validateNumber = (value: number | undefined, name: string): void => {
     if (value !== undefined) {
       if (!Number.isFinite(value)) {
@@ -96,19 +174,19 @@ export function deriveGrossAnnualFromContractorInputs(input: ContractorInputs): 
   validateNumber(hourlyRate, "hourlyRate");
   validateNumber(daysPerWeek, "daysPerWeek");
   validateNumber(hoursPerDay, "hoursPerDay");
+  validateNumber(input.weeksWorkedPerYear, "weeksWorkedPerYear");
 
-  // Priority 1: Monthly rate
+  const weeksWorked = resolveWeeksWorkedPerYear(input);
+
   if (monthlyRate !== undefined && monthlyRate > 0) {
-    return monthlyRate * 12;
+    return monthlyRate * MONTHS_PER_YEAR;
   }
 
-  // Priority 2: Day rate
   if (dayRate !== undefined && dayRate > 0) {
     const effectiveDaysPerWeek = daysPerWeek ?? 5;
-    return dayRate * effectiveDaysPerWeek * 52;
+    return dayRate * effectiveDaysPerWeek * weeksWorked;
   }
 
-  // Priority 3: Hourly rate
   if (hourlyRate !== undefined && hourlyRate > 0) {
     if (hoursPerDay === undefined || hoursPerDay <= 0) {
       throw new Error("hoursPerDay is required when hourlyRate is provided");
@@ -116,7 +194,7 @@ export function deriveGrossAnnualFromContractorInputs(input: ContractorInputs): 
     if (daysPerWeek === undefined || daysPerWeek <= 0) {
       throw new Error("daysPerWeek is required when hourlyRate is provided");
     }
-    return hourlyRate * hoursPerDay * daysPerWeek * 52;
+    return hourlyRate * hoursPerDay * daysPerWeek * weeksWorked;
   }
 
   return 0;
@@ -156,27 +234,43 @@ export function calculateContractorAnnual(
   input: ContractorInputs,
   deps: ContractorEngineDeps
 ): ContractorAnnualResult {
-  // Always derive gross annual income
-  let grossAnnualIncome: number;
+  const weeksWorkedPerYear = resolveWeeksWorkedPerYear(input);
+
+  let assignmentGrossAnnual: number;
   try {
-    grossAnnualIncome = deriveGrossAnnualFromContractorInputs(input);
+    assignmentGrossAnnual = deriveGrossAnnualFromContractorInputs(input);
   } catch (error) {
     return {
       supported: false,
-      reasonIfUnsupported: error instanceof Error ? error.message : "Invalid rate input provided",
+      reasonIfUnsupported:
+        error instanceof Error ? error.message : "Invalid rate input provided",
       grossAnnualIncome: 0,
+      assignmentGrossAnnual: 0,
+      umbrellaFeeAnnual: 0,
+      weeksWorkedPerYear,
     };
   }
 
-  if (grossAnnualIncome <= 0) {
+  const umbrellaFeeAnnual = resolveAnnualUmbrellaFee(input);
+  // Umbrella fee is a pre-tax deduction from the assignment income. Guard
+  // against fees larger than the assignment income.
+  const grossAnnualIncome = Math.max(
+    0,
+    assignmentGrossAnnual - umbrellaFeeAnnual,
+  );
+
+  if (assignmentGrossAnnual <= 0) {
     return {
       supported: false,
-      reasonIfUnsupported: "No valid rate provided. Please provide day rate, hourly rate, or monthly rate.",
+      reasonIfUnsupported:
+        "No valid rate provided. Please provide day rate, hourly rate, or monthly rate.",
       grossAnnualIncome: 0,
+      assignmentGrossAnnual: 0,
+      umbrellaFeeAnnual: 0,
+      weeksWorkedPerYear,
     };
   }
 
-  // Check IR35 status
   if (input.ir35Status === "outside") {
     return {
       supported: false,
@@ -184,30 +278,35 @@ export function calculateContractorAnnual(
         "Outside IR35 limited company modelling is not yet supported. " +
         "This tool currently focuses on inside IR35 / PAYE-style calculations.",
       grossAnnualIncome,
+      assignmentGrossAnnual,
+      umbrellaFeeAnnual,
+      weeksWorkedPerYear,
     };
   }
 
-  // Inside IR35: treat as PAYE employment income
   if (input.ir35Status === "inside") {
     const config = deps.createConfigForYear(input.taxYear);
-    
-    // Convert single plan to array format for new model
-    const studentLoanPlans = input.studentLoanPlan && input.studentLoanPlan !== "none"
-      ? [input.studentLoanPlan]
-      : undefined;
-    
+
+    const studentLoanPlans =
+      input.studentLoanPlan && input.studentLoanPlan !== "none"
+        ? [input.studentLoanPlan]
+        : undefined;
+
     const breakdown = deps.calculateAnnual({
       grossAnnualIncome,
       taxCode: input.taxCode,
       pensionEmployeePercent: input.pensionEmployeePercent,
-      studentLoanPlan: input.studentLoanPlan, // Keep for backwards compatibility
-      studentLoanPlans, // New multi-plan support
+      studentLoanPlan: input.studentLoanPlan,
+      studentLoanPlans,
       config,
     });
 
     return {
       supported: true,
       grossAnnualIncome,
+      assignmentGrossAnnual,
+      umbrellaFeeAnnual,
+      weeksWorkedPerYear,
       annual: {
         paye: breakdown.annualPAYE,
         ni: breakdown.annualNI,
@@ -215,15 +314,19 @@ export function calculateContractorAnnual(
         studentLoan: breakdown.annualStudentLoan,
         studentLoanBreakdown: breakdown.studentLoanBreakdown,
         net: breakdown.netAnnualIncome,
+        umbrellaFee: umbrellaFeeAnnual,
+        assignmentGrossAnnual,
       },
     };
   }
 
-  // Fallback (should not reach here with proper types)
   return {
     supported: false,
     reasonIfUnsupported: `Unknown IR35 status: ${input.ir35Status}`,
     grossAnnualIncome,
+    assignmentGrossAnnual,
+    umbrellaFeeAnnual,
+    weeksWorkedPerYear,
   };
 }
 
