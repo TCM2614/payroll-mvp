@@ -10,19 +10,31 @@ import { WealthPercentileTab } from "./tabs/WealthPercentileTab";
 
 
 
-type TabValue = "paye" | "umbrella" | "limited-inside" | "limited-outside" | "wealth";
+export type CalculatorTabValue =
+  | "paye"
+  | "umbrella"
+  | "limited-inside"
+  | "limited-outside"
+  | "wealth";
 
+interface Props {
+  /**
+   * Which tab should be selected on first render. Used by the per-scenario
+   * SEO landing pages (`/calc/paye`, `/calc/umbrella`, …) so the calculator
+   * opens on the right regime for the visitor's intent.
+   */
+  initialTab?: CalculatorTabValue;
+}
 
+export function TakeHomeCalculator({ initialTab = "paye" }: Props = {}) {
 
-export function TakeHomeCalculator() {
-
-  const [activeTab, setActiveTab] = useState<TabValue>("paye");
+  const [activeTab, setActiveTab] = useState<CalculatorTabValue>(initialTab);
   const [wealthDefaultAnnualGross, setWealthDefaultAnnualGross] = useState<number | undefined>();
   const [wealthDefaultNetAnnual, setWealthDefaultNetAnnual] = useState<number | undefined>();
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as CalculatorTabValue)}>
         {/* Mobile: stacked full-width buttons */}
         <div className="mb-4 flex flex-col gap-2 md:hidden">
           <TabsTrigger
