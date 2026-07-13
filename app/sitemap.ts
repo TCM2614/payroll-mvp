@@ -36,12 +36,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const supportingEntries: MetadataRoute.Sitemap = [
     {
-      url: `${siteUrl}/dashboard`,
-      lastModified,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
       url: `${siteUrl}/about`,
       lastModified,
       changeFrequency: "monthly",

@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calculator, LineChart, Info, Menu, X } from 'lucide-react';
+import { Calculator, Info, Menu, X } from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Calculator },
   { href: '/calc', label: 'Calculator', icon: Calculator },
-  { href: '/dashboard', label: 'Dashboard (Coming Soon)', icon: LineChart },
   { href: '/about', label: 'About', icon: Info },
   { href: '/privacy', label: 'Privacy', icon: Info },
 ];
