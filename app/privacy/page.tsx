@@ -46,7 +46,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="space-y-1 text-sm text-brand-textMuted">
               <li>• Name</li>
-              <li>• Email address</li>
+              <li>• Email address (we don&apos;t operate any signup or newsletter)</li>
               <li>• Salary or tax-related inputs</li>
               <li>• National Insurance number</li>
               <li>• IP address tied to personal identity</li>
@@ -167,20 +167,11 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-brand-text mb-2">8. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-brand-text mb-2">8. Contact</h2>
             <p className="text-sm text-brand-textMuted">
-              For privacy-related questions, contact us at:
-            </p>
-            <p className="mt-2">
-              <a
-                href="mailto:privacy@takehomecalculator.uk"
-                className="text-sm font-medium text-brand-primary hover:text-brand-primary/80 transition-colors"
-              >
-                privacy@takehomecalculator.uk
-              </a>
-            </p>
-            <p className="mt-2 text-sm text-brand-textMuted">
-              We typically respond within 3–5 working days.
+              We do not currently operate a contact channel. A contact address
+              will be added here once available. In the meantime, this page will
+              be updated to reflect any change in how we process data.
             </p>
           </div>
         </div>

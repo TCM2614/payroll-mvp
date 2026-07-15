@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -68,21 +68,30 @@ function IncomeComparisonTooltip(
   );
 }
 
-type PercentileTooltipProps = TooltipContentProps<number, string> & {
-  ageBand?: IncomePercentileResult["ageBand"];
-  clampedPercentile?: number | null;
-};
+type PercentileSegment = (typeof PERCENTILE_SEGMENTS)[number];
 
-function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
-  const { active, payload, ageBand, clampedPercentile } = props;
-  if (!active || !payload || payload.length === 0 || !ageBand) return null;
-  const dataKey = payload[0]?.dataKey;
-  const key = typeof dataKey === "string" ? dataKey : null;
-  const seg = key ? PERCENTILE_SEGMENTS.find((s) => s.key === key) : undefined;
-  if (!seg) return null;
+interface PercentileBreakdownTooltipProps {
+  segment: PercentileSegment;
+  ageBand: IncomePercentileResult["ageBand"];
+  clampedPercentile: number | null;
+}
 
-  const minIncome = estimateIncomeForPercentile(ageBand, seg.start);
-  const maxIncome = estimateIncomeForPercentile(ageBand, seg.end);
+/**
+ * Plain-React tooltip for the distribution chart. Previously wired into
+ * recharts' `<Tooltip>` content prop, but recharts' hit-testing across ten
+ * stacked segments (some only 1% wide) was unreliable — the payload's
+ * `dataKey` for a stacked bar always points at the *first* segment in the
+ * stack, so the tooltip effectively showed the 0–25% band whatever the
+ * cursor was over. We now drive the hover state ourselves via absolutely
+ * positioned hit-boxes and call this component directly.
+ */
+function PercentileBreakdownTooltip({
+  segment,
+  ageBand,
+  clampedPercentile,
+}: PercentileBreakdownTooltipProps) {
+  const minIncome = estimateIncomeForPercentile(ageBand, segment.start);
+  const maxIncome = estimateIncomeForPercentile(ageBand, segment.end);
   let incomeText: string | null = null;
   if (minIncome != null && maxIncome != null && maxIncome > minIncome) {
     incomeText = `${formatGBP(minIncome)}–${formatGBP(maxIncome)} per year`;
@@ -92,19 +101,17 @@ function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
 
   const isUserBand =
     clampedPercentile != null &&
-    clampedPercentile >= seg.start &&
-    clampedPercentile <= seg.end;
+    clampedPercentile >= segment.start &&
+    clampedPercentile <= segment.end;
 
   return (
     <div className="rounded-lg border border-brand-border/60 bg-brand-bg/95 px-3 py-2 text-xs shadow-md">
-      <p className="font-semibold text-brand-text">{seg.label}</p>
+      <p className="font-semibold text-brand-text">{segment.label}</p>
       <p className="mt-1 font-medium text-brand-text">
-        Range {seg.start.toFixed(1)}–{seg.end.toFixed(1)} percentile
+        Range {segment.start.toFixed(1)}–{segment.end.toFixed(1)} percentile
       </p>
       {incomeText && (
-        <p className="mt-1 text-brand-textMuted">
-          {incomeText}
-        </p>
+        <p className="mt-1 text-brand-textMuted">{incomeText}</p>
       )}
       {isUserBand && clampedPercentile != null && (
         <p className="mt-1 font-semibold text-brand-text">
@@ -116,33 +123,44 @@ function PercentileBreakdownTooltip(props: PercentileTooltipProps) {
 }
 
 function formatPercentile(value: number): string {
-  const clamped = Math.min(100, Math.max(0, value));
-  if (clamped >= 99.995) {
-    return "100%";
-  }
-  return `${clamped.toFixed(2)}%`;
+  const clamped = Math.min(99.99, Math.max(0, value));
+  // Trim to at most 2 decimals and drop trailing zeros for a cleaner read
+  // (e.g. "50%", "95.8%", "99.99%") but never claim exactly 100%.
+  const rounded = Math.round(clamped * 100) / 100;
+  const str = rounded.toFixed(2).replace(/\.?0+$/, "");
+  return `${str}%`;
 }
 
 function formatTopShare(value: number): string {
-  const clamped = Math.min(100, Math.max(0, value));
+  const clamped = Math.min(99.99, Math.max(0, value));
   const distanceFromTop = 100 - clamped;
 
-  // Very high percentiles: snap to simple labels
-  if (clamped >= 99.5) {
-    return "top 1%";
-  }
-  if (clamped >= 99) {
-    return "top 2%";
-  }
+  // Round to 2dp and drop trailing zeros so we get e.g. "top 4.2%" rather
+  // than "top 4.20%", while still preserving fine-grained detail near the
+  // top of the distribution.
+  const rounded = Math.round(distanceFromTop * 100) / 100;
+  const topShare = Math.max(0.01, rounded);
+  const str = topShare.toFixed(2).replace(/\.?0+$/, "");
+  return `top ${str}%`;
+}
 
-  const topShare = Math.max(0.01, Number(distanceFromTop.toFixed(2)));
-
-  // Safety net: never say top 0%
-  if (topShare <= 0) {
-    return "top 1%";
+/**
+ * Build the primary result-card headline. Uses "top X%" phrasing for the
+ * upper tail (where "you earn more than 99.9% of people" reads oddly) and
+ * "more than X%" phrasing for the middle/lower ranges.
+ */
+function buildResultHeadline(
+  percentile: number,
+  ageGroupLabel: string,
+): string {
+  const clamped = Math.min(99.99, Math.max(0, percentile));
+  if (clamped >= 90) {
+    return `You're in the ${formatTopShare(clamped)} of earners for ${ageGroupLabel} in the UK.`;
   }
-
-  return `top ${topShare.toFixed(2)}%`;
+  if (clamped >= 50) {
+    return `You earn more than roughly ${formatPercentile(clamped)} of people in ${ageGroupLabel} in the UK.`;
+  }
+  return `You earn less than the median for ${ageGroupLabel} in the UK.`;
 }
 
 function estimateIncomeForPercentile(
@@ -195,6 +213,15 @@ export function WealthPercentileTab({
   const [lastIncome, setLastIncome] = useState<number | null>(
     typeof initialSource === "number" && initialSource > 0 ? Math.round(initialSource) : null,
   );
+  /**
+   * Hover state for the "Where you sit in the distribution" chart. We
+   * carry both the segment key and the mouse's x-offset within the
+   * chart wrapper so the tooltip can render close to the cursor.
+   */
+  const [hoveredSeg, setHoveredSeg] = useState<
+    { key: string; xPct: number } | null
+  >(null);
+  const distributionWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const parsedAge = useMemo(() => {
     const age = parseInt(ageInput, 10);
@@ -381,7 +408,7 @@ export function WealthPercentileTab({
         <section className="rounded-3xl bg-brand-surface/80 border border-brand-border/60 shadow-soft-xl backdrop-blur-xl p-4 sm:p-6 space-y-6">
           <header className="space-y-1">
             <h3 className="text-lg sm:text-xl font-semibold text-brand-text">
-              You earn more than {percentileDisplay} of people your age in the UK.
+              {buildResultHeadline(clampedPercentile, result.ageGroupLabel)}
             </h3>
             <p className="text-sm text-brand-textMuted">
               You are in the{" "}
@@ -422,16 +449,16 @@ export function WealthPercentileTab({
               />
             </div>
             <p className="text-xs text-brand-textMuted">
-              Percentiles show how you compare with others. Being at{" "}
+              Percentiles show how you compare with others in your age group.
+              At{" "}
               <span className="font-semibold text-brand-text">
                 {percentileDisplay}
               </span>{" "}
-              means you earn more than {percentileDisplay} of people in your age group. That
-              places you in the{" "}
+              you sit in the{" "}
               <span className="font-semibold text-brand-text">
                 {formatTopShare(clampedPercentile)}
               </span>{" "}
-              of earners for your age group.
+              of earners for {result.ageGroupLabel} in the UK.
             </p>
           </div>
 
@@ -536,7 +563,11 @@ export function WealthPercentileTab({
             <p className="mb-2 text-xs sm:text-sm font-semibold text-brand-text">
               Where you sit in the distribution
             </p>
-            <div className="h-40 w-full">
+            <div
+              ref={distributionWrapperRef}
+              className="relative h-40 w-full"
+              onMouseLeave={() => setHoveredSeg(null)}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   layout="vertical"
@@ -561,16 +592,6 @@ export function WealthPercentileTab({
                     tickLine={false}
                   />
                   <YAxis type="category" dataKey="name" hide />
-                  <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    content={(p) => (
-                      <PercentileBreakdownTooltip
-                        {...(p as TooltipContentProps<number, string>)}
-                        ageBand={result.ageBand}
-                        clampedPercentile={clampedPercentile}
-                      />
-                    )}
-                  />
                   <ReferenceLine
                     x={Math.min(100, Math.max(0, clampedPercentile ?? 0))}
                     stroke={INCOME_COMPARISON_COLORS.you}
@@ -593,6 +614,83 @@ export function WealthPercentileTab({
                   ))}
                 </BarChart>
               </ResponsiveContainer>
+
+              {/*
+                Hit-test overlay. Recharts' tooltip payload for a stacked
+                bar always points at the first segment, so we drive hover
+                state ourselves. Each hit-box is proportionally sized to
+                its band (25%, 25%, 25%, 10%, 10%, 1%, 1%, 1%, 1%, 1%)
+                and covers the same horizontal region the coloured bars
+                do, matching the chart's right-side margin (8px).
+              */}
+              <div
+                className="absolute inset-x-0 top-0 flex"
+                style={{
+                  height: "calc(100% - 20px)",
+                  paddingRight: 8,
+                }}
+                aria-hidden="true"
+              >
+                {PERCENTILE_SEGMENTS.map((seg) => (
+                  <div
+                    key={seg.key}
+                    className="h-full cursor-crosshair"
+                    style={{ flex: `${seg.end - seg.start} 0 0%` }}
+                    onMouseEnter={(e) => {
+                      const rect =
+                        distributionWrapperRef.current?.getBoundingClientRect();
+                      const xPct = rect
+                        ? Math.max(
+                            0,
+                            Math.min(
+                              100,
+                              ((e.clientX - rect.left) / rect.width) * 100,
+                            ),
+                          )
+                        : (seg.start + seg.end) / 2;
+                      setHoveredSeg({ key: seg.key, xPct });
+                    }}
+                    onMouseMove={(e) => {
+                      const rect =
+                        distributionWrapperRef.current?.getBoundingClientRect();
+                      if (!rect) return;
+                      const xPct = Math.max(
+                        0,
+                        Math.min(
+                          100,
+                          ((e.clientX - rect.left) / rect.width) * 100,
+                        ),
+                      );
+                      setHoveredSeg({ key: seg.key, xPct });
+                    }}
+                  />
+                ))}
+              </div>
+
+              {hoveredSeg &&
+                (() => {
+                  const segment = PERCENTILE_SEGMENTS.find(
+                    (s) => s.key === hoveredSeg.key,
+                  );
+                  if (!segment) return null;
+                  // Clamp the tooltip so it stays inside the wrapper — for
+                  // the top-tail 1% bands the mouse can be right at the
+                  // edge; the transform pulls the tooltip's centre onto
+                  // the cursor unless that would clip off-screen.
+                  const clampedX = Math.max(12, Math.min(88, hoveredSeg.xPct));
+                  return (
+                    <div
+                      className="pointer-events-none absolute top-0 z-10 -translate-x-1/2"
+                      style={{ left: `${clampedX}%` }}
+                    >
+                      <PercentileBreakdownTooltip
+                        segment={segment}
+                        ageBand={result.ageBand}
+                        clampedPercentile={clampedPercentile}
+                      />
+                    </div>
+                  );
+                })()}
             </div>
             <div className="mt-2 flex flex-wrap gap-2 text-[10px] sm:text-xs">
               {PERCENTILE_SEGMENTS.map((seg) => (

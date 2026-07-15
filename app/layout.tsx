@@ -26,11 +26,20 @@ export const metadata: Metadata = {
     locale: "en_GB",
     siteName: "UK Take-Home Calculator",
     url: siteUrl,
+    images: [
+      {
+        url: `${siteUrl}/api/og-comparison?slug=500-a-day`,
+        width: 1200,
+        height: 630,
+        alt: `UK take-home comparison for ${TAX_YEAR} — PAYE vs Umbrella vs Inside/Outside IR35`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `UK Take-Home Pay Calculator ${TAX_YEAR} – Salary After Tax in the UK`,
     description: `Free UK take-home pay calculator for the ${TAX_YEAR} tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.`,
+    images: [`${siteUrl}/api/og-comparison?slug=500-a-day`],
   },
   robots: {
     index: true,
