@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { TaxYearToggle } from "@/components/TaxYearToggle";
+import { TaxCodeHelper } from "@/components/TaxCodeHelper";
 import { CalculatorSummary } from "@/components/CalculatorSummary";
 import { TakeHomeComparisonStrip } from "@/components/landing/TakeHomeComparisonStrip";
 import { deriveComparisonInputs } from "@/lib/marketing/deriveComparisonInputs";
@@ -528,11 +529,10 @@ export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTa
               type="text"
               value={primaryTaxCode}
               onChange={(e) => setPrimaryTaxCode(e.target.value.toUpperCase())}
+              placeholder="e.g. 1257L, K475, S1257L, BR"
               className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm uppercase text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
             />
-            <p className="text-xs text-navy-300">
-              Your default tax code (e.g. 1257L)
-            </p>
+            <TaxCodeHelper code={primaryTaxCode} taxYear={taxYear} />
           </div>
 
           {/* Student loans */}

@@ -1,5 +1,36 @@
 import type { TaxYearLabel } from "../taxYear";
 
+/**
+ * Scottish income-tax bands, published 2025/26 rates. Reused for 2026/27
+ * pending the next Scottish Budget — Scottish rates are set by Holyrood
+ * separately from Westminster, so this file is where they get updated
+ * when new figures land.
+ *
+ * The band widths below are expressed in *taxable-income* space (i.e.
+ * after the personal allowance has been deducted). The Advanced-band top
+ * intentionally aligns with £125,140 total income — the point at which
+ * the £100k+ PA taper fully removes the personal allowance — so the
+ * taxable-income representation lines up with total-income thresholds
+ * for every taxpayer regardless of PA.
+ */
+const SCOTTISH_INCOME_TAX_BANDS = [
+  { rate: 0.19, lower: 0, upper: 2_827 },        // Starter
+  { rate: 0.20, lower: 2_827, upper: 14_921 },   // Basic
+  { rate: 0.21, lower: 14_921, upper: 31_092 },  // Intermediate
+  { rate: 0.42, lower: 31_092, upper: 62_430 },  // Higher
+  { rate: 0.45, lower: 62_430, upper: 112_570 }, // Advanced
+  { rate: 0.48, lower: 112_570 },                // Top (no upper)
+] as const;
+
+const SCOTLAND_2025_26 = {
+  // Flat-rate codes used by HMRC for Scottish second-jobs / overrides.
+  sBrRate: 0.20, // SBR — flat basic
+  sD0Rate: 0.21, // SD0 — flat intermediate
+  sD1Rate: 0.42, // SD1 — flat higher
+  sD2Rate: 0.45, // SD2 — flat advanced
+  bands: SCOTTISH_INCOME_TAX_BANDS,
+} as const;
+
 export const UK_TAX_2025 = {
   personalAllowance: 12_570,
   paTaperStart: 100_000,
@@ -9,6 +40,7 @@ export const UK_TAX_2025 = {
   additionalRate: 0.45,
   basicBandTop: 37_700,
   higherBandTop: 125_140,
+  scotland: SCOTLAND_2025_26,
   ni: {
     primaryThreshold: 12_570,
     upperEarningsLimit: 50_270,
@@ -50,6 +82,12 @@ export const UK_TAX_2025 = {
 
 export type LoanKey = keyof typeof UK_TAX_2025["studentLoans"];
 
+export interface IncomeTaxBand {
+  rate: number;
+  lower: number;
+  upper?: number;
+}
+
 export type PayeTaxConfig = {
   personalAllowance: number;
   paTaperStart: number;
@@ -59,6 +97,19 @@ export type PayeTaxConfig = {
   additionalRate: number;
   basicBandTop: number;
   higherBandTop: number;
+  /**
+   * Optional Scottish rate schedule. Only populated for configs that model
+   * Scottish taxpayers explicitly; older year configs may omit it, in
+   * which case S-prefix tax codes fall back to rUK bands with a warning
+   * from the shared tax-code parser.
+   */
+  scotland?: {
+    sBrRate: number;
+    sD0Rate: number;
+    sD1Rate: number;
+    sD2Rate: number;
+    bands: readonly IncomeTaxBand[];
+  };
   ni: {
     primaryThreshold: number;
     upperEarningsLimit: number;
@@ -160,6 +211,9 @@ export const UK_TAX_2026 = {
   additionalRate: 0.45,
   basicBandTop: 37_700,
   higherBandTop: 125_140,
+  // Scottish rates are set by Holyrood; the 2025/26 rates are used as a
+  // baseline pending the Scottish Budget for 2026/27.
+  scotland: SCOTLAND_2025_26,
   ni: {
     primaryThreshold: 12_570,
     upperEarningsLimit: 50_270,

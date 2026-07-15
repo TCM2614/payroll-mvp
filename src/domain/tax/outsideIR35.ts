@@ -26,6 +26,11 @@
 
 import type { PayeTaxConfig } from "@/lib/tax/uk2025";
 import type { LoanKey } from "@/lib/tax/uk2025";
+import {
+  computeIncomeTaxFromCode,
+  parseTaxCode,
+  taperPersonalAllowance,
+} from "./taxCode";
 
 export type SalaryStrategy =
   | "ni-optimal" // Salary = personal allowance (£12,570) – 20% tax band, small employer NI
@@ -105,39 +110,6 @@ const LOAN_LABELS: Record<LoanKey, string> = {
 
 const DEFAULT_TAX_CODE = "1257L";
 
-function parsePersonalAllowanceFromTaxCode(
-  taxCode: string,
-  config: PayeTaxConfig,
-): number {
-  const s = taxCode.trim().toUpperCase();
-  if (s.includes("NT") || s.includes("BR") || s.includes("D0") || s.includes("D1")) {
-    return 0;
-  }
-  if (s.includes("0T")) {
-    return 0;
-  }
-  const match = s.match(/(\d{3,4})L/);
-  if (match) {
-    return Number(match[1]) * 10;
-  }
-  return config.personalAllowance;
-}
-
-function taperedPersonalAllowance(
-  income: number,
-  basePersonalAllowance: number,
-  config: PayeTaxConfig,
-): number {
-  if (income <= config.paTaperStart) {
-    return basePersonalAllowance;
-  }
-  const lost = Math.min(
-    basePersonalAllowance,
-    Math.max(0, Math.floor((income - config.paTaperStart) / 2)),
-  );
-  return Math.max(0, basePersonalAllowance - lost);
-}
-
 /**
  * UK corporation tax with marginal relief. Small-profits rate applies up to
  * the lower limit, main rate above the upper limit, and marginal relief
@@ -184,24 +156,20 @@ function calculatePayeOnSalary(
   config: PayeTaxConfig,
 ): number {
   if (salary <= 0) return 0;
-  const codePA = parsePersonalAllowanceFromTaxCode(taxCode, config);
-  const pa = taperedPersonalAllowance(totalIncomeForTaper, codePA, config);
-  const taxable = Math.max(0, salary - pa);
-  return bandTaxOnSalary(taxable, config);
-}
-
-function bandTaxOnSalary(taxable: number, config: PayeTaxConfig): number {
-  const { basicRate, higherRate, additionalRate, basicBandTop, higherBandTop } = config;
-  const basic = Math.min(taxable, basicBandTop);
-  const higher = Math.min(
-    Math.max(0, taxable - basicBandTop),
-    higherBandTop - basicBandTop,
+  // Route through the shared parser so K / M / N / T / S / C /
+  // emergency-suffix codes all behave here exactly as they do on the
+  // PAYE and umbrella calculators. Pass the *total* income (salary +
+  // dividends) as the taper baseline — that's the correct HMRC rule
+  // for outside-IR35 director-salary PAYE.
+  const parsed = parseTaxCode(taxCode, config.personalAllowance);
+  const effectivePA = taperPersonalAllowance(
+    parsed.personalAllowance,
+    totalIncomeForTaper,
+    config,
   );
-  const additional = Math.max(0, taxable - higherBandTop);
-  return Math.max(
-    0,
-    basic * basicRate + higher * higherRate + additional * additionalRate,
-  );
+  return computeIncomeTaxFromCode(parsed, salary, config, {
+    effectivePersonalAllowance: effectivePA,
+  });
 }
 
 /**
@@ -219,8 +187,8 @@ function calculateDividendTax(
   if (dividends <= 0) return 0;
 
   const totalIncome = salary + dividends;
-  const codePA = parsePersonalAllowanceFromTaxCode(taxCode, config);
-  const pa = taperedPersonalAllowance(totalIncome, codePA, config);
+  const parsed = parseTaxCode(taxCode, config.personalAllowance);
+  const pa = taperPersonalAllowance(parsed.personalAllowance, totalIncome, config);
 
   // Any personal allowance left after salary is applied to dividends first.
   const paRemaining = Math.max(0, pa - salary);

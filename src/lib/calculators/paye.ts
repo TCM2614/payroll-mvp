@@ -1,8 +1,15 @@
 import { getPayeTaxConfig, type LoanKey, type PayeTaxConfig } from "../tax/uk2025";
 import type { TaxYearLabel } from "../taxYear";
+import {
+  computeIncomeTaxFromCode,
+  parseTaxCode as sharedParseTaxCode,
+  taperPersonalAllowance,
+  type ParsedTaxCode,
+} from "@/domain/tax/taxCode";
 
 export type Frequency = "hourly"|"daily"|"monthly"|"annual";
-export type TaxCodeFlavor = "L"|"BR"|"D0"|"D1"|"0T"|"NT";
+/** Legacy alias — kept for the small handful of external callers. */
+export type TaxCodeFlavor = ParsedTaxCode["flavor"];
 
 export type PayeIncomeStream = {
   id: string; label: string;
@@ -36,17 +43,28 @@ export type CombinedPayeOutput = {
   totalGrossAnnual: number; totalTakeHomeAnnual: number;
 };
 
-function parseTaxCode(raw: string): { flavor: TaxCodeFlavor; paFromCode?: number; nonCumulative?: boolean } {
-  const s = raw.trim().toUpperCase();
-  const nonCumulative = /\b(W1|M1)\b/.test(s);
-  if (s.includes("NT")) return { flavor: "NT", nonCumulative };
-  if (s.includes("BR")) return { flavor: "BR", nonCumulative };
-  if (s.includes("D0")) return { flavor: "D0", nonCumulative };
-  if (s.includes("D1")) return { flavor: "D1", nonCumulative };
-  if (s.includes("0T")) return { flavor: "0T", nonCumulative };
-  const m = s.match(/(\d{3,4})L/);
-  if (m) return { flavor: "L", paFromCode: Number(m[1]) * 10, nonCumulative };
-  return { flavor: "0T", nonCumulative };
+/**
+ * Wrapper kept for the multi-stream PA-allocation code below. Uses the
+ * canonical parser under the hood so every downstream engine agrees on
+ * the flavour taxonomy.
+ */
+function parseTaxCode(raw: string, config: PayeTaxConfig): ParsedTaxCode {
+  return sharedParseTaxCode(raw, config.personalAllowance);
+}
+
+/**
+ * True for codes that carry a positive personal allowance the
+ * multi-stream engine can partially allocate (L / M / N / T). K codes
+ * add a negative allowance instead and are always taxed in full; the
+ * flat-rate codes have no PA at all.
+ */
+function codeCarriesPersonalAllowance(parsed: ParsedTaxCode): boolean {
+  return (
+    parsed.flavor === "L" ||
+    parsed.flavor === "M" ||
+    parsed.flavor === "N" ||
+    parsed.flavor === "T"
+  );
 }
 
 function toAnnual(amount: number, frequency: Frequency): number {
@@ -56,18 +74,6 @@ function toAnnual(amount: number, frequency: Frequency): number {
     case "monthly": return amount * 12;
     default: return amount;
   }
-}
-function clampPA(income: number, pa: number, config: PayeTaxConfig) {
-  if (income <= config.paTaperStart) return pa;
-  const lost = Math.min(pa, Math.max(0, Math.floor((income - config.paTaperStart) / 2)));
-  return Math.max(0, pa - lost);
-}
-function bandTax(taxable: number, config: PayeTaxConfig) {
-  const { basicRate, higherRate, additionalRate, basicBandTop, higherBandTop } = config;
-  const basic = Math.min(taxable, basicBandTop);
-  const higher = Math.min(Math.max(0, taxable - basicBandTop), higherBandTop - basicBandTop);
-  const addl = Math.max(0, taxable - higherBandTop);
-  return Math.max(0, basic*basicRate + higher*higherRate + addl*additionalRate);
 }
 function eeNI(annualGross: number, config: PayeTaxConfig) {
   const { primaryThreshold, upperEarningsLimit, mainRate, upperRate } = config.ni;
@@ -129,25 +135,35 @@ function allocatePA(
   streams: PayeIncomeStream[],
   basePA: number,
   totalIncomeAfterSSOnPrimary: number,
-  config: PayeTaxConfig
+  config: PayeTaxConfig,
 ) {
-  const tapered = clampPA(totalIncomeAfterSSOnPrimary, basePA, config);
-  const lStreams = streams.filter(s => parseTaxCode(s.taxCode).flavor === "L");
+  const tapered = taperPersonalAllowance(basePA, totalIncomeAfterSSOnPrimary, config);
+  const paStreams = streams.filter((s) =>
+    codeCarriesPersonalAllowance(parseTaxCode(s.taxCode, config)),
+  );
   const map = new Map<string, number>();
-  if (!lStreams.length) return map;
+  if (!paStreams.length) return map;
 
-  const primary = lStreams.find(s => s.id === "primary") ?? lStreams[0];
+  const primary = paStreams.find((s) => s.id === "primary") ?? paStreams[0];
   const primRaw = toAnnual(primary.amount, primary.frequency);
-  const { adjustedGross: primAdj } = applySS(primRaw, primary.salarySacrificePct, primary.salarySacrificeFixed);
+  const { adjustedGross: primAdj } = applySS(
+    primRaw,
+    primary.salarySacrificePct,
+    primary.salarySacrificeFixed,
+  );
   const primPA = Math.min(tapered, primAdj);
   map.set(primary.id, primPA);
 
   const remaining = Math.max(0, tapered - primPA);
-  const others = lStreams.filter(s => s.id !== primary.id);
+  const others = paStreams.filter((s) => s.id !== primary.id);
   if (remaining > 0 && others.length) {
-    const total = others.reduce((a, s) => a + toAnnual(s.amount, s.frequency), 0) || 1;
+    const total =
+      others.reduce((a, s) => a + toAnnual(s.amount, s.frequency), 0) || 1;
     for (const s of others) {
-      const share = Math.min(remaining, (toAnnual(s.amount, s.frequency) / total) * remaining);
+      const share = Math.min(
+        remaining,
+        (toAnnual(s.amount, s.frequency) / total) * remaining,
+      );
       map.set(s.id, (map.get(s.id) ?? 0) + share);
     }
   }
@@ -158,35 +174,69 @@ function calcStreamAnnual(
   stream: PayeIncomeStream,
   paShare: number,
   isPrimary: boolean,
-  config: PayeTaxConfig
+  config: PayeTaxConfig,
 ): StreamResult {
-  const parsed = parseTaxCode(stream.taxCode);
+  const parsed = parseTaxCode(stream.taxCode, config);
   const raw = toAnnual(stream.amount, stream.frequency);
 
-  let salarySacrifice = 0, gross = raw;
+  let salarySacrifice = 0;
+  let gross = raw;
   const notes: string[] = [];
   if (isPrimary && (stream.salarySacrificeFixed || stream.salarySacrificePct)) {
-    const res = applySS(raw, stream.salarySacrificePct, stream.salarySacrificeFixed);
-    gross = res.adjustedGross; salarySacrifice = res.sacrifice;
+    const res = applySS(
+      raw,
+      stream.salarySacrificePct,
+      stream.salarySacrificeFixed,
+    );
+    gross = res.adjustedGross;
+    salarySacrifice = res.sacrifice;
     notes.push("Salary sacrifice applied on primary stream.");
   }
 
-  let tax = 0, taxable = 0;
-  switch (parsed.flavor) {
-    case "NT": tax = 0; taxable = 0; notes.push("NT: no tax."); break;
-    case "BR": tax = gross * config.basicRate; taxable = gross; notes.push("BR: 20% flat."); break;
-    case "D0": tax = gross * config.higherRate; taxable = gross; notes.push("D0: 40% flat."); break;
-    case "D1": tax = gross * config.additionalRate; taxable = gross; notes.push("D1: 45% flat."); break;
-    case "0T": taxable = gross; tax = bandTax(taxable, config); notes.push("0T: no PA, banding."); break;
-    case "L":  taxable = Math.max(0, gross - paShare); tax = bandTax(taxable, config); notes.push(`L: PA £${paShare.toFixed(0)}.`); break;
+  // Route every code through the shared engine. For L/M/N/T we pass the
+  // multi-stream-allocated PA in explicitly so we don't double-taper.
+  const tax = codeCarriesPersonalAllowance(parsed)
+    ? computeIncomeTaxFromCode(parsed, gross, config, {
+        effectivePersonalAllowance: paShare,
+      })
+    : computeIncomeTaxFromCode(parsed, gross, config);
+
+  // Derive a taxable-income figure for the payslip breakdown UI. This is
+  // an informational value only — the actual tax number is what matters
+  // for take-home.
+  const effectivePA = codeCarriesPersonalAllowance(parsed) ? paShare : 0;
+  const taxable = Math.max(0, gross + parsed.negativeAllowance - effectivePA);
+
+  notes.push(parsed.description);
+  if (parsed.nonCumulative) {
+    notes.push(
+      "Non-cumulative (W1 / M1 / X) — annual total unchanged, but your monthly deductions may be off until HMRC catches up.",
+    );
   }
+  if (parsed.unrecognised) {
+    notes.push(
+      "Tax code not recognised — falling back to the standard personal allowance.",
+    );
+  }
+  if (parsed.regime === "scotland" && !config.scotland) {
+    notes.push(
+      "Scottish rates config missing for this tax year — using rUK bands as a fallback.",
+    );
+  }
+
   const ni = eeNI(gross, config);
 
   return {
-    id: stream.id, label: stream.label, frequency: stream.frequency,
-    grossEntered: stream.amount, annualisedGross: raw,
-    salarySacrifice, incomeTax: tax, employeeNI: ni,
-    taxableIncomeAfterReliefs: taxable, notes
+    id: stream.id,
+    label: stream.label,
+    frequency: stream.frequency,
+    grossEntered: stream.amount,
+    annualisedGross: raw,
+    salarySacrifice,
+    incomeTax: tax,
+    employeeNI: ni,
+    taxableIncomeAfterReliefs: taxable,
+    notes,
   };
 }
 
@@ -202,9 +252,10 @@ export function calcPAYECombined(input: CombinedPayeInput): CombinedPayeOutput {
     } else totalAfterSSPrimary += annual;
   }
 
-  const primary = streams.find(s => s.id === "primary");
+  const primary = streams.find((s) => s.id === "primary");
   const basePA = primary
-    ? (parseTaxCode(primary.taxCode).paFromCode ?? config.personalAllowance)
+    ? parseTaxCode(primary.taxCode, config).personalAllowance ||
+      config.personalAllowance
     : config.personalAllowance;
 
   const paAlloc = allocatePA(streams, basePA, totalAfterSSPrimary, config);

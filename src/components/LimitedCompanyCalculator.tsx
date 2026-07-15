@@ -9,6 +9,7 @@ import { createUK2026Config, calculateAnnualTax } from "@/domain/tax/periodTax";
 import { StudentLoanSelector } from "@/components/StudentLoanSelector";
 import { CalculatorSummary } from "@/components/CalculatorSummary";
 import { IR35Badge } from "@/components/IR35Badge";
+import { TaxCodeHelper } from "@/components/TaxCodeHelper";
 import { TakeHomeComparisonStrip } from "@/components/landing/TakeHomeComparisonStrip";
 import { deriveComparisonInputs } from "@/lib/marketing/deriveComparisonInputs";
 import type { StudentLoanSelection } from "@/lib/student-loans";
@@ -242,15 +243,16 @@ export function LimitedCompanyCalculator() {
           </div>
 
           {/* Tax inputs */}
-          <div className="space-y-1">
+          <div className="space-y-1 md:col-span-2">
             <label className="block text-sm font-medium text-navy-100">Tax code</label>
             <input
               type="text"
               value={taxCode}
               onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
               className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm uppercase text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
-              placeholder="1257L"
+              placeholder="e.g. 1257L, K475, S1257L, BR"
             />
+            <TaxCodeHelper code={taxCode} />
           </div>
 
           <div className="space-y-1">

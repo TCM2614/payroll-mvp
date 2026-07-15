@@ -8,11 +8,22 @@
  * suitable for serverless/edge context.
  */
 
-import { UK_TAX_2025, UK_TAX_2026 } from "@/lib/tax/uk2025";
+import { UK_TAX_2025, UK_TAX_2026, getPayeTaxConfig } from "@/lib/tax/uk2025";
+import {
+  computeIncomeTaxFromCode,
+  parseTaxCode,
+  type ParsedTaxCode,
+} from "./taxCode";
 
 export type SupportedTaxYear = "2025-26" | "2026-27";
 
 export type PayFrequency = "monthly" | "weekly" | "four-weekly";
+
+export interface IncomeTaxBand {
+  rate: number;
+  lower: number;
+  upper?: number;
+}
 
 export interface TaxYearConfig {
   taxYear: SupportedTaxYear;
@@ -20,11 +31,21 @@ export interface TaxYearConfig {
   basicRateLimit: number;
   higherRateLimit: number;
   additionalRateThreshold: number;
-  bands: {
-    rate: number;
-    lower: number;
-    upper?: number;
-  }[];
+  bands: IncomeTaxBand[];
+  /**
+   * Optional Scottish income-tax schedule. When present the shared
+   * tax-code parser will apply Scottish bands / flat rates for
+   * S-prefixed codes (S1257L, SBR, SD0, SD1, SD2). When absent — which
+   * is fine for older year configs — S-prefixed codes fall back to rUK
+   * bands and the parser marks them as partially-supported.
+   */
+  scotland?: {
+    sBrRate: number;
+    sD0Rate: number;
+    sD1Rate: number;
+    sD2Rate: number;
+    bands: readonly IncomeTaxBand[];
+  };
   ni: {
     primaryThreshold: number;
     upperEarningsLimit: number;
@@ -203,42 +224,47 @@ export function calculateAnnualTax(inputs: AnnualTaxInputs): AnnualTaxBreakdown 
     config,
   } = inputs;
 
-  // Apply pension deduction
+  // Apply pension deduction before any tax-code interpretation.
   const grossAfterPension = grossAnnualIncome - pensionEmployeeAnnual;
 
-  // Resolve the personal allowance from the tax code (e.g. 1257L → £12,570,
-  // BR/D0/D1/0T → 0). Fall back to the config default when the code doesn't
-  // encode a PA (NT).
-  const taxCodePA = parseTaxCodePA(taxCode, config.personalAllowance);
-  const baselinePA = taxCodePA ?? config.personalAllowance;
+  // Delegate every tax-code shape (L / M / N / T / K / BR / D0 / D1 /
+  // SBR / SD0-2 / 0T / NT / S / C / W1 / M1 / X) to the shared parser +
+  // regime-aware engine so this file agrees exactly with paye.ts and
+  // outsideIR35.ts.
+  const payeConfig = getPayeTaxConfig(config.taxYear);
+  const parsedCode: ParsedTaxCode = parseTaxCode(
+    taxCode,
+    payeConfig.personalAllowance,
+  );
+  const annualPAYE = computeIncomeTaxFromCode(
+    parsedCode,
+    grossAfterPension,
+    payeConfig,
+  );
 
-  // Apply the £100k+ personal-allowance taper — HMRC removes £1 of PA for
-  // every £2 of adjusted net income above £100,000. Previously the taper
-  // was computed against `config.personalAllowance` but then overwritten
-  // by the code-derived PA, so anyone with a standard "1257L" code
-  // silently skipped the taper.
-  const paTaperStart = 100000;
-  let effectivePA = baselinePA;
-  if (grossAfterPension > paTaperStart) {
-    const reduction = Math.floor((grossAfterPension - paTaperStart) / 2);
-    effectivePA = Math.max(0, effectivePA - reduction);
-  }
-
-  // Calculate taxable income
-  const taxableIncome = Math.max(0, grossAfterPension - effectivePA);
-
-  // Calculate income tax by bands
-  let annualPAYE = 0;
-  let remaining = taxableIncome;
-  for (const band of config.bands) {
-    if (remaining <= 0) break;
-    const bandWidth = band.upper
-      ? Math.min(remaining, band.upper - band.lower)
-      : remaining;
-    const taxableInBand = Math.max(0, Math.min(bandWidth, remaining));
-    annualPAYE += taxableInBand * band.rate;
-    remaining -= taxableInBand;
-  }
+  // Derive an effective-PA + taxable-income figure for the payslip
+  // breakdown UI. Purely informational — the actual tax number above
+  // is what matters.
+  const rawEffectivePA =
+    parsedCode.flavor === "NT"
+      ? 0
+      : Math.max(
+          0,
+          parsedCode.personalAllowance -
+            Math.max(
+              0,
+              Math.floor(
+                (grossAfterPension - payeConfig.paTaperStart) / 2,
+              ),
+            ),
+        );
+  const effectivePA = grossAfterPension > payeConfig.paTaperStart
+    ? rawEffectivePA
+    : parsedCode.personalAllowance;
+  const taxableIncome = Math.max(
+    0,
+    grossAfterPension + parsedCode.negativeAllowance - effectivePA,
+  );
 
   // Calculate NI
   const annualNI = calculateAnnualNI(grossAfterPension, config.ni);
@@ -619,21 +645,6 @@ function detectWarnings(params: {
  * Helper functions
  */
 
-function parseTaxCodePA(taxCode: string, defaultPA: number): number | null {
-  const upper = taxCode.trim().toUpperCase();
-  const match = upper.match(/(\d{3,4})L/);
-  if (match) {
-    return Number(match[1]) * 10;
-  }
-  if (upper.includes("BR") || upper.includes("D0") || upper.includes("D1") || upper.includes("0T")) {
-    return 0;
-  }
-  if (upper.includes("NT")) {
-    return null; // No tax, so PA doesn't apply
-  }
-  return defaultPA;
-}
-
 function calculateAnnualNI(
   grossIncome: number,
   niConfig: TaxYearConfig["ni"]
@@ -753,6 +764,7 @@ export function createUK2025Config(): TaxYearConfig {
       rate: UK_TAX_2025.employerNi.rate,
       apprenticeshipLevy: UK_TAX_2025.employerNi.apprenticeshipLevy,
     },
+    scotland: UK_TAX_2025.scotland,
     studentLoans: UK_TAX_2025.studentLoans,
   };
 }
@@ -794,6 +806,7 @@ export function createUK2026Config(): TaxYearConfig {
       rate: UK_TAX_2026.employerNi.rate,
       apprenticeshipLevy: UK_TAX_2026.employerNi.apprenticeshipLevy,
     },
+    scotland: UK_TAX_2026.scotland,
     studentLoans: UK_TAX_2026.studentLoans,
   };
 }
