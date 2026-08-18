@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Calculator } from "@/components/Calculator";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ShareBar } from "@/components/ShareBar";
+import { NewsletterCta } from "@/components/NewsletterCta";
 import { JsonLd } from "@/components/JsonLd";
 import { buildMetadata } from "@/lib/seo";
 import { articleJsonLd, faqJsonLd } from "@/lib/seo/structured-data";
@@ -251,6 +252,10 @@ export default async function SalaryPage({ params }: PageProps) {
             </details>
           ))}
         </div>
+      </section>
+
+      <section className="my-10">
+        <NewsletterCta source={`salary_${salary}`} />
       </section>
 
       <p className="mt-10 text-xs text-zinc-500 dark:text-zinc-400">

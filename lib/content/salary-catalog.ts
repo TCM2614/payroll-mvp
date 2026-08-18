@@ -81,6 +81,24 @@ export function parseSalarySlug(slug: string): number | null {
 }
 
 /**
+ * Parse a `{a}-vs-{b}` comparison slug. Returns null on malformed input.
+ * The two salaries are returned sorted ascending for canonical URL discipline.
+ */
+export function parseComparisonSlug(
+  slug: string,
+): { a: number; b: number } | null {
+  const m = /^(\d{4,7})-vs-(\d{4,7})$/.exec(slug);
+  if (!m) return null;
+  const a = Number(m[1]);
+  const b = Number(m[2]);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  if (a === b) return null;
+  const [low, high] = a < b ? [a, b] : [b, a];
+  if (low < 1_000 || high > 10_000_000) return null;
+  return { a: low, b: high };
+}
+
+/**
  * Neighbouring salaries used for the on‑page salary graph navigation.
  * Returns a curated window: previous 3, next 3, plus landmark jumps.
  */
