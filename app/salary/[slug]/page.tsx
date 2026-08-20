@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TakeHomeCalculator } from "@/components/take-home-calculator";
+import { ShareBar } from "@/components/ShareBar";
+import { PageViewTracker } from "@/components/PageViewTracker";
 import {
   LANDMARK_SALARIES,
   SALARY_CATALOG,
@@ -14,8 +16,8 @@ import {
   compareSalaryInsights,
 } from "@/lib/marketing/salaryInsight";
 import { TAX_YEAR } from "../../lib/taxYear";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 export function generateStaticParams() {
   return SALARY_CATALOG.map((e) => ({ slug: `${e.salary}-after-tax` }));
@@ -34,8 +36,8 @@ export async function generateMetadata({
   const salary = parseSalarySlug(slug);
   if (salary === null) return {};
   const insight = buildSalaryInsight(salary);
-  const url = `${siteUrl}/salary/${slug}`;
-  const ogImage = `${siteUrl}/api/og-salary?salary=${salary}`;
+  const url = `${SITE_URL}/salary/${slug}`;
+  const ogImage = `${SITE_URL}/api/og-salary?salary=${salary}`;
 
   return {
     title: `£${salary.toLocaleString("en-GB")} After Tax UK (${TAX_YEAR}) — ${insight.formatted.monthly}/mo Take-Home`,
@@ -77,7 +79,7 @@ export default async function SalaryPage({ params }: RouteParams) {
   const nextRaise = compareSalaryInsights(salary, salary + 5_000);
   const nb = neighbourSalaries(salary);
 
-  const url = `${siteUrl}/salary/${slug}`;
+  const url = `${SITE_URL}/salary/${slug}`;
 
   const faqs = [
     {
@@ -112,8 +114,8 @@ export default async function SalaryPage({ params }: RouteParams) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: `${siteUrl}/` },
-      { "@type": "ListItem", position: 2, name: "Salary", item: `${siteUrl}/salary` },
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "Salary", item: `${SITE_URL}/salary` },
       {
         "@type": "ListItem",
         position: 3,
@@ -194,6 +196,14 @@ export default async function SalaryPage({ params }: RouteParams) {
           </strong>{" "}
           of every pound.
         </p>
+        <div className="mt-5">
+          <ShareBar
+            url={url}
+            text={`£${salary.toLocaleString("en-GB")} UK salary: ${insight.formatted.monthly}/mo take-home. You keep ${insight.formatted.retainedPercent}.`}
+            pageType="salary_page"
+            contentType={`${salary}-after-tax`}
+          />
+        </div>
       </section>
 
       <section className="rounded-3xl border border-brand-border/60 bg-brand-surface/80 p-4 shadow-soft-xl backdrop-blur sm:p-8">
@@ -359,6 +369,12 @@ export default async function SalaryPage({ params }: RouteParams) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <PageViewTracker
+        event="salary_page_viewed"
+        salary={salary}
+        salaryPage={`${salary}-after-tax`}
+        taxYear={insight.taxYear}
       />
     </div>
   );

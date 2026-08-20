@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { TakeHomeCalculator } from "@/components/take-home-calculator";
+import { SITE_URL } from "@/lib/siteUrl";
 import { TAX_YEAR } from "../lib/taxYear";
 
 type TopLevelTab = "calculators" | "faqs" | "scenarios";
@@ -367,7 +368,7 @@ export default function CalcPage() {
             name: "UK Take-Home Calculator",
             applicationCategory: "FinanceApplication",
             operatingSystem: "Web",
-            url: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/calc` : "https://yourdomain.com/calc",
+            url: `${SITE_URL}/calc`,
             description: `Calculate your UK salary after tax, National Insurance, pension and student loan deductions for the ${TAX_YEAR} tax year.`,
             offers: {
               "@type": "Offer",

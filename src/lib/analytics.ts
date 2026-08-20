@@ -189,6 +189,94 @@ export function trackComparisonStripCta(source: string): void {
   trackEvent("comparison_strip_cta_click", { source });
 }
 
+// ---------------------------------------------------------------------------
+// Growth-phase acquisition-surface events
+//
+// These fire from the /salary/[slug], /pay-rise, /100k-tax-trap and
+// /salary-percentile pages. All salary values are pre-bucketed via
+// `getSalaryBand`; no raw £ figures are transmitted for user-entered
+// inputs. For statically-defined public salary landing pages the URL
+// already exposes the salary, so a `salary_page` string like
+// `50000-after-tax` may accompany the band.
+
+/** Growth: `/salary/[slug]-after-tax` page view. */
+export function trackSalaryPageView(params: {
+  salary: number;
+  salaryPage: string; // e.g. "50000-after-tax"
+  taxYear: string; // e.g. "2026-27"
+}): void {
+  trackEvent("salary_page_viewed", {
+    salary_band: getSalaryBand(params.salary),
+    salary_page: params.salaryPage,
+    tax_year: params.taxYear,
+  });
+}
+
+/** Growth: `/pay-rise?from&to` page view / recalculation. */
+export function trackPayRiseView(params: {
+  from: number;
+  to: number;
+}): void {
+  const from = getSalaryBand(params.from);
+  const to = getSalaryBand(params.to);
+  const raise = Math.max(0, params.to - params.from);
+  trackEvent("pay_rise_viewed", {
+    from_band: from,
+    to_band: to,
+    raise_band: getRaiseBand(raise),
+  });
+}
+
+/** Growth: `/100k-tax-trap` page view / chart interaction. */
+export function trackTaxTrapView(surface: string = "page"): void {
+  trackEvent("tax_trap_viewed", { surface });
+}
+
+/** Growth: `/salary-percentile` page view. */
+export function trackPercentileView(params?: {
+  salaryBand?: SalaryBand;
+  ageBand?: string;
+}): void {
+  trackEvent("percentile_viewed", {
+    ...(params?.salaryBand ? { salary_band: params.salaryBand } : {}),
+    ...(params?.ageBand ? { age_band: params.ageBand } : {}),
+  });
+}
+
+export type SharePlatform =
+  | "copy"
+  | "whatsapp"
+  | "x"
+  | "linkedin"
+  | "native_share";
+
+/** Growth: any share button pressed on any acquisition surface. */
+export function trackShareClick(params: {
+  pageType: string; // "salary_page" | "tax_trap" | "pay_rise" | "percentile" | ...
+  platform: SharePlatform;
+  contentType?: string; // e.g. "50000-after-tax", "100k-vs-125k"
+}): void {
+  trackEvent("share_clicked", {
+    page_type: params.pageType,
+    platform: params.platform,
+    ...(params.contentType ? { content_type: params.contentType } : {}),
+  });
+}
+
+/**
+ * Bucket a raise amount into a coarse band so we can compare raise sizes
+ * without transmitting user-entered numbers verbatim.
+ */
+function getRaiseBand(raiseAnnual: number): string {
+  if (raiseAnnual <= 0) return "0";
+  if (raiseAnnual < 2_500) return "<2.5k";
+  if (raiseAnnual < 5_000) return "2.5-5k";
+  if (raiseAnnual < 10_000) return "5-10k";
+  if (raiseAnnual < 20_000) return "10-20k";
+  if (raiseAnnual < 50_000) return "20-50k";
+  return ">50k";
+}
+
 // Extend Window interface for Plausible
 declare global {
   interface Window {

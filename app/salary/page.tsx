@@ -6,13 +6,37 @@ import {
 } from "@/lib/marketing/salaryCatalog";
 import { buildSalaryInsight } from "@/lib/marketing/salaryInsight";
 import { TAX_YEAR } from "../lib/taxYear";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 export const metadata: Metadata = {
   title: `UK Salary Explorer ${TAX_YEAR} — Every Common Salary, After Tax`,
   description: `Browse the take-home pay for every common UK salary from £18,000 to £150,000 for the ${TAX_YEAR} tax year. Free UK PAYE breakdowns for every salary.`,
-  alternates: { canonical: `${siteUrl}/salary` },
+  keywords:
+    "UK salary explorer, UK salary after tax, take home pay UK, salary calculator",
+  alternates: { canonical: `${SITE_URL}/salary` },
+  openGraph: {
+    title: `UK Salary Explorer — ${TAX_YEAR} Take-Home Pay`,
+    description: `Every common UK salary from £18k to £150k with monthly take-home for the ${TAX_YEAR} tax year.`,
+    url: `${SITE_URL}/salary`,
+    siteName: "UK Take-Home Calculator",
+    type: "website",
+    locale: "en_GB",
+    images: [
+      {
+        url: `${SITE_URL}/api/og-salary?salary=50000`,
+        width: 1200,
+        height: 630,
+        alt: `UK salary explorer ${TAX_YEAR}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `UK Salary Explorer — ${TAX_YEAR}`,
+    description: `Take-home for every common UK salary £18k–£150k.`,
+    images: [`${SITE_URL}/api/og-salary?salary=50000`],
+  },
 };
 
 function groupCatalog() {

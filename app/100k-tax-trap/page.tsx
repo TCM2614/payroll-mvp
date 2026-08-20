@@ -1,23 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ShareBar } from "@/components/ShareBar";
+import { PageViewTracker } from "@/components/PageViewTracker";
+import { TaxTrapChart } from "@/components/TaxTrapChart";
 import {
   buildSalaryInsight,
   compareSalaryInsights,
 } from "@/lib/marketing/salaryInsight";
 import { TAX_YEAR } from "../lib/taxYear";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 export const metadata: Metadata = {
   title: `The £100k Tax Trap Explained (UK ${TAX_YEAR})`,
   description: `Between £100,000 and £125,140 the UK Personal Allowance is withdrawn, creating an effective 60% marginal Income Tax rate. See what the numbers actually look like for the ${TAX_YEAR} tax year.`,
   keywords:
     "£100k tax trap, 100000 tax UK, 60% marginal rate UK, personal allowance taper, salary sacrifice £100k",
-  alternates: { canonical: `${siteUrl}/100k-tax-trap` },
+  alternates: { canonical: `${SITE_URL}/100k-tax-trap` },
   openGraph: {
     title: `The £100k UK Tax Trap Explained (${TAX_YEAR})`,
     description: `The £100k–£125,140 UK Personal Allowance taper visualised, deterministically calculated for the ${TAX_YEAR} tax year.`,
-    url: `${siteUrl}/100k-tax-trap`,
+    url: `${SITE_URL}/100k-tax-trap`,
     siteName: "UK Take-Home Calculator",
     type: "article",
     locale: "en_GB",
@@ -109,6 +112,35 @@ export default function TaxTrapPage() {
             {cmp100_125.formatted.netDelta}
           </strong>{" "}
           to your annual take-home.
+        </p>
+        <div className="mt-5">
+          <ShareBar
+            url={`${SITE_URL}/100k-tax-trap`}
+            text={`UK £100k tax trap: earning £110k only adds ${cmp100_110.formatted.netDelta} take-home vs £100k. You keep ${cmp100_110.formatted.retainedPercent} of the raise.`}
+            pageType="tax_trap"
+            contentType="100k-to-125k"
+          />
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="trap-chart"
+        className="mx-auto max-w-4xl space-y-3 rounded-3xl border border-brand-border/60 bg-brand-surface/60 p-4 backdrop-blur sm:p-8"
+      >
+        <h2 id="trap-chart" className="text-xl font-semibold text-brand-text sm:text-2xl">
+          The trap, visualised
+        </h2>
+        <p className="text-sm text-brand-textMuted">
+          Green area: annual take-home as gross salary rises. Pink line:
+          marginal rate you keep on each extra £. Between £100,000 and
+          £125,140 the marginal Income Tax rate jumps to 60% (plus 2% NI) as
+          the Personal Allowance is withdrawn.
+        </p>
+        <TaxTrapChart />
+        <p className="text-xs text-brand-textMuted/70">
+          Chart values are sourced from the same deterministic PAYE engine as
+          the calculator and the table below. The table underneath is the
+          authoritative numerical record for accessibility.
         </p>
       </section>
 
@@ -213,6 +245,7 @@ export default function TaxTrapPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
+      <PageViewTracker event="tax_trap_viewed" surface="page" />
     </div>
   );
 }

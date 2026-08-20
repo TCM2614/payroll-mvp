@@ -8,8 +8,8 @@ import {
   type CalcScenarioSlug,
 } from "@/lib/marketing/calcScenarios";
 import { TAX_YEAR } from "../../lib/taxYear";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 const regimeBadgeClass: Record<
   "PAYE" | "Inside IR35" | "Outside IR35",
@@ -35,8 +35,8 @@ export async function generateMetadata({
   const cfg = CALC_SCENARIOS[scenario as CalcScenarioSlug];
   if (!cfg) return {};
 
-  const url = `${siteUrl}/calc/${cfg.slug}`;
-  const ogImage = `${siteUrl}/api/og-comparison?slug=500-a-day`;
+  const url = `${SITE_URL}/calc/${cfg.slug}`;
+  const ogImage = `${SITE_URL}/api/og-comparison?slug=500-a-day`;
 
   return {
     title: cfg.metaTitle,
@@ -85,7 +85,7 @@ export default async function ScenarioCalcPage({ params }: RouteParams) {
     name: cfg.metaTitle,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",
-    url: `${siteUrl}/calc/${cfg.slug}`,
+    url: `${SITE_URL}/calc/${cfg.slug}`,
     description: cfg.metaDescription,
     offers: {
       "@type": "Offer",

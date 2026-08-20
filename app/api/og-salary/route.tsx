@@ -53,8 +53,8 @@ export async function GET(request: Request) {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <div style={{ fontSize: 56, fontWeight: 500, opacity: 0.9 }}>
-            {insight.formatted.gross} salary
+          <div style={{ display: "flex", fontSize: 56, fontWeight: 500, opacity: 0.9 }}>
+            <span>{insight.formatted.gross} salary</span>
           </div>
           <div
             style={{
@@ -72,14 +72,23 @@ export async function GET(request: Request) {
               / month
             </span>
           </div>
-          <div style={{ fontSize: 36, fontWeight: 500, opacity: 0.9 }}>
-            You keep {insight.formatted.retainedPercent} · Income Tax{" "}
-            {insight.formatted.incomeTax} · NI {insight.formatted.ni}
+          <div
+            style={{
+              display: "flex",
+              fontSize: 36,
+              fontWeight: 500,
+              opacity: 0.9,
+            }}
+          >
+            <span>
+              You keep {insight.formatted.retainedPercent} · Income Tax{" "}
+              {insight.formatted.incomeTax} · NI {insight.formatted.ni}
+            </span>
           </div>
         </div>
 
-        <div style={{ fontSize: 28, opacity: 0.8 }}>
-          uktakehomecalculator.com/salary/{salary}-after-tax
+        <div style={{ display: "flex", fontSize: 28, opacity: 0.8 }}>
+          <span>uktakehomecalculator.com/salary/{salary}-after-tax</span>
         </div>
       </div>
     ),

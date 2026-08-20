@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ShareBar } from "@/components/ShareBar";
+import { PageViewTracker } from "@/components/PageViewTracker";
 import { compareSalaryInsights } from "@/lib/marketing/salaryInsight";
 import { LANDMARK_SALARIES } from "@/lib/marketing/salaryCatalog";
 import { TAX_YEAR } from "../lib/taxYear";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));
@@ -19,7 +21,7 @@ export async function generateMetadata({
   const sp = await searchParams;
   const from = clamp(Number(sp.from) || 40_000, 1_000, 1_000_000);
   const to = clamp(Number(sp.to) || from + 5_000, 1_000, 1_000_000);
-  const url = `${siteUrl}/pay-rise?from=${from}&to=${to}`;
+  const url = `${SITE_URL}/pay-rise?from=${from}&to=${to}`;
   return {
     title: `Pay Rise Calculator — £${from.toLocaleString("en-GB")} → £${to.toLocaleString("en-GB")} (${TAX_YEAR})`,
     description: `Model any UK pay rise from £${from.toLocaleString("en-GB")} to £${to.toLocaleString("en-GB")} for the ${TAX_YEAR} tax year. See how much of the raise you actually keep after Income Tax and NI.`,
@@ -109,15 +111,25 @@ export default async function PayRisePage({ searchParams }: PageProps) {
         <h2 id="raise-numbers" className="sr-only">
           Pay-rise breakdown
         </h2>
+
+        <div className="mb-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand-textMuted/70">
+            Salary
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-text sm:text-3xl">
+            {cmp.from.formatted.gross} → {cmp.to.formatted.gross}
+          </p>
+        </div>
+
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <Stat label="Gross raise" value={cmp.formatted.grossDelta} />
           <Stat
-            label="Additional take-home"
+            label="Additional annual take-home"
             value={cmp.formatted.netDelta}
             big
           />
           <Stat
-            label="Monthly boost"
+            label="Additional monthly take-home"
             value={cmp.formatted.monthlyNetDelta}
             big
           />
@@ -127,10 +139,39 @@ export default async function PayRisePage({ searchParams }: PageProps) {
             tone="negative"
           />
           <Stat label="Extra NI" value={cmp.formatted.niDelta} tone="negative" />
-          <Stat
-            label="You keep"
-            value={cmp.formatted.retainedPercent}
-            big
+          {cmp.studentLoanDelta > 0 && (
+            <Stat
+              label="Extra student loan"
+              value={cmp.formatted.studentLoanDelta}
+              tone="negative"
+            />
+          )}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-5 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-200/80">
+            You actually keep
+          </p>
+          <p className="mt-1 text-4xl font-bold tabular-nums text-emerald-300 sm:text-5xl">
+            {cmp.formatted.retainedPercent}
+          </p>
+          <p className="mt-1 text-sm text-brand-textMuted">
+            of your {cmp.formatted.grossDelta} raise ={" "}
+            <strong className="text-brand-text">{cmp.formatted.netDelta}</strong>{" "}
+            /yr,{" "}
+            <strong className="text-brand-text">
+              {cmp.formatted.monthlyNetDelta}
+            </strong>{" "}
+            /mo
+          </p>
+        </div>
+
+        <div className="mt-5">
+          <ShareBar
+            url={`${SITE_URL}/pay-rise?from=${from}&to=${to}`}
+            text={`${cmp.from.formatted.gross} → ${cmp.to.formatted.gross} UK pay rise: you keep ${cmp.formatted.retainedPercent} = ${cmp.formatted.netDelta}/yr.`}
+            pageType="pay_rise"
+            contentType={`${from}-to-${to}`}
           />
         </div>
       </section>
@@ -170,6 +211,7 @@ export default async function PayRisePage({ searchParams }: PageProps) {
           )}
         </div>
       </section>
+      <PageViewTracker event="pay_rise_viewed" from={from} to={to} />
     </div>
   );
 }

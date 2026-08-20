@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { WealthPercentileTab } from "@/components/tabs/WealthPercentileTab";
+import { ShareBar } from "@/components/ShareBar";
+import { PageViewTracker } from "@/components/PageViewTracker";
+import { getSalaryBand } from "@/lib/analytics";
 import { TAX_YEAR } from "../lib/taxYear";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 interface PageProps {
   searchParams: Promise<{ income?: string; age?: string }>;
@@ -21,13 +24,13 @@ export async function generateMetadata({
     description: `See where any UK salary ranks against adult income taxpayers by age band. Free UK salary percentile calculator using HMRC / ONS-derived data.`,
     keywords:
       "UK salary percentile, how rich am I, UK income distribution, salary ranking UK, income percentile calculator",
-    alternates: { canonical: `${siteUrl}/salary-percentile` },
+    alternates: { canonical: `${SITE_URL}/salary-percentile` },
     openGraph: {
       title: hasIncome
         ? `Where does £${income.toLocaleString("en-GB")} rank in the UK?`
         : `UK Salary Percentile Calculator`,
       description: `Where any UK salary sits against the UK population of adult income taxpayers, by age band.`,
-      url: `${siteUrl}/salary-percentile`,
+      url: `${SITE_URL}/salary-percentile`,
       siteName: "UK Take-Home Calculator",
       type: "website",
       locale: "en_GB",
@@ -70,6 +73,22 @@ export default async function SalaryPercentilePage({ searchParams }: PageProps) 
 
       <section className="mx-auto max-w-3xl space-y-3 rounded-3xl border border-brand-border/60 bg-brand-surface/60 p-6 backdrop-blur sm:p-8">
         <h2 className="text-xl font-semibold text-brand-text sm:text-2xl">
+          Share this percentile
+        </h2>
+        <p className="text-sm text-brand-textMuted">
+          Copy the URL to share the exact scenario you&apos;re looking at
+          (income + age).
+        </p>
+        <ShareBar
+          url={`${SITE_URL}/salary-percentile?income=${defaultAnnualIncome}&age=${defaultAge}`}
+          text={`Where does £${defaultAnnualIncome.toLocaleString("en-GB")} rank in the UK? Find out with the UK Take-Home Calculator percentile tool.`}
+          pageType="percentile"
+          contentType={`age-${defaultAge}`}
+        />
+      </section>
+
+      <section className="mx-auto max-w-3xl space-y-3 rounded-3xl border border-brand-border/60 bg-brand-surface/60 p-6 backdrop-blur sm:p-8">
+        <h2 className="text-xl font-semibold text-brand-text sm:text-2xl">
           Methodology
         </h2>
         <p className="text-sm text-brand-textMuted">
@@ -80,6 +99,11 @@ export default async function SalaryPercentilePage({ searchParams }: PageProps) 
           predictive. Not financial advice.
         </p>
       </section>
+
+      <PageViewTracker
+        event="percentile_viewed"
+        salaryBand={getSalaryBand(defaultAnnualIncome)}
+      />
     </div>
   );
 }
