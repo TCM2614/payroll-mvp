@@ -32,11 +32,30 @@ const TRAP_SALARIES = [
   150_000,
 ];
 
+/**
+ * Marginal rate on the next £1 earned at `salary`, computed as
+ * `1 − Δnet / Δgross` over a small window (£100) using the same tax engine
+ * as the rest of the page. Rounded to the nearest whole percent for the
+ * table — the exact figure fluctuates by pence but the story is the band.
+ */
+function marginalRateAt(salary: number): number {
+  const WINDOW = 100;
+  const lo = compareSalaryInsights(salary - WINDOW, salary + WINDOW);
+  const gross = lo.grossDelta; // 2 × WINDOW
+  if (gross <= 0) return 0;
+  const net = lo.netDelta;
+  return Math.max(0, 1 - net / gross);
+}
+
 export default function TaxTrapPage() {
-  const rows = TRAP_SALARIES.map((s) => buildSalaryInsight(s));
+  const rows = TRAP_SALARIES.map((s) => ({
+    insight: buildSalaryInsight(s),
+    marginal: marginalRateAt(s),
+  }));
   const at100 = buildSalaryInsight(100_000);
   const cmp100_110 = compareSalaryInsights(100_000, 110_000);
   const cmp100_125 = compareSalaryInsights(100_000, 125_140);
+  const marginalAt110 = Math.round(marginalRateAt(110_000) * 100);
 
   const faqs = [
     {
@@ -145,9 +164,19 @@ export default function TaxTrapPage() {
       </section>
 
       <section className="mx-auto max-w-4xl rounded-3xl border border-brand-border/60 bg-brand-surface/60 p-4 backdrop-blur sm:p-8">
-        <h2 className="mb-4 text-xl font-semibold text-brand-text sm:text-2xl">
+        <h2 className="mb-2 text-xl font-semibold text-brand-text sm:text-2xl">
           What happens at each salary
         </h2>
+        <p className="mb-4 text-sm text-brand-textMuted">
+          Two different rates for two different questions. <strong>Effective
+          (average)</strong> is your total tax + NI divided by your total gross
+          — this stays under 40% for the whole trap zone because it&apos;s
+          averaged across your <em>whole</em> salary. <strong>Marginal on next
+          £</strong> is what HMRC actually takes from the next pound you earn
+          — this is the number that jumps to ~{marginalAt110}% between £100k
+          and £125,140 because the Personal Allowance is being withdrawn at £1
+          per £2 <em>on top of</em> the higher-rate 40% band and 2% NI.
+        </p>
         <div className="overflow-x-auto rounded-2xl border border-brand-border/40">
           <table className="min-w-full text-sm">
             <thead className="bg-brand-bg/40 text-left font-semibold text-brand-text">
@@ -156,14 +185,30 @@ export default function TaxTrapPage() {
                 <th className="p-3">Income Tax</th>
                 <th className="p-3">NI</th>
                 <th className="p-3">Take-home</th>
-                <th className="p-3">Effective</th>
+                <th className="p-3">
+                  Effective
+                  <span className="ml-1 text-[10px] font-normal text-brand-textMuted">
+                    (avg)
+                  </span>
+                </th>
+                <th className="p-3">
+                  Marginal
+                  <span className="ml-1 text-[10px] font-normal text-brand-textMuted">
+                    (next £)
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody className="text-brand-textMuted">
-              {rows.map((r) => (
+              {rows.map(({ insight: r, marginal }) => (
                 <tr
                   key={r.salary}
-                  className="border-t border-brand-border/40 hover:bg-brand-bg/30"
+                  className={
+                    "border-t border-brand-border/40 hover:bg-brand-bg/30" +
+                    (r.salary >= 100_000 && r.salary <= 125_140
+                      ? " bg-rose-500/[0.06]"
+                      : "")
+                  }
                 >
                   <td className="p-3 font-medium text-brand-text">
                     <Link
@@ -185,11 +230,27 @@ export default function TaxTrapPage() {
                   <td className="p-3 tabular-nums">
                     {r.formatted.effectiveRate}
                   </td>
+                  <td className="p-3 tabular-nums font-semibold">
+                    <span
+                      className={
+                        r.salary >= 100_000 && r.salary <= 125_140
+                          ? "text-rose-300"
+                          : "text-brand-text"
+                      }
+                    >
+                      {(marginal * 100).toFixed(0)}%
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <p className="mt-3 text-xs text-brand-textMuted/70">
+          Rose-shaded rows sit inside the PA-taper zone (£100,000 → £125,140).
+          Marginal rate is derived by nudging the tax engine by £100 either
+          side of each salary — no separate marginal-rate formula is used.
+        </p>
       </section>
 
       <section className="mx-auto max-w-3xl space-y-4 rounded-3xl border border-brand-border/60 bg-brand-surface/60 p-6 backdrop-blur sm:p-8">

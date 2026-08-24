@@ -72,6 +72,132 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Discovery strip — surfaces the growth acquisition pages from the
+            landing page so visitors don't have to know the URLs. */}
+        <section
+          aria-labelledby="discover-heading"
+          className="mt-12 w-full max-w-5xl"
+        >
+          <div className="mb-3 flex items-baseline justify-between gap-2">
+            <h2
+              id="discover-heading"
+              className="text-sm font-semibold uppercase tracking-[0.18em] text-white/60"
+            >
+              Explore
+            </h2>
+            <span className="text-[11px] text-white/40">
+              Deterministic 2026/27 UK figures
+            </span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Link
+              href="/salary"
+              className="group rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-emerald-400/60 hover:bg-white/10"
+              onClick={() => {
+                (window as PlausibleWindow).plausible?.("cta_click", {
+                  props: { cta: "discover_salary", location: "landing_discover" },
+                });
+              }}
+            >
+              <p className="text-sm font-semibold text-white">
+                Salary explorer
+              </p>
+              <p className="mt-1 text-xs text-white/60">
+                Every common UK salary £18k–£150k, with monthly take-home for
+                the 2026/27 tax year.
+              </p>
+            </Link>
+
+            <Link
+              href="/contractor"
+              className="group rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-emerald-400/60 hover:bg-white/10"
+              onClick={() => {
+                (window as PlausibleWindow).plausible?.("cta_click", {
+                  props: { cta: "discover_contractor", location: "landing_discover" },
+                });
+              }}
+            >
+              <p className="text-sm font-semibold text-white">
+                Contractor take-home
+              </p>
+              <p className="mt-1 text-xs text-white/60">
+                Same annualised gross across PAYE, Umbrella and Ltd Inside /
+                Outside IR35.
+              </p>
+            </Link>
+
+            <Link
+              href="/multiple-jobs"
+              className="group rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-emerald-400/60 hover:bg-white/10"
+              onClick={() => {
+                (window as PlausibleWindow).plausible?.("cta_click", {
+                  props: { cta: "discover_multiple_jobs", location: "landing_discover" },
+                });
+              }}
+            >
+              <p className="text-sm font-semibold text-white">
+                Multiple jobs
+              </p>
+              <p className="mt-1 text-xs text-white/60">
+                What happens to your tax code and take-home with a second job.
+              </p>
+            </Link>
+
+            <Link
+              href="/pay-rise"
+              className="group rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-emerald-400/60 hover:bg-white/10"
+              onClick={() => {
+                (window as PlausibleWindow).plausible?.("cta_click", {
+                  props: { cta: "discover_pay_rise", location: "landing_discover" },
+                });
+              }}
+            >
+              <p className="text-sm font-semibold text-white">
+                Pay-rise reality
+              </p>
+              <p className="mt-1 text-xs text-white/60">
+                How much of your next raise you actually keep after tax and NI.
+              </p>
+            </Link>
+
+            <Link
+              href="/100k-tax-trap"
+              className="group rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-rose-400/60 hover:bg-white/10"
+              onClick={() => {
+                (window as PlausibleWindow).plausible?.("cta_click", {
+                  props: { cta: "discover_100k_trap", location: "landing_discover" },
+                });
+              }}
+            >
+              <p className="text-sm font-semibold text-white">
+                The £100k tax trap
+              </p>
+              <p className="mt-1 text-xs text-white/60">
+                Why the marginal rate between £100k and £125,140 is ~62% —
+                visualised.
+              </p>
+            </Link>
+
+            <Link
+              href="/salary-percentile"
+              className="group rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-emerald-400/60 hover:bg-white/10"
+              onClick={() => {
+                (window as PlausibleWindow).plausible?.("cta_click", {
+                  props: { cta: "discover_percentile", location: "landing_discover" },
+                });
+              }}
+            >
+              <p className="text-sm font-semibold text-white">
+                Salary percentile
+              </p>
+              <p className="mt-1 text-xs text-white/60">
+                Where does a UK salary rank against income taxpayers in your
+                age band?
+              </p>
+            </Link>
+          </div>
+        </section>
+
         {/* Simple 3-column trust strip */}
         <section className="mt-12 grid w-full max-w-4xl gap-4 text-xs text-white/70 sm:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
