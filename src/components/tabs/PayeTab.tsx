@@ -1,0 +1,816 @@
+"use client";
+
+/* eslint-disable react-hooks/preserve-manual-memoization */
+
+import { useState, useEffect, useMemo } from "react";
+import SIPPAndSalarySacrifice from "@/components/SIPPAndSalarySacrifice";
+import { StudentLoanSelector } from "@/components/StudentLoanSelector";
+import { TaxYearToggle } from "@/components/TaxYearToggle";
+import { TaxCodeHelper } from "@/components/TaxCodeHelper";
+import { CalculatorSummary } from "@/components/CalculatorSummary";
+import { TakeHomeComparisonStrip } from "@/components/landing/TakeHomeComparisonStrip";
+import { deriveComparisonInputs } from "@/lib/marketing/deriveComparisonInputs";
+import type { StudentLoanSelection } from "@/lib/student-loans";
+import { studentLoanSelectionToLoanKeys } from "@/lib/student-loans";
+import { calcPAYECombined } from "@/lib/calculators/paye";
+import { formatGBP } from "@/lib/format";
+import { LoanKey } from "@/lib/tax/uk2025";
+import type { TaxYearLabel } from "@/lib/taxYear";
+import {
+  trackCalculatorSubmit,
+  trackResultsView,
+  trackCalculatorRun,
+  getSalaryBand,
+} from "@/lib/analytics";
+
+
+
+type EmploymentKind = "main" | "additional";
+
+type JobInput = {
+  id: number;
+  name: string;
+  kind: EmploymentKind;
+  grossMonthly: number;
+  taxCode: string;
+};
+
+// Per-job breakdown from calculation
+type JobBreakdown = {
+  id: string;
+  label: string;
+  kind: EmploymentKind;
+  grossAnnual: number;
+  annualPAYE: number;
+  annualNI: number;
+  annualPensionEmployee: number;
+  netAnnual: number;
+  // Period splits
+  monthly: number;
+  weekly: number;
+};
+
+// Combined breakdown across all jobs
+type CombinedJobsBreakdown = {
+  grossAnnual: number;
+  annualPAYE: number;
+  annualNI: number;
+  annualPensionEmployee: number;
+  annualStudentLoan: number;
+  studentLoanBreakdown: Array<{ plan: LoanKey; label: string; amount: number }>;
+  netAnnual: number;
+  monthly: number;
+  weekly: number;
+};
+
+type PayeTabProps = {
+  onAnnualGrossChange?: (value: number) => void;
+  onNetAnnualChange?: (value: number) => void;
+  onShowWealthTab?: () => void;
+};
+
+
+
+export function PayeTab({ onAnnualGrossChange, onNetAnnualChange, onShowWealthTab }: PayeTabProps) {
+  const [primaryIncome, setPrimaryIncome] = useState("6000");
+
+  const [primaryFrequency, setPrimaryFrequency] = useState<
+
+    "monthly" | "annual" | "weekly" | "daily" | "hourly"
+
+  >("monthly");
+
+  // Hourly mode inputs (for calculations when frequency is hourly)
+  const [hoursPerWeek, setHoursPerWeek] = useState(37.5);
+  const [daysPerWeek, setDaysPerWeek] = useState(5);
+
+  // Optional UX input for hourly context (always available, not used in calculations)
+  const [optionalHoursPerWeek, setOptionalHoursPerWeek] = useState<string>("");
+
+  function toMonthly(value: string | number, freq: typeof primaryFrequency): number {
+    const numericValue = typeof value === "string" 
+      ? parseFloat(value.replace(/,/g, "")) || 0 
+      : value;
+    
+    switch (freq) {
+      case "annual":
+        return numericValue / 12;
+
+      case "weekly":
+        return (numericValue * 52) / 12;
+
+      case "daily":
+        // assume 5 working days per week
+        return (numericValue * 5 * 52) / 12;
+
+      case "hourly": {
+        // weeklyIncome = hourlyRate * hoursPerWeek
+        // annualIncome = weeklyIncome * 52
+        // monthlyIncome = annualIncome / 12
+        const weeklyIncome = numericValue * hoursPerWeek;
+        const annualIncome = weeklyIncome * 52;
+        return annualIncome / 12;
+      }
+
+      case "monthly":
+      default:
+        return numericValue;
+    }
+  }
+
+
+
+  const [primaryTaxCode, setPrimaryTaxCode] = useState("1257L");
+
+
+
+  const [jobs, setJobs] = useState<JobInput[]>([]);
+  const [nextJobId, setNextJobId] = useState(1);
+
+  const [studentLoanSelection, setStudentLoanSelection] = useState<StudentLoanSelection>({
+    undergraduatePlan: "none",
+    hasPostgraduateLoan: false,
+  });
+
+  // UI-level tax year selection (kept separate from postgrad schema)
+  const [taxYear, setTaxYear] = useState<TaxYearLabel>("2026-27");
+
+  const [pensionPct, setPensionPct] = useState(5);
+
+  const [salarySacrificeFixed, setSalarySacrificeFixed] = useState(0);
+
+  const [sippPersonal, setSippPersonal] = useState(0);
+
+
+
+  const [cgtGains, setCgtGains] = useState(0);
+
+  const [cgtAllowance, setCgtAllowance] = useState(3000);
+
+  const [cgtRate, setCgtRate] = useState(20);
+
+
+
+  const [debtPrincipal, setDebtPrincipal] = useState(0);
+
+  const [debtRate, setDebtRate] = useState(10);
+
+
+
+  const primaryGrossMonthly = toMonthly(primaryIncome, primaryFrequency);
+
+  const annualGross = primaryGrossMonthly * 12;
+
+  const weeklyGross = annualGross / 52;
+
+  // Calculate hourly rate for display (only when not in hourly mode)
+  const numericPrimaryIncome = parseFloat(primaryIncome.replace(/,/g, "")) || 0;
+  const hourlyRate = primaryFrequency === "hourly" 
+    ? numericPrimaryIncome 
+    : weeklyGross / (hoursPerWeek || 37.5);
+
+
+
+  const allJobs: JobInput[] = [
+    { id: 0, name: "Primary job", kind: "main", grossMonthly: primaryGrossMonthly, taxCode: primaryTaxCode },
+    ...jobs.map(job => ({ ...job, kind: "additional" as const })),
+  ];
+
+
+
+  // Calculate multi-job scenario with per-job and combined breakdowns
+  // Use calcPAYECombined for proper multi-job handling with shared PA allocation
+  const calculationResult = useMemo(() => {
+    const loans = studentLoanSelectionToLoanKeys(studentLoanSelection);
+    
+    const result = calcPAYECombined({
+      streams: allJobs.map((job) => ({
+        id: job.id === 0 ? "primary" : `job-${job.id}`,
+        label: job.name,
+        frequency: "monthly" as const,
+        amount: job.grossMonthly,
+        taxCode: job.taxCode,
+        salarySacrificePct: job.id === 0 ? (pensionPct > 0 ? pensionPct : undefined) : undefined,
+      })),
+      sippPersonal,
+      loans,
+      taxYear,
+    });
+
+    // Extract per-job breakdowns from stream results
+    const jobBreakdowns: JobBreakdown[] = result.streams.map((stream) => {
+      const job = allJobs.find(j => (j.id === 0 ? "primary" : `job-${j.id}`) === stream.id);
+      const kind = job?.kind || (stream.id === "primary" ? "main" : "additional");
+      
+      // Calculate net for this job (gross - tax - NI - pension)
+      // Note: Student loans are calculated on combined gross, so they appear only in combined summary
+      const annualPensionEmployee = stream.salarySacrifice || 0;
+      const netAnnual = stream.annualisedGross - stream.incomeTax - stream.employeeNI - annualPensionEmployee;
+
+      return {
+        id: stream.id,
+        label: stream.label,
+        kind,
+        grossAnnual: stream.annualisedGross,
+        annualPAYE: stream.incomeTax,
+        annualNI: stream.employeeNI,
+        annualPensionEmployee,
+        netAnnual,
+        monthly: netAnnual / 12,
+        weekly: netAnnual / 52,
+      };
+    });
+
+    // Combined breakdown (sums across all jobs + student loans)
+    const combined: CombinedJobsBreakdown = {
+      grossAnnual: result.totalGrossAnnual,
+      annualPAYE: result.totalIncomeTax,
+      annualNI: result.totalEmployeeNI,
+      annualPensionEmployee: result.streams.reduce((sum, s) => sum + (s.salarySacrifice || 0), 0),
+      annualStudentLoan: result.totalStudentLoans,
+      studentLoanBreakdown: result.studentLoanBreakdown,
+      netAnnual: result.totalTakeHomeAnnual,
+      monthly: result.totalTakeHomeAnnual / 12,
+      weekly: result.totalTakeHomeAnnual / 52,
+    };
+
+    return {
+      jobs: jobBreakdowns,
+      combined,
+    };
+  }, [studentLoanSelection, allJobs, pensionPct, sippPersonal, hoursPerWeek, taxYear]);
+
+  // Expose combined gross/net up to the parent for use in other tabs (e.g. wealth percentile)
+  useEffect(() => {
+    if (calculationResult.combined.grossAnnual > 0) {
+      onAnnualGrossChange?.(calculationResult.combined.grossAnnual);
+    }
+    if (calculationResult.combined.netAnnual > 0) {
+      onNetAnnualChange?.(calculationResult.combined.netAnnual);
+    }
+  }, [calculationResult.combined.grossAnnual, calculationResult.combined.netAnnual, onAnnualGrossChange, onNetAnnualChange]);
+
+  // Track calculator submission and calculator_run goal
+  useEffect(() => {
+    const totalGross = calculationResult.combined.grossAnnual;
+    if (totalGross > 0) {
+      const hasStudentLoan =
+        studentLoanSelection.undergraduatePlan !== "none" ||
+        studentLoanSelection.hasPostgraduateLoan;
+      trackCalculatorSubmit({
+        tab: "standard",
+        hasPension: pensionPct > 0 || salarySacrificeFixed > 0 || sippPersonal > 0,
+        hasStudentLoan,
+        salaryBand: getSalaryBand(totalGross),
+      });
+      // Track calculator_run goal
+      trackCalculatorRun("standard");
+    }
+  }, [calculationResult, pensionPct, salarySacrificeFixed, sippPersonal, studentLoanSelection]);
+
+  // Track results view
+  useEffect(() => {
+    if (calculationResult.combined.netAnnual > 0) {
+      trackResultsView();
+    }
+  }, [calculationResult]);
+
+
+
+  const yearlyDebtInterest = (debtPrincipal * debtRate) / 100;
+
+  const monthlyDebtInterest = yearlyDebtInterest / 12;
+
+
+
+  const cgtTaxable = Math.max(cgtGains - cgtAllowance, 0);
+
+  const cgtDue = (cgtTaxable * cgtRate) / 100;
+
+
+
+  function addJob() {
+
+    setJobs((prev) => [
+
+      ...prev,
+
+      { id: nextJobId, name: `Job ${nextJobId}`, kind: "additional", grossMonthly: 0, taxCode: "BR" },
+
+    ]);
+
+    setNextJobId((id) => id + 1);
+
+  }
+
+
+
+  function updateJob(id: number, field: keyof JobInput, value: string | number) {
+
+    setJobs((prev) =>
+
+      prev.map((job) => (job.id === id ? { ...job, [field]: value } : job)),
+
+    );
+
+  }
+
+
+
+  function removeJob(id: number) {
+
+    setJobs((prev) => prev.filter((job) => job.id !== id));
+
+  }
+
+
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+
+      {/* Header */}
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-navy-50 sm:text-4xl">
+            Standard PAYE salary calculator
+          </h2>
+          <p className="mt-1 text-sm text-navy-200">
+            Use this tab if you&apos;re a UK employee paid through PAYE. If you contract via an umbrella or a limited company, use the dedicated Umbrella or Limited (Inside / Outside IR35) tabs instead.
+          </p>
+        </div>
+        <TaxYearToggle value={taxYear} onChange={setTaxYear} />
+      </header>
+
+      {/* Section 1: Primary job inputs */}
+      <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+
+        <header className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-navy-100 sm:text-base">Primary job</h2>
+        </header>
+        <p className="text-xs text-navy-200">
+          Enter your main employment income details
+        </p>
+
+        <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4">
+
+          {/* Income input with frequency selector */}
+          <div className="space-y-1 md:col-span-2">
+            <label className="block text-sm font-medium text-navy-100">
+              {primaryFrequency === "hourly" ? "Hourly rate" : "Income"}
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={primaryIncome}
+                onChange={(e) => {
+                  const raw = e.target.value;
+
+                  // Allow empty string
+                  if (raw === "") {
+                    setPrimaryIncome("");
+                    return;
+                  }
+
+                  // Allow only numbers + decimals + commas
+                  const cleaned = raw.replace(/[^0-9.,]/g, "");
+                  setPrimaryIncome(cleaned);
+                }}
+                placeholder="Enter your income"
+                className="flex-1 rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+              />
+              <select
+                value={primaryFrequency}
+                onChange={(e) =>
+                  setPrimaryFrequency(e.target.value as typeof primaryFrequency)
+                }
+                className="rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+              >
+                <option value="monthly">per month</option>
+                <option value="annual">per year</option>
+                <option value="weekly">per week</option>
+                <option value="daily">per day</option>
+                <option value="hourly">per hour</option>
+              </select>
+            </div>
+            {primaryFrequency === "hourly" ? (
+              <p className="text-xs text-navy-300">
+                Annual: {formatGBP(annualGross)} | Monthly: {formatGBP(primaryGrossMonthly)}
+              </p>
+            ) : (
+              <p className="text-xs text-navy-300">
+                Annual: {formatGBP(annualGross)} | Hourly (est.): £{hourlyRate.toFixed(2)}
+              </p>
+            )}
+          </div>
+
+          {/* Optional Hours per week (always visible, UX only) */}
+          <div className="mt-3 md:col-span-2">
+            <div className="flex flex-col space-y-1">
+              <label className="text-sm font-medium text-navy-100">
+                Hours per week (optional)
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                min="0"
+                step="0.1"
+                value={optionalHoursPerWeek}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setOptionalHoursPerWeek("");
+                    return;
+                  }
+                  const cleaned = raw.replace(/[^0-9.,]/g, "");
+                  setOptionalHoursPerWeek(cleaned);
+                }}
+                placeholder="e.g. 37.5"
+                className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+              />
+              <p className="text-xs text-navy-300">
+                Used to derive hourly breakdown from your results
+              </p>
+            </div>
+          </div>
+
+          {/* Hours and Days inputs (only when hourly) */}
+          {primaryFrequency === "hourly" && (
+            <>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-navy-100">
+                  Hours worked per week
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="80"
+                  step="0.5"
+                  value={hoursPerWeek}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (isNaN(val) || val < 1) {
+                      setHoursPerWeek(1);
+                    } else if (val > 80) {
+                      setHoursPerWeek(80);
+                    } else {
+                      setHoursPerWeek(val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const val = Number(e.target.value);
+                    if (isNaN(val) || val < 1) {
+                      setHoursPerWeek(1);
+                    } else if (val > 80) {
+                      setHoursPerWeek(80);
+                    }
+                  }}
+                  required={primaryFrequency === "hourly"}
+                  className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+                />
+                <p className="text-xs text-navy-300">
+                  Min: 1, Max: 80
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-navy-100">
+                  Days worked per week
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="7"
+                  step="1"
+                  value={daysPerWeek}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (isNaN(val) || val < 1) {
+                      setDaysPerWeek(1);
+                    } else if (val > 7) {
+                      setDaysPerWeek(7);
+                    } else {
+                      setDaysPerWeek(Math.floor(val));
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const val = Number(e.target.value);
+                    if (isNaN(val) || val < 1) {
+                      setDaysPerWeek(1);
+                    } else if (val > 7) {
+                      setDaysPerWeek(7);
+                    } else {
+                      setDaysPerWeek(Math.floor(val));
+                    }
+                  }}
+                  required={primaryFrequency === "hourly"}
+                  className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+                />
+                <p className="text-xs text-navy-300">
+                  Min: 1, Max: 7
+                </p>
+              </div>
+
+              {/* Validation error message */}
+              {primaryFrequency === "hourly" && (hoursPerWeek < 1 || hoursPerWeek > 80 || daysPerWeek < 1 || daysPerWeek > 7) && (
+                <div className="md:col-span-2">
+                  <p className="text-xs text-rose-400">
+                    Please enter valid hours (1-80) and days (1-7) worked per week for accurate calculations.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Tax code */}
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-navy-100">Tax code</label>
+            <input
+              type="text"
+              value={primaryTaxCode}
+              onChange={(e) => setPrimaryTaxCode(e.target.value.toUpperCase())}
+              placeholder="e.g. 1257L, K475, S1257L, BR"
+              className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-4 py-3 text-sm uppercase text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+            />
+            <TaxCodeHelper code={primaryTaxCode} taxYear={taxYear} />
+          </div>
+
+          {/* Student loans */}
+          <div className="md:col-span-2">
+            <StudentLoanSelector
+              selection={studentLoanSelection}
+              onChange={setStudentLoanSelection}
+            />
+          </div>
+
+        </div>
+
+      </section>
+
+
+
+      {/* Section 2: Pension & SIPP */}
+      <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+        <header className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-navy-100 sm:text-base">Pension & SIPP</h2>
+        </header>
+        <SIPPAndSalarySacrifice
+          salarySacrificePct={pensionPct}
+          setSalarySacrificePct={setPensionPct}
+          salarySacrificeFixed={salarySacrificeFixed}
+          setSalarySacrificeFixed={setSalarySacrificeFixed}
+          sippPersonal={sippPersonal}
+          setSippPersonal={setSippPersonal}
+        />
+      </section>
+
+      {/* Section 3: Additional jobs */}
+      <section className="rounded-2xl border border-sea-jet-700/30 bg-sea-jet-900/60 p-8 shadow-xl shadow-navy-900/50 space-y-3">
+        <header className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-navy-100 sm:text-base">Additional jobs</h2>
+          <button
+            type="button"
+            onClick={addJob}
+            className="rounded-xl bg-brilliant-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brilliant-500/30 transition hover:bg-brilliant-600"
+          >
+            + Add job
+          </button>
+        </header>
+
+        <div className="space-y-3">
+          {jobs.map((job) => (
+            <div
+              key={job.id}
+              className="rounded-xl border border-sea-jet-700/20 bg-navy-800/40 p-3 space-y-2"
+            >
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-navy-100">Name</label>
+                  <input
+                    value={job.name}
+                    onChange={(e) => updateJob(job.id, "name", e.target.value)}
+                    className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-3 py-2 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-navy-100">Gross / month (£)</label>
+                  <input
+                    type="number"
+                    value={job.grossMonthly}
+                    onChange={(e) =>
+                      updateJob(job.id, "grossMonthly", Number(e.target.value) || 0)
+                    }
+                    className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-3 py-2 text-sm text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-navy-100">Tax code</label>
+                  <input
+                    value={job.taxCode}
+                    onChange={(e) =>
+                      updateJob(job.id, "taxCode", e.target.value.toUpperCase())
+                    }
+                    className="w-full rounded-xl border border-sea-jet-600/40 bg-sea-jet-800/60 px-3 py-2 text-sm uppercase text-navy-50 placeholder:text-navy-400 focus:border-brilliant-400 focus:ring-2 focus:ring-brilliant-400/30"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeJob(job.id)}
+                className="text-xs text-aqua-300 hover:text-aqua-200 transition-colors"
+              >
+                Remove job
+              </button>
+            </div>
+          ))}
+          {jobs.length === 0 && (
+            <p className="text-xs text-navy-300">
+              No extra jobs added yet. Click &quot;+ Add job&quot; to include more employment.
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Section 4: Results */}
+      <section className="space-y-4">
+        <header className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-brand-text sm:text-base">
+            Take-home pay breakdown
+          </h2>
+        </header>
+
+        {/* Per-job breakdowns */}
+        <div className="space-y-4">
+          {calculationResult.jobs.map((job) => (
+            <div
+              key={job.id}
+              className="rounded-3xl bg-brand-surface/80 border border-brand-border/60 shadow-soft-xl backdrop-blur-xl p-4 sm:p-6 space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-brand-text">
+                    {job.kind === "main" ? "Main job" : "Additional job"} – {job.label}
+                  </h3>
+                  <p className="mt-1 text-xs text-brand-textMuted">
+                    Headline net take-home:{" "}
+                    <span className="font-semibold text-brand-text">
+                      {formatGBP(job.netAnnual)} / year
+                    </span>{" "}
+                    ({formatGBP(job.monthly)} / month)
+                  </p>
+                </div>
+                {job.kind === "additional" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const jobId = job.id === "primary" ? 0 : Number(job.id.replace("job-", ""));
+                      if (!isNaN(jobId) && jobId > 0) {
+                        removeJob(jobId);
+                      }
+                    }}
+                    className="text-xs text-brand-textMuted hover:text-brand-text transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              <dl className="space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">Gross pay (annual)</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(job.grossAnnual)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">Gross pay (monthly)</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(job.grossAnnual / 12)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">PAYE income tax</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(job.annualPAYE)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">National Insurance</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(job.annualNI)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">Workplace pension (employee)</dt>
+                  <dd className="text-right font-medium text-brand-text">
+                    {formatGBP(job.annualPensionEmployee)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-brand-textMuted">Student loans</dt>
+                  <dd className="text-right text-xs text-brand-textMuted">
+                    Included in combined totals below
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2 border-t border-brand-border/40 pt-2">
+                  <dt className="text-brand-text font-medium">Net take-home (annual)</dt>
+                  <dd className="text-right font-semibold text-brand-accent">
+                    {formatGBP(job.netAnnual)}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </div>
+
+        {/* Combined summary — shared CalculatorSummary template */}
+        {(() => {
+          const parsedOptionalHours = optionalHoursPerWeek
+            ? parseFloat(optionalHoursPerWeek.replace(/,/g, ""))
+            : NaN;
+          const derivedHoursPerWeek =
+            Number.isFinite(parsedOptionalHours) && parsedOptionalHours > 0
+              ? parsedOptionalHours
+              : primaryFrequency === "hourly"
+              ? hoursPerWeek
+              : undefined;
+
+          return (
+            <CalculatorSummary
+              title="Combined across all jobs"
+              subtitle="Estimated PAYE take-home after income tax, NI, pension and SIPP."
+              grossAnnual={calculationResult.combined.grossAnnual}
+              incomeTaxAnnual={calculationResult.combined.annualPAYE}
+              nationalInsuranceAnnual={calculationResult.combined.annualNI}
+              workplacePensionAnnual={
+                calculationResult.combined.annualPensionEmployee
+              }
+              sippAnnual={sippPersonal}
+              studentLoanAnnual={calculationResult.combined.annualStudentLoan}
+              studentLoanBreakdown={calculationResult.combined.studentLoanBreakdown.map(
+                ({ plan, label, amount }) => ({
+                  key: plan,
+                  label,
+                  annualAmount: amount,
+                }),
+              )}
+              netAnnual={calculationResult.combined.netAnnual}
+              hoursPerWeek={derivedHoursPerWeek}
+              cta={
+                onShowWealthTab
+                  ? {
+                      label: "See how your pay compares",
+                      hint: "Curious how this compares to others in the UK on a similar salary?",
+                      onClick: onShowWealthTab,
+                    }
+                  : undefined
+              }
+            />
+          );
+        })()}
+      </section>
+
+      {/*
+        Live comparison strip: shows how the same annualised gross salary
+        would fare if the user were instead operating via umbrella, inside
+        IR35 or outside IR35. Updates as they tweak inputs above. Hidden
+        until the combined gross is > 0.
+      */}
+      {(() => {
+        const stripInputs = deriveComparisonInputs({
+          kind: "annual-income",
+          annualIncome: calculationResult.combined.grossAnnual,
+        });
+        if (!stripInputs) return null;
+        return (
+          <TakeHomeComparisonStrip
+            inputs={stripInputs}
+            analyticsSource="calc_paye"
+            showCta={false}
+            eyebrow="Compare with contracting"
+            title={
+              <>
+                Same {formatGBP(calculationResult.combined.grossAnnual)}/year
+                gross under all four engagement types.
+              </>
+            }
+            subtitle={
+              <>
+                If you were contracting at an equivalent day rate instead of
+                being on PAYE payroll, this is how the same annual income
+                would break down under an umbrella (Inside IR35), a limited
+                company inside IR35, or a limited company outside IR35 — UK
+                2026/27 tax year. The Standard PAYE figure matches your
+                combined take-home above.
+              </>
+            }
+            className="mt-8 w-full"
+          />
+        );
+      })()}
+
+    </div>
+
+  );
+
+}
