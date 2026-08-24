@@ -8,14 +8,15 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
 import { SchemaMarkup } from "@/components/SEO/SchemaMarkup";
 import { TAX_YEAR } from "./lib/taxYear";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: `UK Take-Home Calculator · ${TAX_YEAR}`,
   description: `High-accuracy UK take-home pay calculator for PAYE, NI, and pensions (${TAX_YEAR} tax year).`,
   alternates: {
-    canonical: siteUrl,
+    canonical: SITE_URL,
   },
   keywords: ["UK payroll calculator", "take-home pay", "PAYE calculator", "umbrella company calculator", "limited company calculator", "UK tax calculator", "student loan calculator", "UK salary calculator", "salary after tax", "take home pay calculator UK"],
   authors: [{ name: "Payroll MVP" }],
@@ -25,10 +26,10 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_GB",
     siteName: "UK Take-Home Calculator",
-    url: siteUrl,
+    url: SITE_URL,
     images: [
       {
-        url: `${siteUrl}/api/og-comparison?slug=500-a-day`,
+        url: `${SITE_URL}/api/og-comparison?slug=500-a-day`,
         width: 1200,
         height: 630,
         alt: `UK take-home comparison for ${TAX_YEAR} — PAYE vs Umbrella vs Inside/Outside IR35`,
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `UK Take-Home Pay Calculator ${TAX_YEAR} – Salary After Tax in the UK`,
     description: `Free UK take-home pay calculator for the ${TAX_YEAR} tax year. See your salary after tax, National Insurance, pension and student loan deductions in seconds.`,
-    images: [`${siteUrl}/api/og-comparison?slug=500-a-day`],
+    images: [`${SITE_URL}/api/og-comparison?slug=500-a-day`],
   },
   robots: {
     index: true,
@@ -60,7 +61,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en-GB" className="h-full">
       <body className="min-h-full bg-brand-bg text-brand-text antialiased">
         {/* Privacy-friendly analytics by Plausible */}
         <Script

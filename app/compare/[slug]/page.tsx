@@ -8,8 +8,8 @@ import {
   parseCompareSlug,
 } from "@/lib/marketing/compareSlug";
 import { formatGBP } from "@/lib/format";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
 
 export function generateStaticParams() {
   return CANONICAL_COMPARE_SLUGS.map((slug) => ({ slug }));
@@ -29,8 +29,8 @@ export async function generateMetadata({
   const title = `${parsed.compactDisplay} contractor take-home: PAYE vs Umbrella vs Inside/Outside IR35 (2026/27)`;
   const description = `See what a ${parsed.compactDisplay} UK contractor actually keeps under Standard PAYE, an umbrella company, Inside IR35 and Outside IR35 — all four figures calculated live for the 2026/27 tax year.`;
 
-  const url = `${siteUrl}/compare/${slug}`;
-  const ogImage = `${siteUrl}/api/og-comparison?slug=${encodeURIComponent(slug)}`;
+  const url = `${SITE_URL}/compare/${slug}`;
+  const ogImage = `${SITE_URL}/api/og-comparison?slug=${encodeURIComponent(slug)}`;
 
   return {
     title,
@@ -71,7 +71,7 @@ export default async function ComparePage({ params }: RouteParams) {
     name: `UK take-home comparison: ${parsed.compactDisplay}`,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",
-    url: `${siteUrl}/compare/${slug}`,
+    url: `${SITE_URL}/compare/${slug}`,
     offers: {
       "@type": "Offer",
       price: "0",
