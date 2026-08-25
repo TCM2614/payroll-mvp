@@ -3,13 +3,28 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calculator, Info, Menu, X } from 'lucide-react';
+import {
+  BarChart3,
+  Briefcase,
+  Calculator,
+  Info,
+  Menu,
+  Percent,
+  TrendingUp,
+  Users,
+  X,
+} from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Calculator },
   { href: '/calc', label: 'Calculator', icon: Calculator },
+  { href: '/salary', label: 'Salary', icon: BarChart3 },
+  { href: '/contractor', label: 'Contractor', icon: Briefcase },
+  { href: '/multiple-jobs', label: 'Multiple jobs', icon: Users },
+  { href: '/pay-rise', label: 'Pay rise', icon: TrendingUp },
+  { href: '/100k-tax-trap', label: '£100k trap', icon: Percent },
+  { href: '/salary-percentile', label: 'Percentile', icon: BarChart3 },
   { href: '/about', label: 'About', icon: Info },
-  { href: '/privacy', label: 'Privacy', icon: Info },
 ];
 
 export function Header() {
@@ -34,8 +49,8 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Nav - Desktop: pill-style navigation */}
-        <nav className="hidden items-center gap-1 rounded-full border border-brand-border/70 bg-brand-surface/80 px-1 py-1 text-xs sm:flex backdrop-blur">
+        {/* Nav - Desktop: pill-style navigation with horizontal scroll on tight widths */}
+        <nav className="hidden max-w-full flex-1 items-center gap-1 overflow-x-auto rounded-full border border-brand-border/70 bg-brand-surface/80 px-1 py-1 text-xs backdrop-blur sm:flex mx-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
               pathname === href || (href !== '/' && pathname?.startsWith(href));
@@ -44,7 +59,7 @@ export function Header() {
                 key={href}
                 href={href}
                 className={[
-                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70',
+                  'flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70',
                   isActive
                     ? 'bg-brand-primary text-white shadow-soft-xl'
                     : 'text-brand-textMuted hover:text-brand-text hover:bg-brand-border/40',
@@ -57,9 +72,9 @@ export function Header() {
           })}
         </nav>
 
-        {/* Tax year - Desktop */}
-        <div className="hidden items-center gap-2 sm:flex">
-          <span className="text-xs text-brand-textMuted">Tax year 2026/27</span>
+        {/* Tax year - Desktop, hidden on md so it doesn't crowd the nav */}
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+          <span className="text-xs text-brand-textMuted">2026/27</span>
         </div>
 
         {/* Mobile Menu Button */}
