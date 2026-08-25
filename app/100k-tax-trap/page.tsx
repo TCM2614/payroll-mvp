@@ -9,6 +9,7 @@ import {
 } from "@/lib/marketing/salaryInsight";
 import { TAX_YEAR } from "../lib/taxYear";
 import { SITE_URL } from "@/lib/siteUrl";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 
 
 export const metadata: Metadata = {
@@ -304,7 +305,7 @@ export default function TaxTrapPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
       />
       <PageViewTracker event="tax_trap_viewed" surface="page" />
     </div>

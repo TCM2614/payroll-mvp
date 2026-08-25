@@ -22,9 +22,16 @@ const SIZE = { width: 1200, height: 630 } as const;
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const slug = url.searchParams.get("slug") ?? "500-a-day";
+  const rawSlug = url.searchParams.get("slug");
+  const slug =
+    rawSlug && rawSlug.trim().length > 0 ? rawSlug.trim() : "500-a-day";
 
-  const parsed = parseCompareSlug(slug) ?? parseCompareSlug("500-a-day");
+  // Reject overlong / obviously abusive slug strings before parsing.
+  if (slug.length > 64) {
+    return new Response("Invalid slug", { status: 400 });
+  }
+
+  const parsed = parseCompareSlug(slug);
   if (!parsed) {
     return new Response("Invalid slug", { status: 400 });
   }

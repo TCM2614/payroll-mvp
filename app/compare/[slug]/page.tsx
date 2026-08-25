@@ -9,11 +9,15 @@ import {
 } from "@/lib/marketing/compareSlug";
 import { formatGBP } from "@/lib/format";
 import { SITE_URL } from "@/lib/siteUrl";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 
 
 export function generateStaticParams() {
   return CANONICAL_COMPARE_SLUGS.map((slug) => ({ slug }));
 }
+
+/** Only the curated compare catalogue is indexable — no on-demand slug sprawl. */
+export const dynamicParams = false;
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -191,7 +195,7 @@ export default async function ComparePage({ params }: RouteParams) {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(softwareJsonLd) }}
       />
     </div>
   );

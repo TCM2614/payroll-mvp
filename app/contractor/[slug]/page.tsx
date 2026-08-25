@@ -16,6 +16,7 @@ import { buildSalaryInsight } from "@/lib/marketing/salaryInsight";
 import { formatGBP } from "@/lib/format";
 import { TAX_YEAR } from "../../lib/taxYear";
 import { SITE_URL } from "@/lib/siteUrl";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 
 export function generateStaticParams() {
   return CONTRACTOR_CATALOG.map((e) => ({
@@ -348,11 +349,11 @@ export default async function ContractorPage({ params }: RouteParams) {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       <PageViewTracker
         event="salary_page_viewed"

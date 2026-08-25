@@ -9,6 +9,7 @@ import {
 } from "@/lib/marketing/calcScenarios";
 import { TAX_YEAR } from "../../lib/taxYear";
 import { SITE_URL } from "@/lib/siteUrl";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 
 
 const regimeBadgeClass: Record<
@@ -23,6 +24,8 @@ const regimeBadgeClass: Record<
 export function generateStaticParams() {
   return CALC_SCENARIO_SLUGS.map((scenario) => ({ scenario }));
 }
+
+export const dynamicParams = false;
 
 interface RouteParams {
   params: Promise<{ scenario: string }>;
@@ -183,11 +186,11 @@ export default async function ScenarioCalcPage({ params }: RouteParams) {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(softwareJsonLd) }}
       />
     </div>
   );

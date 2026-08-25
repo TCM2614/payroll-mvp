@@ -8,6 +8,7 @@ import {
 } from "@/lib/marketing/multiJobInsight";
 import { TAX_YEAR } from "../lib/taxYear";
 import { SITE_URL } from "@/lib/siteUrl";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 
 export const metadata: Metadata = {
   title: `Multiple UK Jobs & Second-Job Tax Codes (${TAX_YEAR})`,
@@ -219,7 +220,7 @@ export default function MultipleJobsIndexPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
       />
       {/* Reuse existing salary_page_viewed shape for parity with other
           growth pages. `salaryPage` records the surface identifier. */}

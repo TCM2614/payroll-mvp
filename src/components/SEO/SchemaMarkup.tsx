@@ -1,3 +1,5 @@
+import { safeJsonLd } from "@/lib/safeJsonLd";
+
 export function SchemaMarkup() {
   const faqSchema = {
     "@context": "https://schema.org",
@@ -22,6 +24,7 @@ export function SchemaMarkup() {
     ],
   };
 
+  // No aggregateRating — unverified ratings must not be asserted in structured data.
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -33,11 +36,6 @@ export function SchemaMarkup() {
       price: "0",
       priceCurrency: "GBP",
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "100",
-    },
   };
 
   return (
@@ -45,16 +43,15 @@ export function SchemaMarkup() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqSchema),
+          __html: safeJsonLd(faqSchema),
         }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productSchema),
+          __html: safeJsonLd(productSchema),
         }}
       />
     </>
   );
 }
-
