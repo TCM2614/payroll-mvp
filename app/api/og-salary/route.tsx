@@ -12,12 +12,19 @@ const SIZE = { width: 1200, height: 630 } as const;
  * shared image and the on-page numbers are guaranteed to match.
  *
  * Query params:
- *   salary=<integer £ per year>   Required. Guardrails reject values outside £1k–£10m.
+ *   salary=<integer £ per year>   Required. Guardrails reject values outside
+ *   £1k–£500k (covers the public salary catalogue with headroom; rejects
+ *   pathological multi-million inputs that only burn edge CPU).
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const raw = Number(url.searchParams.get("salary"));
-  if (!Number.isFinite(raw) || raw < 1_000 || raw > 10_000_000) {
+  if (
+    !Number.isFinite(raw) ||
+    !Number.isInteger(raw) ||
+    raw < 1_000 ||
+    raw > 500_000
+  ) {
     return new Response("Invalid salary", { status: 400 });
   }
   const salary = Math.round(raw);

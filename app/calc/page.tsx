@@ -3,6 +3,7 @@
 import * as React from "react";
 import { TakeHomeCalculator } from "@/components/take-home-calculator";
 import { SITE_URL } from "@/lib/siteUrl";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 import { TAX_YEAR } from "../lib/taxYear";
 
 type TopLevelTab = "calculators" | "faqs" | "scenarios";
@@ -150,7 +151,7 @@ export default function CalcPage() {
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
+              __html: safeJsonLd({
                 "@context": "https://schema.org",
                 "@type": "FAQPage",
                 mainEntity: [
@@ -362,7 +363,7 @@ export default function CalcPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJsonLd({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
             name: "UK Take-Home Calculator",

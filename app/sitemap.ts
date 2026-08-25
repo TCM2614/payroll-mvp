@@ -2,6 +2,14 @@ import type { MetadataRoute } from "next";
 import { CALC_SCENARIO_SLUGS } from "@/lib/marketing/calcScenarios";
 import { CANONICAL_COMPARE_SLUGS } from "@/lib/marketing/compareSlug";
 import { SALARY_CATALOG, salaryPath } from "@/lib/marketing/salaryCatalog";
+import {
+  CONTRACTOR_CATALOG,
+  contractorPath,
+} from "@/lib/marketing/contractorCatalog";
+import {
+  MULTI_JOB_CATALOG,
+  multiJobPath,
+} from "@/lib/marketing/multiJobInsight";
 import { SITE_URL } from "@/lib/siteUrl";
 
 
@@ -18,6 +26,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/`, lastModified, changeFrequency: "weekly", priority: 1.0 },
     { url: `${SITE_URL}/calc`, lastModified, changeFrequency: "weekly", priority: 1.0 },
     { url: `${SITE_URL}/salary`, lastModified, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/contractor`, lastModified, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/multiple-jobs`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/pay-rise`, lastModified, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/100k-tax-trap`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/salary-percentile`, lastModified, changeFrequency: "monthly", priority: 0.8 },
@@ -38,6 +48,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly" as const,
     priority: entry.landmark ? 0.8 : 0.6,
   }));
+
+  const contractorEntries: MetadataRoute.Sitemap = CONTRACTOR_CATALOG.map(
+    (entry) => ({
+      url: `${SITE_URL}${contractorPath(entry.salary)}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: entry.landmark ? 0.8 : 0.6,
+    }),
+  );
+
+  const multiJobEntries: MetadataRoute.Sitemap = MULTI_JOB_CATALOG.map(
+    (entry) => ({
+      url: `${SITE_URL}${multiJobPath(entry.primary, entry.secondary)}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }),
+  );
 
   const compareEntries: MetadataRoute.Sitemap = CANONICAL_COMPARE_SLUGS.map(
     (slug) => ({
@@ -67,12 +95,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.4,
     },
+    {
+      url: `${SITE_URL}/cookies`,
+      lastModified,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${SITE_URL}/terms`,
+      lastModified,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
 
   return [
     ...rootEntries,
     ...scenarioEntries,
     ...salaryEntries,
+    ...contractorEntries,
+    ...multiJobEntries,
     ...compareEntries,
     ...supportingEntries,
   ];
